@@ -1,0 +1,56 @@
+<section class="app-page">
+  <div class="container">
+    <div class="section-title mb-4">Settings</div>
+    <div class="row g-4">
+      <div class="col-lg-7">
+        <div class="lux-card p-4 mb-4">
+          <div class="font-display fs-2 mb-3">Shop Details</div>
+          <form [formGroup]="shopForm" class="row g-3">
+            <div class="col-md-6"><label class="form-label">Shop Name</label><input class="form-control" formControlName="shopName"></div>
+            <div class="col-md-6"><label class="form-label">GST Number</label><input class="form-control" formControlName="gstNumber"></div>
+            <div class="col-12"><label class="form-label">Address</label><input class="form-control" formControlName="shopAddress"></div>
+            <div class="col-md-6"><label class="form-label">Phone</label><input class="form-control" formControlName="shopPhone"></div>
+            <div class="col-md-6"><label class="form-label">Email</label><input class="form-control" formControlName="shopEmail"></div>
+            <div class="col-12"><button class="btn lux-btn lux-btn-primary" type="button" (click)="saveShop()">Save Shop Settings</button></div>
+          </form>
+        </div>
+        <div class="lux-card p-4 mb-4">
+          <div class="font-display fs-2 mb-3">Interest Rate Settings</div>
+          <form [formGroup]="interestForm" class="row g-3">
+            <div class="col-md-4"><label class="form-label">Interest %</label><input class="form-control" type="number" formControlName="interestRatePercent"></div>
+            <div class="col-md-4"><label class="form-label">Calculation Type</label><select class="form-select" formControlName="calculationType"><option [ngValue]="1">Monthly</option><option [ngValue]="0">Daily</option><option [ngValue]="2">Yearly</option></select></div>
+            <div class="col-md-4"><label class="form-label">Effective From</label><input class="form-control" type="date" formControlName="effectiveFrom"></div>
+            <div class="col-12"><button class="btn lux-btn lux-btn-outline" type="button" (click)="saveInterest()">Add Interest Rate</button></div>
+          </form>
+          <div class="mt-4">
+            @for (rate of interestRates; track rate.id) {
+              <div class="d-flex justify-content-between border-bottom py-2">
+                <span>{{ rate.interestRatePercent }}% {{ rate.calculationType }}</span>
+                <span>{{ rate.effectiveFrom }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="lux-card p-4 mb-4">
+          <div class="font-display fs-2 mb-3">Gold Price API</div>
+          <form [formGroup]="priceSettingsForm" class="row g-3">
+            <div class="col-12"><label class="form-label">API Key</label><input class="form-control" formControlName="apiKey"></div>
+            <div class="col-12"><label class="form-label">Refresh Interval (Minutes)</label><input class="form-control" formControlName="refreshIntervalMinutes"></div>
+            <div class="col-12"><button class="btn lux-btn lux-btn-outline" type="button" (click)="savePriceSettings()">Save API Settings</button></div>
+          </form>
+        </div>
+        <div class="lux-card p-4">
+          <div class="font-display fs-2 mb-3">User Management</div>
+          @for (user of users; track user.userId) {
+            <div class="d-flex justify-content-between border-bottom py-2">
+              <span>{{ user.fullName }}</span>
+              <span class="small text-secondary">{{ user.role }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,61 @@
+.financial-summary {
+  background: rgba(255, 215, 0, 0.05);
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 215, 0, 0.1);
+
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    
+    span {
+      color: rgba(255, 215, 0, 0.7);
+      font-size: 0.95rem;
+    }
+
+    strong {
+      color: #ffd700;
+      font-size: 1rem;
+    }
+
+    &.border-top {
+      border-top: 1px solid rgba(255, 215, 0, 0.15);
+    }
+  }
+}
+
+.search-box {
+  .product-item {
+    &:hover {
+      background: rgba(255, 215, 0, 0.05) !important;
+      padding-left: 1rem;
+    }
+  }
+}
+
+.customer-type-toggle {
+  .btn-group {
+    display: flex;
+
+    .btn {
+      flex: 1;
+      border-color: rgba(255, 215, 0, 0.2);
+      color: rgba(255, 215, 0, 0.7);
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: rgba(255, 215, 0, 0.1);
+        border-color: rgba(255, 215, 0, 0.3);
+      }
+
+      &.active {
+        background: #ffd700;
+        border-color: #ffd700;
+        color: #1a1a2e;
+        font-weight: 600;
+      }
+    }
+  }
+}

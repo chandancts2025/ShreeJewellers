@@ -1,0 +1,191 @@
+<section class="app-page">
+  <div class="container-fluid">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <div>
+        <div class="section-title mb-2">Daily Sales Summary</div>
+        <div class="text-secondary small">
+          @if (summary) {
+            {{ summary.date | date:'fullDate' }}
+          }
+        </div>
+      </div>
+      <button class="btn lux-btn lux-btn-secondary" type="button" (click)="loadSummary()">
+        <i class="bi bi-arrow-clockwise me-2"></i> Refresh
+      </button>
+    </div>
+
+    @if (isLoading) {
+      <div class="text-center py-5">
+        <div class="spinner-border text-warning" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="text-secondary mt-2">Loading daily summary...</p>
+      </div>
+    } @else if (summary) {
+      <!-- Key Metrics Row -->
+      <div class="row g-3 mb-4">
+        <div class="col-md-6 col-lg-3">
+          <div class="metric-card p-4">
+            <div class="metric-icon">📊</div>
+            <div class="metric-label">Total Orders</div>
+            <div class="metric-value">{{ summary.orderCount }}</div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="metric-card p-4">
+            <div class="metric-icon">💰</div>
+            <div class="metric-label">Gross Amount</div>
+            <div class="metric-value">{{ formatCurrency(summary.totalGrossAmount) }}</div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="metric-card p-4">
+            <div class="metric-icon">🏷️</div>
+            <div class="metric-label">Total Discount</div>
+            <div class="metric-value text-danger">-{{ formatCurrency(summary.totalDiscounts) }}</div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="metric-card p-4">
+            <div class="metric-icon">🛒</div>
+            <div class="metric-label">Amount Received</div>
+            <div class="metric-value text-success">{{ formatCurrency(summary.totalAmountReceived) }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Financial Summary Card -->
+      <div class="lux-card p-4 mb-4">
+        <h5 class="mb-4">Financial Breakdown</h5>
+        
+        <div class="row g-4">
+          <div class="col-md-6">
+            <div class="breakdown-item">
+              <div class="breakdown-label">Gross Sales</div>
+              <div class="breakdown-value">{{ formatCurrency(summary.totalGrossAmount) }}</div>
+            </div>
+            <div class="breakdown-item">
+              <div class="breakdown-label text-danger">Less: Discount</div>
+              <div class="breakdown-value text-danger">-{{ formatCurrency(summary.totalDiscounts) }}</div>
+            </div>
+            <div class="breakdown-item border-bottom pb-3 mb-3">
+              <div class="breakdown-label">Subtotal</div>
+              <div class="breakdown-value">{{ formatCurrency(summary.totalGrossAmount - summary.totalDiscounts) }}</div>
+            </div>
+            <div class="breakdown-item">
+              <div class="breakdown-label">GST Tax</div>
+              <div class="breakdown-value">{{ formatCurrency(summary.totalTax) }}</div>
+            </div>
+            <div class="breakdown-item border-top pt-3 mt-3">
+              <div class="breakdown-label fw-bold">Net Amount (Payable)</div>
+              <div class="breakdown-value fs-5" style="color: #ffd700;">{{ formatCurrency(summary.totalNetAmount) }}</div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="info-section p-3" style="background: rgba(255, 215, 0, 0.05); border-radius: 8px; border: 1px solid rgba(255, 215, 0, 0.1);">
+              <h6 class="mb-3">Quick Stats</h6>
+              <div class="stat-row">
+                <span>Average Order Value</span>
+                <strong>{{ summary.orderCount > 0 ? formatCurrency(summary.totalNetAmount / summary.orderCount) : '₹0' }}</strong>
+              </div>
+              <div class="stat-row">
+                <span>Average Discount/Order</span>
+                <strong>{{ summary.orderCount > 0 ? formatCurrency(summary.totalDiscounts / summary.orderCount) : '₹0' }}</strong>
+              </div>
+              <div class="stat-row">
+                <span>Total Tax Collected</span>
+                <strong>{{ formatCurrency(summary.totalTax) }}</strong>
+              </div>
+              <div class="stat-row border-top pt-2 mt-2">
+                <span>Total Amount Received</span>
+                <strong class="text-success">{{ formatCurrency(summary.totalAmountReceived) }}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment Modes & Categories -->
+      <div class="row g-4">
+        <!-- Payment Modes -->
+        <div class="col-lg-6">
+          <div class="lux-card p-4">
+            <div class="d-flex align-items-center justify-content-between mb-4">
+              <h5 class="mb-0">Payment Modes</h5>
+              <span class="badge lux-badge-info">{{ getPaymentModes().length }} Modes</span>
+            </div>
+
+            <div class="payment-list">
+              @for (mode of getPaymentModes(); track mode[0]) {
+                <div class="payment-item mb-3">
+                  <div class="d-flex align-items-center justify-content-between mb-2">
+                    <div>
+                      <strong>{{ mode[0] }}</strong>
+                      <div class="small text-secondary">{{ formatCurrency(mode[1]) }}</div>
+                    </div>
+                    <div class="percentage-badge" [title]="getPaymentModePercentage(mode[0], mode[1]) + '%'">
+                      {{ getPaymentModePercentage(mode[0], mode[1]) | number:'1.0-1' }}%
+                    </div>
+                  </div>
+                  <div class="progress" style="height: 6px;">
+                    <div class="progress-bar" [style.width.%]="getPaymentModePercentage(mode[0], mode[1])"></div>
+                  </div>
+                </div>
+              }
+            </div>
+
+            @if (getPaymentModes().length > 0) {
+              <div class="alert alert-info mt-3 mb-0" role="alert">
+                <small><strong>Top Payment Mode:</strong> {{ getTopPaymentMode() }}</small>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Categories -->
+        <div class="col-lg-6">
+          <div class="lux-card p-4">
+            <div class="d-flex align-items-center justify-content-between mb-4">
+              <h5 class="mb-0">Sales by Category</h5>
+              <span class="badge lux-badge-success">{{ getCategories().length }} Categories</span>
+            </div>
+
+            <div class="category-list">
+              @for (category of getCategories(); track category[0]) {
+                <div class="category-item mb-3">
+                  <div class="d-flex align-items-center justify-content-between mb-2">
+                    <div>
+                      <strong>{{ category[0] }}</strong>
+                      <div class="small text-secondary">{{ formatCurrency(category[1]) }}</div>
+                    </div>
+                    <div class="percentage-badge" [title]="getCategoryPercentage(category[0], category[1]) + '%'">
+                      {{ getCategoryPercentage(category[0], category[1]) | number:'1.0-1' }}%
+                    </div>
+                  </div>
+                  <div class="progress" style="height: 6px;">
+                    <div class="progress-bar" [style.width.%]="getCategoryPercentage(category[0], category[1])" 
+                         style="background-color: #51cf66;"></div>
+                  </div>
+                </div>
+              }
+            </div>
+
+            @if (getCategories().length > 0) {
+              <div class="alert alert-success mt-3 mb-0" role="alert">
+                <small><strong>Top Category:</strong> {{ getTopCategory() }}</small>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+    } @else {
+      <div class="lux-card p-5 text-center">
+        <i class="bi bi-inbox" style="font-size: 2rem; color: rgba(255, 215, 0, 0.3);"></i>
+        <p class="text-secondary mt-3">No sales data available for today</p>
+      </div>
+    }
+  </div>
+</section>

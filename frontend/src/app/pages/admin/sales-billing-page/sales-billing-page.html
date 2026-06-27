@@ -1,0 +1,41 @@
+<section class="app-page">
+  <div class="container">
+    <div class="section-title mb-4">Sales & Billing</div>
+    <div class="row g-4">
+      <div class="col-lg-5">
+        <div class="lux-card p-4">
+          <div class="font-display fs-2 mb-3">New Sale</div>
+          <p class="text-secondary small">This sample form is wired to the sales API. Add searched product lines before final production use.</p>
+          <form [formGroup]="saleForm" class="row g-3">
+            <div class=\"col-12\"><label class=\"form-label\">Customer Name</label><input class=\"form-control\" formControlName=\"walkInCustomerName\"></div>
+            <div class=\"col-12\"><label class=\"form-label\">Phone</label><input class=\"form-control\" formControlName=\"walkInCustomerPhone\"></div>
+            <div class=\"col-6\"><label class=\"form-label\">Payment Mode</label><select class=\"form-select\" formControlName=\"paymentMode\"><option>Cash</option><option>UPI</option><option>Card</option><option>NEFT</option></select></div>
+            <div class=\"col-6\"><label class=\"form-label\">Amount Paid</label><input class=\"form-control\" type=\"number\" formControlName=\"amountPaid\"></div>
+            <div class="col-12"><button class="btn lux-btn lux-btn-primary" type="button" (click)="createSampleSale()">Generate Invoice</button></div>
+          </form>
+        </div>
+      </div>
+      <div class="col-lg-7">
+        <div class="lux-card p-4">
+          <div class="font-display fs-2 mb-3">Sales History</div>
+          <div class="table-responsive">
+            <table class="table">
+              <thead><tr><th>Invoice</th><th>Date</th><th>Customer</th><th>Amount</th><th>Status</th></tr></thead>
+              <tbody>
+                @for (order of history; track order.id) {
+                  <tr>
+                    <td>{{ order.orderNumber }}</td>
+                    <td>{{ order.orderDate }}</td>
+                    <td>{{ order.customerName }}</td>
+                    <td>₹{{ order.netAmount | number:'1.0-0' }}</td>
+                    <td>{{ order.status }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,60 @@
+<section class="app-page">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-4">
+        <div class="lux-card portal-card h-100">
+          <div class="section-kicker mb-2">Welcome</div>
+          <div class="font-display fs-1">{{ data?.fullName }}</div>
+          <div class="text-secondary mb-3">{{ data?.customerCode }}</div>
+          <span class="status-badge" [class.status-verified]="data?.kycStatus === 'Verified'" [class.status-pending]="data?.kycStatus !== 'Verified'">
+            KYC {{ data?.kycStatus }}
+          </span>
+        </div>
+      </div>
+      <div class="col-lg-8">
+        <div class="row g-3">
+          <div class="col-md-4"><div class="lux-card portal-card h-100"><div class="small text-secondary">Active Loans</div><div class="font-display fs-2">{{ data?.activeLoanCount }}</div></div></div>
+          <div class="col-md-4"><div class="lux-card portal-card h-100"><div class="small text-secondary">Outstanding</div><div class="font-display fs-2">₹{{ data?.activeLoanOutstanding | number:'1.0-0' }}</div></div></div>
+          <div class="col-md-4"><div class="lux-card portal-card h-100"><div class="small text-secondary">Recent Orders</div><div class="font-display fs-2">{{ data?.recentOrderCount }}</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4 mt-1">
+      <div class="col-lg-7">
+        <div class="lux-card p-4 h-100">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="font-display fs-2">My Active Loans</div>
+            <a routerLink="/customer/loans" class="small fw-bold">View all</a>
+          </div>
+          @for (loan of data?.activeLoans ?? []; track loan.loanId) {
+            <div class="border rounded-4 p-3 mb-3">
+              <div class="d-flex justify-content-between flex-wrap gap-2">
+                <div>
+                  <div class="fw-bold">{{ loan.loanNumber }}</div>
+                  <div class="small text-secondary">Days remaining: {{ loan.daysRemaining }}</div>
+                </div>
+                <a class="btn btn-sm btn-outline-dark" [routerLink]="['/customer/loans', loan.loanId]">Details</a>
+              </div>
+              <div class="row g-2 mt-2">
+                <div class="col-md-4 small">Principal: ₹{{ loan.principalAmount | number:'1.0-0' }}</div>
+                <div class="col-md-4 small">Interest: ₹{{ loan.interestAccrued | number:'1.0-0' }}</div>
+                <div class="col-md-4 small">Outstanding: ₹{{ loan.outstandingBalance | number:'1.0-0' }}</div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="lux-card p-4 h-100">
+          <div class="font-display fs-2 mb-3">Quick Actions</div>
+          <div class="d-grid gap-2">
+            <a class="btn lux-btn lux-btn-outline" routerLink="/customer/loans">View Loans</a>
+            <a class="btn lux-btn lux-btn-outline" routerLink="/customer/orders">View Orders</a>
+            <a class="btn lux-btn lux-btn-primary" routerLink="/customer/profile">Update Profile</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

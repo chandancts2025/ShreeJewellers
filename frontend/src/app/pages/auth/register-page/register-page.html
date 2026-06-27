@@ -1,0 +1,69 @@
+<section class="app-page">
+  <div class="container" style="max-width:860px;">
+    <div class="lux-card p-4 p-lg-5">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <div class="section-kicker mb-2">Register</div>
+          <div class="section-title">Create your customer profile</div>
+        </div>
+        <div class="small text-secondary">Step {{ step }} of 3</div>
+      </div>
+
+      <div class="progress mb-4" style="height:8px;">
+        <div class="progress-bar bg-warning" [style.width.%]="step * 33.33"></div>
+      </div>
+
+      @if (step === 1) {
+        <form [formGroup]="basicForm" (ngSubmit)="submitStep1()" class="row g-3">
+          <div class="col-md-6"><label class="form-label">First Name</label><input class="form-control" formControlName="firstName"></div>
+          <div class="col-md-6"><label class="form-label">Last Name</label><input class="form-control" formControlName="lastName"></div>
+          <div class="col-md-6"><label class="form-label">Email</label><input class="form-control" formControlName="email"></div>
+          <div class="col-md-6"><label class="form-label">Phone</label><input class="form-control" formControlName="phoneNumber"></div>
+          <div class="col-md-6"><label class="form-label">Password</label><input class="form-control" type="password" formControlName="password"></div>
+          <div class="col-md-6"><label class="form-label">Confirm Password</label><input class="form-control" type="password" formControlName="confirmPassword"></div>
+          <div class="col-12"><button class="btn lux-btn lux-btn-primary" [disabled]="isSubmitting">Continue</button></div>
+        </form>
+      }
+
+      @if (step === 2) {
+        <form [formGroup]="kycForm" (ngSubmit)="submitStep2()" class="row g-3">
+          <div class="col-md-4"><label class="form-label">DOB</label><input class="form-control" type="date" formControlName="dateOfBirth"></div>
+          <div class="col-md-4"><label class="form-label">Gender</label><select class="form-select" formControlName="gender"><option>Female</option><option>Male</option><option>Other</option></select></div>
+          <div class="col-md-4"><label class="form-label">PIN Code</label><input class="form-control" formControlName="pinCode"></div>
+          <div class="col-md-6"><label class="form-label">Aadhaar</label><input class="form-control" formControlName="aadhaarNumber"></div>
+          <div class="col-md-6"><label class="form-label">PAN</label><input class="form-control" formControlName="panNumber"></div>
+          <div class="col-12"><label class="form-label">Address</label><input class="form-control" formControlName="addressLine1"></div>
+          <div class="col-12"><label class="form-label">Address Line 2</label><input class="form-control" formControlName="addressLine2"></div>
+          <div class="col-md-4"><label class="form-label">City</label><input class="form-control" formControlName="city"></div>
+          <div class="col-md-4"><label class="form-label">State</label><input class="form-control" formControlName="state"></div>
+          <div class="col-md-4"><label class="form-label">Alternate Phone</label><input class="form-control" formControlName="alternatePhone"></div>
+          <div class="col-12 d-flex gap-3">
+            <button class="btn lux-btn lux-btn-outline" type="button" (click)="step = 1">Back</button>
+            <button class="btn lux-btn lux-btn-primary" [disabled]="isSubmitting">Continue</button>
+          </div>
+        </form>
+      }
+
+      @if (step === 3) {
+        <form [formGroup]="uploadForm" (ngSubmit)="submitStep3()" class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Profile Photo</label>
+            <input class="form-control" type="file" (change)="onFileChange($event, 'profilePhoto')">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">ID Proof</label>
+            <input class="form-control" type="file" (change)="onFileChange($event, 'idProof')">
+          </div>
+          <div class="col-12 d-flex gap-3">
+            <button class="btn lux-btn lux-btn-outline" type="button" (click)="step = 2">Back</button>
+            <button class="btn lux-btn lux-btn-primary" [disabled]="isSubmitting">Complete Registration</button>
+          </div>
+        </form>
+      }
+
+      <div class="small text-secondary mt-4">
+        Already registered? <a routerLink="/login" class="fw-bold">Login here</a>
+      </div>
+    </div>
+  </div>
+</section>

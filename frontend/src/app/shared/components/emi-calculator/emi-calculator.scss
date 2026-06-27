@@ -1,0 +1,17 @@
+.emi-calculator {
+  .result-card {
+    min-height: 150px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .form-text {
+    color: rgba(0, 0, 0, 0.65);
+  }
+
+  .input-group-text {
+    min-width: 42px;
+    justify-content: center;
+  }
+}

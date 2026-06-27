@@ -1,0 +1,558 @@
+<section class="app-page inventory-page">
+  <div class="container-fluid px-4">
+    <div class="page-heading">
+      <div>
+        <div class="section-kicker">Operations</div>
+        <h1 class="section-title mb-1">Inventory Management</h1>
+        <p class="text-secondary mb-0">Products, stock movement, valuation, and reorder alerts.</p>
+      </div>
+      <button class="btn lux-btn lux-btn-primary" type="button" (click)="load()">
+        <i class="bi bi-arrow-clockwise me-2"></i>
+        Refresh
+      </button>
+    </div>
+
+    <div class="metric-grid">
+      <div class="metric-card">
+        <div class="metric-label">Inventory Value</div>
+        <div class="metric-value">Rs. {{ (valuation?.totalInventoryValue || 0) | number:'1.0-0' }}</div>
+        <div class="metric-note">As of {{ valuation?.asOf | date:'short' }}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Gold Holding</div>
+        <div class="metric-value">{{ (valuation?.totalGoldWeightGrams || 0) | number:'1.0-3' }} g</div>
+        <div class="metric-note">Rs. {{ (valuation?.totalGoldValueINR || 0) | number:'1.0-0' }}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Silver Holding</div>
+        <div class="metric-value">{{ (valuation?.totalSilverWeightGrams || 0) | number:'1.0-3' }} g</div>
+        <div class="metric-note">Rs. {{ (valuation?.totalSilverValueINR || 0) | number:'1.0-0' }}</div>
+      </div>
+      <div class="metric-card" [class.metric-danger]="lowStock.length">
+        <div class="metric-label">Low Stock</div>
+        <div class="metric-value">{{ lowStock.length }}</div>
+        <div class="metric-note">{{ stockLevels.length }} active stock records</div>
+      </div>
+    </div>
+
+    <div class="admin-tabs" role="tablist" aria-label="Inventory sections">
+      <button type="button" [class.active]="activePanel === 'catalog'" (click)="activePanel = 'catalog'">
+        <i class="bi bi-box-seam"></i>
+        Catalog
+      </button>
+      <button type="button" [class.active]="activePanel === 'stock'" (click)="activePanel = 'stock'">
+        <i class="bi bi-arrow-left-right"></i>
+        Stock Control
+      </button>
+      <button type="button" [class.active]="activePanel === 'ledger'" (click)="activePanel = 'ledger'">
+        <i class="bi bi-journal-text"></i>
+        Ledger
+      </button>
+    </div>
+
+    @if (activePanel === 'catalog') {
+      <div class="inventory-grid">
+        <div class="lux-card p-4">
+          <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
+            <div>
+              <h2 class="panel-title">{{ productForm.controls.id.value ? 'Edit Product' : 'Add Product' }}</h2>
+              <div class="text-secondary small">The fields map directly to the product API contract.</div>
+            </div>
+            @if (productForm.controls.id.value) {
+              <span class="status-badge status-pending">Editing #{{ productForm.controls.id.value }}</span>
+            }
+          </div>
+
+          <form [formGroup]="productForm" class="row g-3">
+            <div class="col-md-7">
+              <label class="form-label">Product Name</label>
+              <input class="form-control" formControlName="name" [class.is-invalid]="isInvalid(productForm, 'name')">
+            </div>
+            <div class="col-md-5">
+              <label class="form-label">Category</label>
+              <select class="form-select" formControlName="categoryId" [class.is-invalid]="isInvalid(productForm, 'categoryId')">
+                <option [ngValue]="0">Select category</option>
+                @for (category of categories; track category.id) {
+                  <option [ngValue]="category.id">{{ category.name }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">SKU Code</label>
+              <input class="form-control text-uppercase" formControlName="skuCode" (input)="onSkuInput()" [class.is-invalid]="isInvalid(productForm, 'skuCode')">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">HSN Code</label>
+              <input class="form-control" formControlName="hsnCode" [class.is-invalid]="isInvalid(productForm, 'hsnCode')">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Purity</label>
+              <select class="form-select" formControlName="purity">
+                <option value="24K">24K</option>
+                <option value="22K">22K</option>
+                <option value="18K">18K</option>
+                <option value="14K">14K</option>
+                <option value="925">925 Silver</option>
+                <option value="999">999 Silver</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Net Weight (g)</label>
+              <input class="form-control" type="number" min="0" step="0.001" formControlName="netWeightGrams" [class.is-invalid]="isInvalid(productForm, 'netWeightGrams')">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Gross Weight (g)</label>
+              <input class="form-control" type="number" min="0" step="0.001" formControlName="grossWeightGrams">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Stone Weight (g)</label>
+              <input class="form-control" type="number" min="0" step="0.001" formControlName="stoneWeightGrams">
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Making Type</label>
+              <select class="form-select" formControlName="makingChargesType">
+                @for (type of makingChargeTypes; track type.value) {
+                  <option [ngValue]="type.value">{{ type.label }}</option>
+                }
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Making Charge</label>
+              <input class="form-control" type="number" min="0" step="0.01" formControlName="makingChargesValue">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">GST %</label>
+              <input class="form-control" type="number" min="0" max="28" step="0.01" formControlName="gstRatePercent">
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Opening Stock</label>
+              <input class="form-control" type="number" min="0" formControlName="stockQuantity">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Reorder Level</label>
+              <input class="form-control" type="number" min="0" formControlName="reorderLevel">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Wastage %</label>
+              <input class="form-control" type="number" min="0" max="20" step="0.01" formControlName="wastagePercent">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Hallmark Charges</label>
+              <input class="form-control" type="number" min="0" step="0.01" formControlName="hallmarkCharges">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Hallmark Number</label>
+              <input class="form-control" formControlName="hallmarkNumber">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Stone Value</label>
+              <input class="form-control" type="number" min="0" step="0.01" formControlName="stoneValue">
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Description</label>
+              <textarea class="form-control" rows="3" formControlName="description"></textarea>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Product Image</label>
+              <div class="image-picker">
+                @if (imagePreviewUrl) {
+                  <img [src]="imagePreviewUrl" alt="Selected product">
+                } @else {
+                  <div class="image-placeholder">
+                    <i class="bi bi-image"></i>
+                  </div>
+                }
+                <div class="flex-grow-1">
+                  <input class="form-control" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" (change)="onImageSelected($event)">
+                  @if (imageFileName) {
+                    <div class="small text-secondary mt-1">{{ imageFileName }}</div>
+                  }
+                </div>
+                @if (imagePreviewUrl) {
+                  <button class="btn btn-outline-secondary" type="button" (click)="clearImage()">
+                    <i class="bi bi-x-lg"></i>
+                  </button>
+                }
+              </div>
+            </div>
+
+            <div class="col-12 d-flex flex-wrap gap-2">
+              <button class="btn lux-btn lux-btn-primary" type="button" (click)="saveProduct()" [disabled]="isSavingProduct">
+                <i class="bi bi-check2-circle me-2"></i>
+                {{ isSavingProduct ? 'Saving...' : 'Save Product' }}
+              </button>
+              <button class="btn btn-outline-secondary" type="button" (click)="resetProductForm()">Reset</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="lux-card p-4">
+          <div class="table-head">
+            <div>
+              <h2 class="panel-title">Product Catalog</h2>
+              <div class="text-secondary small">{{ totalProducts }} products found</div>
+            </div>
+            <div class="catalog-filters">
+              <input class="form-control" placeholder="Search name, SKU, hallmark" [(ngModel)]="searchTerm" (input)="onSearch()">
+              <select class="form-select" [(ngModel)]="selectedCategory" (change)="onSearch()">
+                <option value="">All categories</option>
+                @for (category of categories; track category.id) {
+                  <option [value]="category.id">{{ category.name }}</option>
+                }
+              </select>
+              <select class="form-select compact" [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+                @for (size of pageSizeOptions; track size) {
+                  <option [ngValue]="size">{{ size }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table align-middle admin-table">
+              <thead>
+                <tr>
+                  <th>SKU</th>
+                  <th>Product</th>
+                  <th>Category</th>
+                  <th>Purity</th>
+                  <th class="text-end">Stock</th>
+                  <th class="text-end">Value</th>
+                  <th class="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @if (isLoadingProducts) {
+                  <tr>
+                    <td colspan="7" class="text-center text-secondary py-5">Loading products...</td>
+                  </tr>
+                } @else if (!products.length) {
+                  <tr>
+                    <td colspan="7" class="text-center text-secondary py-5">No products match the current filters.</td>
+                  </tr>
+                } @else {
+                  @for (product of products; track product.id) {
+                    <tr>
+                      <td class="fw-semibold">{{ product.skuCode }}</td>
+                      <td>
+                        <div class="fw-semibold">{{ product.name }}</div>
+                        <div class="small text-secondary">{{ product.netWeightGrams | number:'1.0-3' }} g</div>
+                      </td>
+                      <td>{{ product.categoryName }}</td>
+                      <td>{{ product.purity }}</td>
+                      <td class="text-end" [class.text-danger]="product.isLowStock">{{ product.stockQuantity }}</td>
+                      <td class="text-end">Rs. {{ (product.currentTotalValue || 0) | number:'1.0-0' }}</td>
+                      <td class="text-end">
+                        <div class="btn-group btn-group-sm">
+                          <button class="btn btn-outline-primary" type="button" (click)="editProduct(product)" title="Edit product">
+                            <i class="bi bi-pencil"></i>
+                          </button>
+                          <button class="btn btn-outline-info" type="button" (click)="generateQrCode(product.id)" title="Generate QR">
+                            <i class="bi bi-qr-code"></i>
+                          </button>
+                          <button class="btn btn-outline-danger" type="button" (click)="deleteProduct(product.id)" title="Deactivate product">
+                            <i class="bi bi-trash"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                }
+              </tbody>
+            </table>
+          </div>
+
+          @if (totalPages > 1) {
+            <div class="pagination-row">
+              <button class="btn btn-outline-secondary btn-sm" type="button" [disabled]="currentPage === 1" (click)="onPageChange(currentPage - 1)">Previous</button>
+              <div class="page-dots">
+                @for (page of pages; track page) {
+                  <button class="page-dot" type="button" [class.active]="page === currentPage" (click)="onPageChange(page)">{{ page }}</button>
+                }
+              </div>
+              <button class="btn btn-outline-secondary btn-sm" type="button" [disabled]="currentPage === totalPages" (click)="onPageChange(currentPage + 1)">Next</button>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    @if (activePanel === 'stock') {
+      <div class="row g-4">
+        <div class="col-xl-6">
+          <div class="lux-card p-4 h-100">
+            <h2 class="panel-title">Stock In</h2>
+            <form [formGroup]="stockInForm" class="row g-3">
+              <div class="col-12">
+                <label class="form-label">Product</label>
+                <select class="form-select" formControlName="productId" [class.is-invalid]="isInvalid(stockInForm, 'productId')">
+                  <option [ngValue]="0">Select product</option>
+                  @for (product of products; track product.id) {
+                    <option [ngValue]="product.id">{{ product.name }} ({{ product.skuCode }})</option>
+                  }
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Quantity</label>
+                <input class="form-control" type="number" min="1" formControlName="quantity">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Weight (g)</label>
+                <input class="form-control" type="number" min="0" step="0.001" formControlName="weightGrams">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Rate / g</label>
+                <input class="form-control" type="number" min="0" step="0.01" formControlName="ratePerGram">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Supplier</label>
+                <input class="form-control" formControlName="supplierName" [class.is-invalid]="isInvalid(stockInForm, 'supplierName')">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Invoice No.</label>
+                <input class="form-control" formControlName="invoiceNumber">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Purchase Date</label>
+                <input class="form-control" type="date" formControlName="purchaseDate">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Notes</label>
+                <input class="form-control" formControlName="notes">
+              </div>
+              <div class="col-12">
+                <button class="btn lux-btn lux-btn-primary" type="button" (click)="recordStockIn()" [disabled]="isRecordingStockIn">
+                  <i class="bi bi-plus-circle me-2"></i>
+                  {{ isRecordingStockIn ? 'Recording...' : 'Record Stock In' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="col-xl-6">
+          <div class="lux-card p-4 h-100">
+            <h2 class="panel-title">Stock Adjustment</h2>
+            <form [formGroup]="adjustmentForm" class="row g-3">
+              <div class="col-12">
+                <label class="form-label">Product</label>
+                <select class="form-select" formControlName="productId" [class.is-invalid]="isInvalid(adjustmentForm, 'productId')">
+                  <option [ngValue]="0">Select product</option>
+                  @for (product of products; track product.id) {
+                    <option [ngValue]="product.id">{{ product.name }} ({{ product.skuCode }})</option>
+                  }
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Quantity Change</label>
+                <input class="form-control" type="number" formControlName="quantityChange" [class.is-invalid]="isInvalid(adjustmentForm, 'quantityChange')">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Weight Change (g)</label>
+                <input class="form-control" type="number" step="0.001" formControlName="weightGramsChange">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Reason</label>
+                <select class="form-select" formControlName="reasonCode" [class.is-invalid]="isInvalid(adjustmentForm, 'reasonCode')">
+                  <option value="">Select reason</option>
+                  @for (reason of reasonOptions; track reason.value) {
+                    <option [value]="reason.value">{{ reason.label }}</option>
+                  }
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Notes</label>
+                <input class="form-control" formControlName="notes" [class.is-invalid]="isInvalid(adjustmentForm, 'notes')">
+              </div>
+              <div class="col-12">
+                <button class="btn lux-btn lux-btn-primary" type="button" (click)="recordAdjustment()" [disabled]="isRecordingAdjustment">
+                  <i class="bi bi-sliders me-2"></i>
+                  {{ isRecordingAdjustment ? 'Recording...' : 'Record Adjustment' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          <div class="lux-card p-4 h-100">
+            <h2 class="panel-title">Low Stock Watchlist</h2>
+            @if (!lowStock.length) {
+              <div class="empty-state">All active products are above reorder level.</div>
+            } @else {
+              <div class="watch-list">
+                @for (item of lowStock; track item.id) {
+                  <div class="watch-item">
+                    <div>
+                      <div class="fw-semibold">{{ item.name }}</div>
+                      <div class="small text-secondary">{{ item.skuCode }}</div>
+                    </div>
+                    <span class="status-badge status-danger">{{ item.stockQuantity }} left</span>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="col-lg-8">
+          <div class="lux-card p-4 h-100">
+            <h2 class="panel-title">Stock Levels</h2>
+            <div class="table-responsive">
+              <table class="table align-middle admin-table">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>SKU</th>
+                    <th class="text-end">Current</th>
+                    <th class="text-end">Reorder</th>
+                    <th class="text-end">Market Value</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (stock of stockLevels; track stock.productId) {
+                    <tr>
+                      <td>
+                        <div class="fw-semibold">{{ stock.productName }}</div>
+                        <div class="small text-secondary">{{ stock.categoryName }} / {{ stock.purity }}</div>
+                      </td>
+                      <td>{{ stock.skuCode }}</td>
+                      <td class="text-end">{{ stock.currentStock }}</td>
+                      <td class="text-end">{{ stock.reorderLevel }}</td>
+                      <td class="text-end">Rs. {{ stock.currentMarketValue | number:'1.0-0' }}</td>
+                      <td><span class="status-badge" [ngClass]="statusClass(stock)">{{ stockStatus(stock) }}</span></td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="6" class="text-center text-secondary py-5">No stock records found.</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (activePanel === 'ledger') {
+      <div class="row g-4">
+        <div class="col-xl-4">
+          <div class="lux-card p-4 h-100">
+            <h2 class="panel-title">Product QR</h2>
+            <select class="form-select mb-3" [(ngModel)]="selectedProduct" (ngModelChange)="generateQrCode($event?.id)">
+              <option [ngValue]="null">Select product</option>
+              @for (product of products; track product.id) {
+                <option [ngValue]="product">{{ product.name }} ({{ product.skuCode }})</option>
+              }
+            </select>
+            <div class="qr-frame">
+              @if (qrCodeBase64) {
+                <img [src]="'data:image/png;base64,' + qrCodeBase64" alt="Product QR code">
+                <div class="fw-semibold mt-3">{{ selectedProductName }}</div>
+              } @else {
+                <div class="empty-state">Choose a product to generate its QR code.</div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-8">
+          <div class="lux-card p-4 h-100">
+            <div class="table-head">
+              <div>
+                <h2 class="panel-title">Inventory Transactions</h2>
+                <div class="text-secondary small">Latest stock movements from the inventory API.</div>
+              </div>
+              <div class="catalog-filters">
+                <input class="form-control" type="date" [(ngModel)]="transactionFilters.from" (change)="loadTransactions()">
+                <input class="form-control" type="date" [(ngModel)]="transactionFilters.to" (change)="loadTransactions()">
+                <select class="form-select" [(ngModel)]="transactionFilters.type" (change)="loadTransactions()">
+                  <option value="">All movement</option>
+                  @for (type of transactionTypes; track type) {
+                    <option [value]="type">{{ type }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table align-middle admin-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Product</th>
+                    <th class="text-end">Qty</th>
+                    <th class="text-end">Value</th>
+                    <th>Reference</th>
+                    <th>User</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @if (isLoadingInventory) {
+                    <tr>
+                      <td colspan="7" class="text-center text-secondary py-5">Loading transactions...</td>
+                    </tr>
+                  } @else {
+                    @for (transaction of transactions; track transaction.id) {
+                      <tr>
+                        <td>{{ transaction.createdAt | date:'short' }}</td>
+                        <td><span class="status-badge status-pending">{{ transaction.transactionType }}</span></td>
+                        <td>
+                          <div class="fw-semibold">{{ transaction.productName || '-' }}</div>
+                          <div class="small text-secondary">{{ transaction.skuCode }}</div>
+                        </td>
+                        <td class="text-end" [class.text-success]="transaction.quantity > 0" [class.text-danger]="transaction.quantity < 0">
+                          {{ transaction.quantity > 0 ? '+' : '' }}{{ transaction.quantity }}
+                        </td>
+                        <td class="text-end">Rs. {{ transaction.totalValue | number:'1.0-0' }}</td>
+                        <td>{{ transaction.referenceNo || transaction.notes || '-' }}</td>
+                        <td>{{ transaction.createdByName || '-' }}</td>
+                      </tr>
+                    } @empty {
+                      <tr>
+                        <td colspan="7" class="text-center text-secondary py-5">No transactions found.</td>
+                      </tr>
+                    }
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="lux-card p-4">
+            <h2 class="panel-title">Valuation By Category</h2>
+            <div class="category-valuation">
+              @for (category of valuation?.byCategory || []; track category.categoryName) {
+                <div class="category-row">
+                  <div>
+                    <div class="fw-semibold">{{ category.categoryName }}</div>
+                    <div class="small text-secondary">{{ category.productCount }} products / {{ category.totalPieces }} pieces</div>
+                  </div>
+                  <div class="text-end">
+                    <div class="fw-semibold">Rs. {{ category.totalValue | number:'1.0-0' }}</div>
+                    <div class="small text-secondary">{{ category.totalWeightGrams | number:'1.0-3' }} g</div>
+                  </div>
+                </div>
+              } @empty {
+                <div class="empty-state">No valuation records available.</div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</section>

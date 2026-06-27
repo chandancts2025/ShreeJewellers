@@ -1,0 +1,37 @@
+<section class="app-page">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-8">
+        <div class="lux-card p-4 p-lg-5 h-100">
+          <div class="section-kicker mb-2">Our Story</div>
+          <div class="section-title mb-4">{{ data?.shopName }}</div>
+          <p class="lead text-secondary">{{ data?.story }}</p>
+          <div class="row g-3 mt-4">
+            @for (item of data?.certifications ?? []; track item) {
+              <div class="col-md-6">
+                <div class="lux-card p-3 h-100">
+                  <div class="fw-bold text-warning-emphasis">{{ item }}</div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="lux-card p-4 h-100 text-center">
+          <img
+            [src]="data?.ownerPhotoUrl || 'https://placehold.co/420x520/faf8f2/1a1a2e?text=Owner'"
+            alt="Owner"
+            class="img-fluid rounded-4 mb-4">
+          <div class="font-display fs-2">{{ data?.ownerName }}</div>
+          <div class="text-secondary mb-4">{{ data?.ownerTitle }}</div>
+          <div class="status-badge status-verified justify-content-center">
+            <i class="bi bi-award"></i>
+            BIS Hallmark Focus
+          </div>
+          <p class="small text-secondary mt-3 mb-0">{{ data?.hallmarkNote }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

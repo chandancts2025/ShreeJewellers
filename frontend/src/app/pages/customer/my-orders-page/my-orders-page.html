@@ -1,0 +1,25 @@
+<section class="app-page">
+  <div class="container">
+    <div class="section-kicker mb-2">Purchases</div>
+    <div class="section-title mb-4">My Orders</div>
+    <div class="lux-card p-4">
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead><tr><th>Invoice</th><th>Date</th><th>Amount</th><th>Status</th><th>Payment</th><th></th></tr></thead>
+          <tbody>
+            @for (order of orders; track order.id) {
+              <tr>
+                <td>{{ order.orderNumber }}</td>
+                <td>{{ order.orderDate }}</td>
+                <td>₹{{ order.netAmount | number:'1.0-0' }}</td>
+                <td>{{ order.status }}</td>
+                <td>{{ order.paymentStatus }}</td>
+                <td><button class="btn btn-sm btn-outline-dark" type="button" (click)="downloadInvoice(order.id)">Invoice</button></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,68 @@
+# ============================================================
+# Shree Jewellers — Web API Dockerfile
+# Multi-stage build: build → publish → runtime
+# Base: .NET 8.0 SDK / ASP.NET Core runtime
+# ============================================================
+
+# ── Stage 1: Build ──────────────────────────────────────────
+FROM mcr.microsoft.com/dotnet/sdk:8.0-bookworm-slim AS build
+WORKDIR /src
+
+# Copy solution and project files first (for layer caching)
+COPY ["ShreeJewellers.sln", "./"]
+COPY ["src/ShreeJewellers.Domain/ShreeJewellers.Domain.csproj",          "src/ShreeJewellers.Domain/"]
+COPY ["src/ShreeJewellers.Application/ShreeJewellers.Application.csproj","src/ShreeJewellers.Application/"]
+COPY ["src/ShreeJewellers.Infrastructure/ShreeJewellers.Infrastructure.csproj","src/ShreeJewellers.Infrastructure/"]
+COPY ["src/ShreeJewellers.API/ShreeJewellers.API.csproj",                 "src/ShreeJewellers.API/"]
+
+# Restore NuGet packages (cached if .csproj files unchanged)
+RUN dotnet restore "src/ShreeJewellers.API/ShreeJewellers.API.csproj"
+
+# Copy full source and build
+COPY . .
+WORKDIR "/src/src/ShreeJewellers.API"
+RUN dotnet build "ShreeJewellers.API.csproj" -c Release -o /app/build --no-restore
+
+# ── Stage 2: Publish ─────────────────────────────────────────
+FROM build AS publish
+RUN dotnet publish "ShreeJewellers.API.csproj" \
+    -c Release \
+    -o /app/publish \
+    --no-restore \
+    --self-contained false \
+    /p:UseAppHost=false
+
+# ── Stage 3: Runtime ─────────────────────────────────────────
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-bookworm-slim AS runtime
+WORKDIR /app
+
+# Security: run as non-root user
+RUN adduser --disabled-password --gecos '' --uid 1001 appuser
+RUN mkdir -p /app/logs /app/secure-uploads && chown -R appuser:appuser /app
+
+# Install curl for health checks, remove after if needed
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=publish /app/publish .
+
+# Secure file permissions
+RUN chown -R appuser:appuser /app
+
+USER appuser
+
+# ── Configuration ─────────────────────────────────────────────
+# All secrets are injected via environment variables — never in image
+ENV ASPNETCORE_ENVIRONMENT=Production \
+    ASPNETCORE_URLS=http://+:8080 \
+    DOTNET_RUNNING_IN_CONTAINER=true \
+    DOTNET_GCConserveMemory=9
+
+# Expose API port (not 443 — TLS terminated at nginx/load balancer)
+EXPOSE 8080
+
+# Health check — uses the /health/live endpoint from Program.cs
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:8080/health/live || exit 1
+
+ENTRYPOINT ["dotnet", "ShreeJewellers.API.dll"]

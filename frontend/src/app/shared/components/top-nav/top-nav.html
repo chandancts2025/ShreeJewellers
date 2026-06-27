@@ -1,0 +1,88 @@
+<app-price-ticker></app-price-ticker>
+<nav class="navbar navbar-expand-lg navbar-blur border-bottom border-warning-subtle sticky-top">
+  <div class="container py-2">
+    <a class="navbar-brand font-display fs-2" routerLink="/">Shree Jewellers</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNav">
+      <div class="navbar-nav ms-auto align-items-lg-center gap-lg-3">
+        <a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a>
+        <a class="nav-link" routerLink="/about" routerLinkActive="active">About</a>
+        <a class="nav-link" routerLink="/contact" routerLinkActive="active">Contact</a>
+        <a class="nav-link" routerLink="/gold-loan" routerLinkActive="active">Gold Loan</a>
+
+        @if (!auth.isAuthenticated()) {
+          <a class="btn lux-btn lux-btn-outline" routerLink="/login">Login</a>
+          <a class="btn lux-btn lux-btn-primary" routerLink="/register">Register</a>
+        } @else {
+          <!-- Admin Navigation Menu -->
+          @if (auth.hasAnyRole(['Staff', 'Admin', 'SuperAdmin'])) {
+            <div class="dropdown">
+              <button class="nav-link dropdown-toggle" data-bs-toggle="dropdown" type="button">
+                <i class="bi bi-box-seam me-1"></i>Admin
+              </button>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" routerLink="/admin/dashboard"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><strong class="dropdown-header">Operations</strong></li>
+                <li><a class="dropdown-item" routerLink="/admin/customers"><i class="bi bi-people me-2"></i>Customers</a></li>
+                <li><a class="dropdown-item" routerLink="/admin/inventory"><i class="bi bi-box2 me-2"></i>Inventory & Products</a></li>
+                <li><a class="dropdown-item" routerLink="/admin/sales"><i class="bi bi-receipt me-2"></i>Sales & Billing</a></li>
+                <li><a class="dropdown-item" routerLink="/admin/loans"><i class="bi bi-cash-coin me-2"></i>Gold Loans</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><strong class="dropdown-header">Reporting</strong></li>
+                <li><a class="dropdown-item" routerLink="/admin/reports"><i class="bi bi-graph-up me-2"></i>Reports & Analytics</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><strong class="dropdown-header">Configuration</strong></li>
+                @if (auth.hasAnyRole(['SuperAdmin'])) {
+                  <li><a class="dropdown-item" routerLink="/admin/settings"><i class="bi bi-gear me-2"></i>Settings</a></li>
+                }
+              </ul>
+            </div>
+          }
+
+          <!-- Customer Account Menu -->
+          @if (auth.hasAnyRole(['Customer'])) {
+            <div class="dropdown">
+              <button class="nav-link dropdown-toggle" data-bs-toggle="dropdown" type="button">
+                <i class="bi bi-wallet2 me-1"></i>Account
+              </button>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" routerLink="/customer/dashboard"><i class="bi bi-house me-2"></i>Dashboard</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><strong class="dropdown-header">My Information</strong></li>
+                <li><a class="dropdown-item" routerLink="/customer/profile"><i class="bi bi-person me-2"></i>Profile</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><strong class="dropdown-header">My Activities</strong></li>
+                <li><a class="dropdown-item" routerLink="/customer/loans"><i class="bi bi-cash-coin me-2"></i>My Loans</a></li>
+                <li><a class="dropdown-item" routerLink="/customer/orders"><i class="bi bi-receipt me-2"></i>My Orders</a></li>
+              </ul>
+            </div>
+          }
+
+          <button class="btn lux-btn lux-btn-outline" type="button" (click)="goToDashboard()">Dashboard</button>
+
+          <!-- User Profile Dropdown -->
+          <div class="dropdown">
+            <button class="btn lux-btn lux-btn-primary dropdown-toggle" data-bs-toggle="dropdown" type="button">
+              <i class="bi bi-person-circle me-2"></i>{{ displayName() }}
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              @if (auth.hasAnyRole(['Customer'])) {
+                <li><strong class="dropdown-header">Customer Options</strong></li>
+                <li><a class="dropdown-item" routerLink="/customer/profile"><i class="bi bi-person me-2"></i>Profile</a></li>
+              }
+              @if (auth.hasAnyRole(['Staff', 'Admin', 'SuperAdmin'])) {
+                <li><strong class="dropdown-header">Admin Options</strong></li>
+                <li><a class="dropdown-item" routerLink="/admin/dashboard"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
+              }
+              <li><hr class="dropdown-divider"></li>
+              <li><button class="dropdown-item" type="button" (click)="auth.logout()"><i class="bi bi-box-arrow-right me-2"></i>Logout</button></li>
+            </ul>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</nav>

@@ -1,0 +1,48 @@
+# ============================================================
+# Shree Jewellers — MVC Web Frontend Dockerfile
+# ============================================================
+
+FROM mcr.microsoft.com/dotnet/sdk:8.0-bookworm-slim AS build
+WORKDIR /src
+
+COPY ["ShreeJewellers.sln", "./"]
+COPY ["src/ShreeJewellers.Domain/ShreeJewellers.Domain.csproj",          "src/ShreeJewellers.Domain/"]
+COPY ["src/ShreeJewellers.Application/ShreeJewellers.Application.csproj","src/ShreeJewellers.Application/"]
+COPY ["src/ShreeJewellers.Web/ShreeJewellers.Web.csproj",                 "src/ShreeJewellers.Web/"]
+
+RUN dotnet restore "src/ShreeJewellers.Web/ShreeJewellers.Web.csproj"
+
+COPY . .
+WORKDIR "/src/src/ShreeJewellers.Web"
+RUN dotnet build "ShreeJewellers.Web.csproj" -c Release -o /app/build --no-restore
+
+FROM build AS publish
+RUN dotnet publish "ShreeJewellers.Web.csproj" \
+    -c Release \
+    -o /app/publish \
+    --no-restore \
+    --self-contained false \
+    /p:UseAppHost=false
+
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-bookworm-slim AS runtime
+WORKDIR /app
+
+RUN adduser --disabled-password --gecos '' --uid 1001 appuser
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=publish /app/publish .
+RUN chown -R appuser:appuser /app
+
+USER appuser
+
+ENV ASPNETCORE_ENVIRONMENT=Production \
+    ASPNETCORE_URLS=http://+:8081 \
+    DOTNET_RUNNING_IN_CONTAINER=true
+
+EXPOSE 8081
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:8081/health/live || exit 1
+
+ENTRYPOINT ["dotnet", "ShreeJewellers.Web.dll"]

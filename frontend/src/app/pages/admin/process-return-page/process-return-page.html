@@ -1,0 +1,177 @@
+<section class="app-page">
+  <div class="container-fluid">
+    <div class="section-title mb-4">Process Order Return</div>
+
+    @if (!isLoading && order) {
+      <div class="row g-4">
+        <!-- LEFT: Order & Items Selection -->
+        <div class="col-lg-8">
+          <!-- Original Order Info -->
+          <div class="lux-card p-4 mb-4">
+            <h5 class="mb-3">Original Order</h5>
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <div class="info-label">Invoice #</div>
+                <div class="info-value">{{ order.orderNumber }}</div>
+              </div>
+              <div class="col-md-6">
+                <div class="info-label">Order Date</div>
+                <div class="info-value">{{ formatDate(order.orderDate) }}</div>
+              </div>
+              <div class="col-md-6">
+                <div class="info-label">Customer</div>
+                <div class="info-value">{{ order.customerName }}</div>
+              </div>
+              <div class="col-md-6">
+                <div class="info-label">Original Amount</div>
+                <div class="info-value fs-5">{{ formatCurrency(order.netAmount) }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Items Selection -->
+          <div class="lux-card p-4 mb-4">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <h5 class="mb-0">Select Items to Return</h5>
+              <div class="btn-group btn-group-sm" role="group">
+                <button class="btn btn-outline-info" type="button" (click)="selectAllItems()">
+                  <i class="bi bi-check-all me-1"></i> All
+                </button>
+                <button class="btn btn-outline-secondary" type="button" (click)="deselectAllItems()">
+                  <i class="bi bi-x-circle me-1"></i> None
+                </button>
+              </div>
+            </div>
+
+            <div class="items-list">
+              @for (item of order.items; track item.id) {
+                <div class="item-row p-3" [style.background]="isItemSelected(item.id) ? 'rgba(255, 215, 0, 0.1)' : ''">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" 
+                           [id]="'item-' + item.id"
+                           [checked]="isItemSelected(item.id)"
+                           (change)="toggleItemSelection(item.id)">
+                    <label class="form-check-label w-100" [for]="'item-' + item.id">
+                      <div class="d-flex align-items-start justify-content-between">
+                        <div class="flex-grow-1">
+                          <strong>{{ item.productName }}</strong>
+                          <div class="small text-secondary mt-1">
+                            {{ item.skuCode }} • {{ item.purity }} • Qty: {{ item.quantity }} • Weight: {{ item.weightGrams }}g
+                          </div>
+                          <div class="small text-secondary mt-1">
+                            Rate: ₹{{ item.ratePerGram }}/g | Making: ₹{{ item.makingCharges }} | Hallmark: ₹{{ item.hallmarkCharges }}
+                          </div>
+                        </div>
+                        <div class="text-end">
+                          <div class="fw-bold">{{ formatCurrency(item.lineTotal) }}</div>
+                          <span class="badge" [class.badge-success]="isItemSelected(item.id)" 
+                                [class.badge-secondary]="!isItemSelected(item.id)">
+                            {{ getItemStatus(item.id) }}
+                          </span>
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Return Reason Form -->
+          <form [formGroup]="returnForm" class="lux-card p-4">
+            <h5 class="mb-3">Return Details</h5>
+            
+            <div class="mb-3">
+              <label class="form-label">Return Reason <span class="text-danger">*</span></label>
+              <textarea class="form-control" formControlName="returnReason" rows="3"
+                        placeholder="Please provide a detailed reason for the return (minimum 10 characters)"></textarea>
+              @if (returnForm.get('returnReason')?.invalid && returnForm.get('returnReason')?.touched) {
+                <div class="text-danger small mt-1">
+                  @if (returnForm.get('returnReason')?.errors?.['required']) {
+                    Return reason is required
+                  }
+                  @if (returnForm.get('returnReason')?.errors?.['minlength']) {
+                    Minimum 10 characters required
+                  }
+                </div>
+              }
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Refund Mode <span class="text-danger">*</span></label>
+              <select class="form-select" formControlName="refundMode">
+                <option value="Cash">💵 Cash</option>
+                <option value="Card">💳 Card</option>
+                <option value="UPI">📱 UPI</option>
+                <option value="NEFT">🏦 NEFT</option>
+                <option value="StoreCredit">🎁 Store Credit</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Additional Notes</label>
+              <textarea class="form-control" formControlName="notes" rows="2"
+                        placeholder="Add any additional notes about this return"></textarea>
+            </div>
+          </form>
+        </div>
+
+        <!-- RIGHT: Return Summary -->
+        <div class="col-lg-4">
+          <div class="lux-card p-4 sticky-top" style="top: 100px;">
+            <h5 class="mb-3">Return Summary</h5>
+
+            <div class="summary-section mb-4">
+              <div class="summary-label">Items Selected</div>
+              <div class="summary-value">{{ selectedItems.size }}/{{ order.items.length }}</div>
+            </div>
+
+            <div class="summary-section mb-4 p-3" style="background: rgba(255, 215, 0, 0.05); border-radius: 8px; border: 1px solid rgba(255, 215, 0, 0.1);">
+              <div class="summary-sub-label">Original Order Amount</div>
+              <div class="summary-amount">{{ formatCurrency(originalAmount) }}</div>
+              
+              <div class="summary-sub-label mt-3">Return Amount</div>
+              <div class="summary-amount text-danger">{{ formatCurrency(returnAmount) }}</div>
+              
+              <div class="summary-sub-label mt-3">Refund Amount</div>
+              <div class="summary-amount text-success fs-5">{{ formatCurrency(refundAmount) }}</div>
+            </div>
+
+            <div class="alert alert-info mb-3" role="alert">
+              <i class="bi bi-info-circle me-2"></i>
+              <small>Stock will be automatically restored when you process this return</small>
+            </div>
+
+            <div class="d-grid gap-2">
+              <button class="btn lux-btn lux-btn-danger btn-lg" type="button" 
+                      (click)="submitReturn()"
+                      [disabled]="isProcessing || selectedItems.size === 0 || returnForm.invalid">
+                @if (isProcessing) {
+                  <span class="spinner-border spinner-border-sm me-2"></span>
+                  Processing...
+                } @else {
+                  <i class="bi bi-arrow-counterclockwise me-2"></i>
+                  Process Return
+                }
+              </button>
+              <button class="btn btn-outline-secondary" type="button" (click)="cancel()" [disabled]="isProcessing">
+                Cancel
+              </button>
+            </div>
+
+            <div class="alert alert-warning mt-3 mb-0" role="alert">
+              <small><strong>Warning:</strong> This action cannot be undone. Please verify all details before confirming.</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    } @else if (isLoading) {
+      <div class="text-center py-5">
+        <div class="spinner-border text-warning" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="text-secondary mt-2">Loading order details...</p>
+      </div>
+    }
+  </div>
+</section>

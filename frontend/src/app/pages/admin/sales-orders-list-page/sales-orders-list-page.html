@@ -1,0 +1,183 @@
+<section class="app-page">
+  <div class="container-fluid">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <div class="section-title">Sales Orders</div>
+      <a routerLink="/admin/sales/create" class="btn lux-btn lux-btn-primary">
+        <i class="bi bi-plus-lg me-2"></i> New Order
+      </a>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="lux-card p-4 mb-4">
+      <form [formGroup]="filterForm" class="row g-3">
+        <div class="col-md-6 col-lg-2">
+          <label class="form-label small">From Date</label>
+          <input class="form-control" type="date" formControlName="fromDate">
+        </div>
+        <div class="col-md-6 col-lg-2">
+          <label class="form-label small">To Date</label>
+          <input class="form-control" type="date" formControlName="toDate">
+        </div>
+        <div class="col-md-6 col-lg-2">
+          <label class="form-label small">Customer</label>
+          <input class="form-control" type="text" formControlName="customerSearch" placeholder="Search name/ID">
+        </div>
+        <div class="col-md-6 col-lg-2">
+          <label class="form-label small">Order Status</label>
+          <select class="form-select" formControlName="status">
+            <option value="">All Statuses</option>
+            <option value="Draft">Draft</option>
+            <option value="Confirmed">Confirmed</option>
+            <option value="Delivered">Delivered</option>
+            <option value="Cancelled">Cancelled</option>
+            <option value="Returned">Returned</option>
+          </select>
+        </div>
+        <div class="col-md-6 col-lg-2">
+          <label class="form-label small">Payment Status</label>
+          <select class="form-select" formControlName="paymentStatus">
+            <option value="">All Payments</option>
+            <option value="Pending">Pending</option>
+            <option value="PartiallyPaid">Partially Paid</option>
+            <option value="Paid">Paid</option>
+            <option value="Refunded">Refunded</option>
+          </select>
+        </div>
+        <div class="col-md-6 col-lg-2 d-flex align-items-end">
+          <button class="btn btn-secondary w-100" type="button" (click)="resetFilters()">
+            <i class="bi bi-arrow-clockwise me-2"></i> Reset
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Stats Section -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-4">
+        <div class="stat-card p-3">
+          <div class="stat-value">{{ totalCount }}</div>
+          <div class="stat-label">Total Orders</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="stat-card p-3">
+          <div class="stat-value">{{ (orders | slice:0:20).length }}</div>
+          <div class="stat-label">Showing this page</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="stat-card p-3">
+          <div class="stat-value">{{ totalPages }}</div>
+          <div class="stat-label">Total Pages</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Orders Table -->
+    <div class="lux-card p-4 mb-4">
+      @if (isLoading) {
+        <div class="text-center py-5">
+          <div class="spinner-border text-warning" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="text-secondary mt-2">Loading orders...</p>
+        </div>
+      } @else if (orders.length === 0) {
+        <div class="text-center py-5 text-secondary">
+          <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+          <p class="mt-2">No orders found</p>
+        </div>
+      } @else {
+        <div class="table-responsive">
+          <table class="table">
+            <thead style="background: rgba(255, 215, 0, 0.1);">
+              <tr>
+                <th>Invoice #</th>
+                <th>Date</th>
+                <th>Customer</th>
+                <th>Net Amount</th>
+                <th>Order Status</th>
+                <th>Payment Status</th>
+                <th>Balance Due</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (order of orders; track order.id) {
+                <tr style="border-bottom: 1px solid rgba(255, 215, 0, 0.1);">
+                  <td>
+                    <strong class="text-warning">{{ order.orderNumber }}</strong>
+                  </td>
+                  <td class="small text-secondary">{{ formatDate(order.orderDate) }}</td>
+                  <td>
+                    <div class="customer-info">
+                      <strong>{{ order.customerName || order.walkInCustomerName }}</strong>
+                      @if (order.customerCode) {
+                        <div class="small text-secondary">{{ order.customerCode }}</div>
+                      }
+                    </div>
+                  </td>
+                  <td class="font-weight-bold">{{ formatCurrency(order.netAmount) }}</td>
+                  <td>
+                    <span [class]="'badge ' + getStatusBadgeClass(order.status)">
+                      {{ order.status }}
+                    </span>
+                  </td>
+                  <td>
+                    <span [class]="'badge ' + getPaymentStatusBadgeClass(order.paymentStatus)">
+                      {{ order.paymentStatus }}
+                    </span>
+                  </td>
+                  <td [style.color]="order.balanceDue > 0 ? '#ff6b6b' : '#51cf66'">
+                    {{ order.balanceDue > 0 ? '+' : '' }}{{ formatCurrency(order.balanceDue) }}
+                  </td>
+                  <td>
+                    <div class="btn-group btn-group-sm" role="group">
+                      <a [routerLink]="['/admin/sales/view', order.id]" class="btn btn-outline-info" title="View">
+                        <i class="bi bi-eye"></i>
+                      </a>
+                      <a [routerLink]="['/admin/sales/edit', order.id]" class="btn btn-outline-warning" title="Edit">
+                        <i class="bi bi-pencil"></i>
+                      </a>
+                      @if (order.status === 'Confirmed' || order.status === 'Delivered') {
+                        <a [routerLink]="['/admin/sales/return', order.id]" class="btn btn-outline-danger" title="Process Return">
+                          <i class="bi bi-arrow-counterclockwise"></i>
+                        </a>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+
+    <!-- Pagination -->
+    @if (orders.length > 0) {
+      <div class="d-flex align-items-center justify-content-between">
+        <div class="text-secondary small">
+          Showing {{ displayStart }} to {{ displayEnd }} of {{ totalCount }}
+        </div>
+        <nav>
+          <ul class="pagination justify-content-center mb-0">
+            <li class="page-item" [class.disabled]="currentPage === 1">
+              <button class="page-link" (click)="previousPage()" [disabled]="currentPage === 1">
+                <i class="bi bi-chevron-left"></i> Previous
+              </button>
+            </li>
+            <li class="page-item active">
+              <span class="page-link">Page {{ currentPage }} of {{ totalPages }}</span>
+            </li>
+            <li class="page-item" [class.disabled]="currentPage >= totalPages">
+              <button class="page-link" (click)="nextPage()" [disabled]="currentPage >= totalPages">
+                Next <i class="bi bi-chevron-right"></i>
+              </button>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    }
+  </div>
+</section>

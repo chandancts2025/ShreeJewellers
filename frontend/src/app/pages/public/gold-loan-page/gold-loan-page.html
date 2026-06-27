@@ -1,0 +1,55 @@
+<section class="app-page">
+  <div class="container">
+    <div class="hero-panel p-4 p-lg-5 mb-5">
+      <div class="row g-4 align-items-center">
+        <div class="col-lg-7">
+          <div class="section-kicker mb-2">Gold Loan Information</div>
+          <h1 class="font-display display-4 mb-3">Secure liquidity against your gold</h1>
+          <p class="lead text-white-50">
+            {{ data?.interestRatePercent }}% {{ data?.interestCalculationType }} interest, up to
+            {{ data?.loanToValuePercent }}% LTV, with transparent documentation and repayment visibility.
+          </p>
+
+          @if (isAuthenticated) {
+            @if (isCustomer) {
+              <a class="btn lux-btn lux-btn-primary mt-3 me-2" routerLink="/customer/loans">View My Loans</a>
+              <span class="text-white-75 d-block mt-3">You are logged in as a customer. To apply for a new gold loan, please contact branch staff or visit the admin desk.</span>
+            }
+            @if (!isCustomer && isStaffOrAdmin) {
+              <a class="btn lux-btn lux-btn-primary mt-3" routerLink="/admin/loans">Manage Loans</a>
+            }
+          }
+          @if (!isAuthenticated) {
+            <a class="btn lux-btn lux-btn-primary mt-3 me-2" routerLink="/login">Log in</a>
+            <a class="btn lux-btn lux-btn-secondary mt-3" routerLink="/register">Register</a>
+          }
+        </div>
+        <div class="col-lg-5">
+          <div class="lux-card p-4 text-dark">
+            <div class="small text-uppercase text-secondary mb-2">Loan Snapshot</div>
+            <div class="mb-2"><strong>Tenure:</strong> {{ data?.defaultTenureMonths }} months</div>
+            <div class="mb-2"><strong>Interest Type:</strong> {{ data?.interestCalculationType }}</div>
+            <div><strong>Documents:</strong> {{ data?.requiredDocuments?.join(', ') }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+      <div class="col-lg-6">
+        <div class="lux-card p-4 h-100">
+          <div class="section-kicker mb-2">Process</div>
+          <div class="section-title mb-3">Step-by-step journey</div>
+          <ol class="mb-0">
+            @for (step of data?.steps ?? []; track step) {
+              <li class="mb-3">{{ step }}</li>
+            }
+          </ol>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <app-emi-calculator></app-emi-calculator>
+      </div>
+    </div>
+  </div>
+</section>

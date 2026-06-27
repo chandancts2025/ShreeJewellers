@@ -1,0 +1,109 @@
+.info-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(255, 215, 0, 0.6);
+  margin-bottom: 0.25rem;
+  font-weight: 600;
+}
+
+.info-value {
+  font-size: 1rem;
+  color: #ffd700;
+  font-weight: 500;
+}
+
+.items-list {
+  .item-row {
+    border-bottom: 1px solid rgba(255, 215, 0, 0.1);
+    transition: all 0.2s ease;
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(255, 215, 0, 0.05) !important;
+    }
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    .form-check-input {
+      border-color: rgba(255, 215, 0, 0.3);
+      accent-color: #ffd700;
+      cursor: pointer;
+
+      &:checked {
+        background-color: #ffd700;
+        border-color: #ffd700;
+      }
+    }
+
+    .form-check-label {
+      cursor: pointer;
+    }
+  }
+}
+
+.summary-section {
+  .summary-label {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: rgba(255, 215, 0, 0.6);
+    margin-bottom: 0.5rem;
+  }
+
+  .summary-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #ffd700;
+  }
+
+  .summary-sub-label {
+    font-size: 0.8rem;
+    color: rgba(255, 215, 0, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .summary-amount {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #ffd700;
+  }
+}
+
+.alert-info {
+  background: rgba(13, 202, 240, 0.1);
+  border-color: rgba(13, 202, 240, 0.3);
+  color: #0dcaf0;
+}
+
+.alert-warning {
+  background: rgba(255, 193, 7, 0.1);
+  border-color: rgba(255, 193, 7, 0.3);
+  color: #ffc107;
+
+  small {
+    color: #ffc107;
+  }
+}
+
+.badge {
+  padding: 0.35rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+
+  &.badge-success {
+    background-color: #198754;
+  }
+
+  &.badge-secondary {
+    background-color: #6c757d;
+  }
+}
+
+.sticky-top {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}

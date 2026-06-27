@@ -1,0 +1,40 @@
+<section class="app-page">
+  <div class="container">
+    <div class="section-kicker mb-2">Admin Overview</div>
+    <div class="section-title mb-4">Business Dashboard</div>
+    <div class="row g-3 mb-4">
+      <div class="col-md-6 col-xl-3"><div class="lux-card admin-kpi h-100"><div class="small text-secondary">Today's Sales</div><div class="font-display fs-2">₹{{ data?.todaySalesAmount | number:'1.0-0' }}</div></div></div>
+      <div class="col-md-6 col-xl-3"><div class="lux-card admin-kpi h-100"><div class="small text-secondary">Active Loans</div><div class="font-display fs-2">{{ data?.activeLoanCount }}</div></div></div>
+      <div class="col-md-6 col-xl-3"><div class="lux-card admin-kpi h-100"><div class="small text-secondary">Stock Value</div><div class="font-display fs-2">₹{{ data?.stockValueAtLivePrice | number:'1.0-0' }}</div></div></div>
+      <div class="col-md-6 col-xl-3"><div class="lux-card admin-kpi h-100"><div class="small text-secondary">Pending KYC</div><div class="font-display fs-2">{{ data?.pendingKYCCount }}</div></div></div>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-lg-6">
+        <div class="lux-card p-4 h-100">
+          <div class="font-display fs-2 mb-3">Sales Trend</div>
+          @for (point of data?.salesTrend12Months ?? []; track point.month) {
+            <div class="mb-3">
+              <div class="d-flex justify-content-between small mb-1">
+                <span>{{ point.month }}</span>
+                <span>₹{{ point.amount | number:'1.0-0' }}</span>
+              </div>
+              <div class="chart-bar" [style.width.%]="(point.amount / (data?.todaySalesAmount || 1)) * 100"></div>
+            </div>
+          }
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="lux-card p-4 h-100">
+          <div class="font-display fs-2 mb-3">Category Mix</div>
+          @for (row of data?.salesByCategory ?? []; track row.category) {
+            <div class="d-flex justify-content-between border-bottom py-2">
+              <span>{{ row.category }}</span>
+              <span>{{ row.percent }}%</span>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

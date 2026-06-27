@@ -1,0 +1,163 @@
+version: '3.9'
+
+# ============================================================
+# Shree Jewellers — Docker Compose
+# Services: nginx | api | web | sqlserver
+# ============================================================
+
+services:
+
+  # ── Nginx Reverse Proxy ─────────────────────────────────────
+  nginx:
+    image: nginx:1.25.3-alpine
+    container_name: sj-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./nginx/logs:/var/log/nginx
+    depends_on:
+      api:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+    networks:
+      - sj-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ── Web API ─────────────────────────────────────────────────
+  api:
+    build:
+      context: ../..
+      dockerfile: Deployment/Docker/Dockerfile.API
+    container_name: sj-api
+    image: shreejewellers/api:${IMAGE_TAG:-latest}
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Production}
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=ShreeJewellers;User=sa;Password=${SQL_SA_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=true;Connect Timeout=30
+      - JwtSettings__SecretKey=${JWT_SECRET_KEY}
+      - JwtSettings__Issuer=ShreeJewellers.API
+      - JwtSettings__Audience=ShreeJewellers.Web
+      - JwtSettings__AccessTokenExpiryMinutes=15
+      - JwtSettings__RefreshTokenExpiryDays=7
+      - GoldPriceApi__ApiKey=${GOLD_API_KEY}
+      - GoldPriceApi__BaseUrl=https://www.goldapi.io/api/
+      - GoldPriceApi__RefreshIntervalMinutes=15
+      - EmailSettings__SmtpHost=${SMTP_HOST}
+      - EmailSettings__SmtpPort=${SMTP_PORT:-587}
+      - EmailSettings__SenderEmail=${SMTP_SENDER_EMAIL}
+      - EmailSettings__SenderPassword=${SMTP_SENDER_PASSWORD}
+      - TwilioSettings__AccountSid=${TWILIO_ACCOUNT_SID}
+      - TwilioSettings__AuthToken=${TWILIO_AUTH_TOKEN}
+      - TwilioSettings__FromNumber=${TWILIO_FROM_NUMBER}
+      - EncryptionSettings__AESKey=${AES_ENCRYPTION_KEY}
+      - FileStorage__BasePath=/app/secure-uploads
+      - Cors__AllowedOrigins__0=${WEB_ORIGIN:-https://shreejewellers.com}
+    volumes:
+      - sj-uploads:/app/secure-uploads
+      - sj-logs:/app/logs
+    networks:
+      - sj-network
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/live"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # ── MVC Web Frontend ─────────────────────────────────────────
+  web:
+    build:
+      context: ../..
+      dockerfile: Deployment/Docker/Dockerfile.Web
+    container_name: sj-web
+    image: shreejewellers/web:${IMAGE_TAG:-latest}
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Production}
+      - ApiSettings__BaseUrl=http://api:8080
+    networks:
+      - sj-network
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health/live"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  # ── SQL Server 2022 ──────────────────────────────────────────
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-CU11-ubuntu-22.04
+    container_name: sj-sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${SQL_SA_PASSWORD}
+      - MSSQL_PID=Express          # Use Standard or Enterprise for production
+      - MSSQL_COLLATION=SQL_Latin1_General_CP1_CI_AS
+    ports:
+      - "127.0.0.1:1433:1433"      # Bind to localhost ONLY — not exposed externally
+    volumes:
+      - sj-sqldata:/var/opt/mssql/data
+      - sj-sqllog:/var/opt/mssql/log
+      - sj-sqlbackup:/var/opt/mssql/backup
+      - ./SQL:/docker-entrypoint-initdb.d:ro
+    networks:
+      - sj-network
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P '$$MSSQL_SA_PASSWORD' -Q 'SELECT 1' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 10
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+
+# ── Volumes ───────────────────────────────────────────────────
+volumes:
+  sj-sqldata:
+    driver: local
+  sj-sqllog:
+    driver: local
+  sj-sqlbackup:
+    driver: local
+  sj-uploads:
+    driver: local
+  sj-logs:
+    driver: local
+
+# ── Network ───────────────────────────────────────────────────
+networks:
+  sj-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

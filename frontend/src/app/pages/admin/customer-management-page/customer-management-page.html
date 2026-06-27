@@ -1,0 +1,330 @@
+<section class="app-page customer-page">
+  <div class="container-fluid px-4">
+    <div class="page-heading">
+      <div>
+        <div class="section-kicker">CRM</div>
+        <h1 class="section-title mb-1">Customer Management</h1>
+        <p class="text-secondary mb-0">Search, review KYC, update profiles, and control account access.</p>
+      </div>
+      @if (canManageCustomers) {
+        <button class="btn lux-btn lux-btn-primary" type="button" (click)="openCreatePanel()">
+          <i class="bi bi-person-plus me-2"></i>
+          New Account
+        </button>
+      }
+    </div>
+
+    <div class="metric-grid">
+      <div class="metric-card">
+        <div class="metric-label">Total Customers</div>
+        <div class="metric-value">{{ totalCustomers | number:'1.0-0' }}</div>
+        <div class="metric-note">Matching current filters</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Active On Page</div>
+        <div class="metric-value">{{ activeOnPage }}</div>
+        <div class="metric-note">{{ customers.length }} visible records</div>
+      </div>
+      <div class="metric-card" [class.metric-danger]="pendingKycOnPage">
+        <div class="metric-label">Pending KYC</div>
+        <div class="metric-value">{{ pendingKycOnPage }}</div>
+        <div class="metric-note">Visible records awaiting review</div>
+      </div>
+    </div>
+
+    <div class="customer-grid">
+      <div class="lux-card p-4">
+        <form [formGroup]="filters" class="filter-row" (ngSubmit)="applyFilters()">
+          <div>
+            <label class="form-label">Search</label>
+            <input class="form-control" formControlName="search" placeholder="Name, code, phone, email">
+          </div>
+          <div>
+            <label class="form-label">KYC</label>
+            <select class="form-select" formControlName="kycStatus">
+              <option value="">All KYC</option>
+              <option value="Pending">Pending</option>
+              <option value="Verified">Verified</option>
+              <option value="Rejected">Rejected</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Status</label>
+            <select class="form-select" formControlName="isActive">
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+          <div class="filter-actions">
+            <button class="btn lux-btn lux-btn-primary" type="submit">
+              <i class="bi bi-search me-2"></i>
+              Search
+            </button>
+          </div>
+        </form>
+
+        <div class="table-responsive mt-4">
+          <table class="table align-middle admin-table">
+            <thead>
+              <tr>
+                <th>Customer</th>
+                <th>Phone</th>
+                <th>Code</th>
+                <th>KYC</th>
+                <th>Status</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @if (isLoading) {
+                <tr>
+                  <td colspan="6" class="text-center text-secondary py-5">Loading customers...</td>
+                </tr>
+              } @else {
+                @for (customer of customers; track customer.userId) {
+                  <tr [class.table-active]="selectedCustomer?.userId === customer.userId">
+                    <td>
+                      <button class="link-button" type="button" (click)="selectCustomer(customer)">
+                        {{ customer.fullName }}
+                      </button>
+                      <div class="small text-secondary">{{ customer.email }}</div>
+                    </td>
+                    <td>{{ customer.phoneNumber || '-' }}</td>
+                    <td>{{ customer.customerCode || '-' }}</td>
+                    <td><span class="status-badge" [ngClass]="kycClass(customer.kycStatus)">{{ customer.kycStatus }}</span></td>
+                    <td>
+                      <span class="status-badge" [class.status-active]="customer.isActive" [class.status-danger]="!customer.isActive">
+                        {{ customer.isActive ? 'Active' : 'Inactive' }}
+                      </span>
+                    </td>
+                    <td class="text-end">
+                      <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-primary" type="button" (click)="selectCustomer(customer)" title="Open profile">
+                          <i class="bi bi-eye"></i>
+                        </button>
+                        @if (canManageCustomers) {
+                          <button class="btn btn-outline-success" type="button" (click)="verify(customer)" [disabled]="customer.kycStatus === 'Verified'" title="Verify KYC">
+                            <i class="bi bi-shield-check"></i>
+                          </button>
+                          <button class="btn btn-outline-warning" type="button" (click)="reject(customer)" [disabled]="customer.kycStatus === 'Rejected'" title="Reject KYC">
+                            <i class="bi bi-shield-x"></i>
+                          </button>
+                          <button class="btn btn-outline-secondary" type="button" (click)="toggleActive(customer)" title="Toggle account">
+                            <i class="bi" [class.bi-person-x]="customer.isActive" [class.bi-person-check]="!customer.isActive"></i>
+                          </button>
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="6" class="text-center text-secondary py-5">No customers match the current filters.</td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+
+        @if (totalPages > 1) {
+          <div class="pagination-row">
+            <button class="btn btn-outline-secondary btn-sm" type="button" [disabled]="currentPage === 1" (click)="onPageChange(currentPage - 1)">Previous</button>
+            <div class="page-dots">
+              @for (page of pages; track page) {
+                <button class="page-dot" type="button" [class.active]="page === currentPage" (click)="onPageChange(page)">{{ page }}</button>
+              }
+            </div>
+            <button class="btn btn-outline-secondary btn-sm" type="button" [disabled]="currentPage === totalPages" (click)="onPageChange(currentPage + 1)">Next</button>
+          </div>
+        }
+      </div>
+
+      <div class="lux-card p-4">
+        @if (activePanel === 'create') {
+          <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+            <div>
+              <h2 class="panel-title">Create Account</h2>
+              <div class="text-secondary small">Admin-created accounts receive a temporary password by email.</div>
+            </div>
+            <button class="btn btn-outline-secondary btn-sm" type="button" (click)="activePanel = 'details'">Close</button>
+          </div>
+
+          <form [formGroup]="createForm" class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">First Name</label>
+              <input class="form-control" formControlName="firstName" [class.is-invalid]="isInvalid(createForm, 'firstName')">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Last Name</label>
+              <input class="form-control" formControlName="lastName" [class.is-invalid]="isInvalid(createForm, 'lastName')">
+            </div>
+            <div class="col-md-7">
+              <label class="form-label">Email</label>
+              <input class="form-control" type="email" formControlName="email" [class.is-invalid]="isInvalid(createForm, 'email')">
+            </div>
+            <div class="col-md-5">
+              <label class="form-label">Role</label>
+              <select class="form-select" formControlName="role">
+                <option value="Customer">Customer</option>
+                <option value="Staff">Staff</option>
+                <option value="Admin">Admin</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Phone</label>
+              <input class="form-control" formControlName="phoneNumber" [class.is-invalid]="isInvalid(createForm, 'phoneNumber')">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Alternate Phone</label>
+              <input class="form-control" formControlName="alternatePhone">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Date of Birth</label>
+              <input class="form-control" type="date" formControlName="dateOfBirth" [class.is-invalid]="isInvalid(createForm, 'dateOfBirth')">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Gender</label>
+              <select class="form-select" formControlName="gender">
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Address Line 1</label>
+              <input class="form-control" formControlName="addressLine1" [class.is-invalid]="isInvalid(createForm, 'addressLine1')">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Address Line 2</label>
+              <input class="form-control" formControlName="addressLine2">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">City</label>
+              <input class="form-control" formControlName="city" [class.is-invalid]="isInvalid(createForm, 'city')">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">State</label>
+              <input class="form-control" formControlName="state" [class.is-invalid]="isInvalid(createForm, 'state')">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">PIN Code</label>
+              <input class="form-control" formControlName="pinCode" [class.is-invalid]="isInvalid(createForm, 'pinCode')">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Aadhaar</label>
+              <input class="form-control" formControlName="aadhaarNumber" maxlength="12">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">PAN</label>
+              <input class="form-control text-uppercase" formControlName="panNumber" maxlength="10">
+            </div>
+            <div class="col-12 d-flex flex-wrap gap-2">
+              <button class="btn lux-btn lux-btn-primary" type="button" (click)="createCustomer()" [disabled]="isCreating">
+                <i class="bi bi-person-plus me-2"></i>
+                {{ isCreating ? 'Creating...' : 'Create Account' }}
+              </button>
+              <button class="btn btn-outline-secondary" type="button" (click)="resetCreateForm()">Reset</button>
+            </div>
+          </form>
+        } @else if (selectedCustomer) {
+          <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+            <div>
+              <h2 class="panel-title">{{ selectedCustomer.fullName }}</h2>
+              <div class="text-secondary small">{{ selectedCustomer.customerCode || 'No customer code' }} / Joined {{ selectedCustomer.createdAt | date:'mediumDate' }}</div>
+            </div>
+            <span class="status-badge" [ngClass]="kycClass(selectedCustomer.kycStatus)">{{ selectedCustomer.kycStatus }}</span>
+          </div>
+
+          @if (isLoadingDetail) {
+            <div class="empty-state">Loading customer profile...</div>
+          } @else {
+            <form [formGroup]="detailForm" class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">First Name</label>
+                <input class="form-control" formControlName="firstName" [class.is-invalid]="isInvalid(detailForm, 'firstName')">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Last Name</label>
+                <input class="form-control" formControlName="lastName" [class.is-invalid]="isInvalid(detailForm, 'lastName')">
+              </div>
+              <div class="col-md-7">
+                <label class="form-label">Email</label>
+                <input class="form-control" type="email" formControlName="email" [class.is-invalid]="isInvalid(detailForm, 'email')">
+              </div>
+              <div class="col-md-5">
+                <label class="form-label">Active</label>
+                <select class="form-select" formControlName="isActive">
+                  <option [ngValue]="true">Active</option>
+                  <option [ngValue]="false">Inactive</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Phone</label>
+                <input class="form-control" formControlName="phoneNumber" [class.is-invalid]="isInvalid(detailForm, 'phoneNumber')">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Alternate Phone</label>
+                <input class="form-control" formControlName="alternatePhone">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Date of Birth</label>
+                <input class="form-control" type="date" formControlName="dateOfBirth">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Gender</label>
+                <select class="form-select" formControlName="gender">
+                  <option value="">Not set</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div class="col-12">
+                <label class="form-label">Address Line 1</label>
+                <input class="form-control" formControlName="addressLine1" [class.is-invalid]="isInvalid(detailForm, 'addressLine1')">
+              </div>
+              <div class="col-12">
+                <label class="form-label">Address Line 2</label>
+                <input class="form-control" formControlName="addressLine2">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">City</label>
+                <input class="form-control" formControlName="city" [class.is-invalid]="isInvalid(detailForm, 'city')">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">State</label>
+                <input class="form-control" formControlName="state" [class.is-invalid]="isInvalid(detailForm, 'state')">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">PIN Code</label>
+                <input class="form-control" formControlName="pinCode" [class.is-invalid]="isInvalid(detailForm, 'pinCode')">
+              </div>
+
+              <div class="col-12 d-flex flex-wrap gap-2">
+                @if (canManageCustomers) {
+                  <button class="btn lux-btn lux-btn-primary" type="button" (click)="saveCustomer()" [disabled]="isSaving">
+                    <i class="bi bi-check2-circle me-2"></i>
+                    {{ isSaving ? 'Saving...' : 'Save Profile' }}
+                  </button>
+                  <button class="btn btn-outline-success" type="button" (click)="verify(selectedCustomer)" [disabled]="selectedCustomer.kycStatus === 'Verified'">Verify KYC</button>
+                  <button class="btn btn-outline-warning" type="button" (click)="reject(selectedCustomer)" [disabled]="selectedCustomer.kycStatus === 'Rejected'">Reject KYC</button>
+                  <button class="btn btn-outline-secondary" type="button" (click)="toggleActive(selectedCustomer)">
+                    {{ selectedCustomer.isActive ? 'Deactivate' : 'Activate' }}
+                  </button>
+                }
+              </div>
+            </form>
+          }
+        } @else {
+          <div class="empty-state">
+            <div>
+              <i class="bi bi-person-lines-fill fs-1 d-block mb-3"></i>
+              Select a customer to review the full profile.
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</section>

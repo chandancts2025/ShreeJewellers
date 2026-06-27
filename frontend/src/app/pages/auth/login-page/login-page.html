@@ -1,0 +1,40 @@
+<section class="app-page">
+  <div class="container" style="max-width:560px;">
+    <div class="lux-card p-4 p-lg-5">
+      <div class="section-kicker mb-2">Sign In</div>
+      <div class="section-title mb-4">Access your account</div>
+      <form [formGroup]="form" (ngSubmit)="submit()" class="row g-3">
+        <div class="col-12">
+          <label class="form-label">Email or Customer Code</label>
+          <input class="form-control" formControlName="username">
+        </div>
+        <div class="col-12">
+          <label class="form-label">Password</label>
+          <div class="input-group">
+            <input class="form-control" [type]="showPassword() ? 'text' : 'password'" formControlName="password">
+            <button class="btn btn-outline-secondary" type="button" (click)="showPassword.set(!showPassword())">
+              <i class="bi" [class.bi-eye]="!showPassword()" [class.bi-eye-slash]="showPassword()"></i>
+            </button>
+          </div>
+        </div>
+        <div class="col-12 d-flex justify-content-between align-items-center">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" formControlName="rememberMe" id="rememberMe">
+            <label class="form-check-label" for="rememberMe">Remember me</label>
+          </div>
+          <button type="button" class="btn btn-link p-0" (click)="auth.forgotPassword(form.controls.username.value).subscribe()">
+            Forgot Password
+          </button>
+        </div>
+        <div class="col-12">
+          <button class="btn lux-btn lux-btn-primary w-100" [disabled]="isSubmitting">
+            {{ isSubmitting ? 'Signing in...' : 'Login' }}
+          </button>
+        </div>
+      </form>
+      <div class="small text-secondary mt-4">
+        New here? <a routerLink="/register" class="fw-bold">Create an account</a>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,40 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+*.lock.json
+packages/
+
+## Secrets — NEVER commit these
+.env
+*.env
+appsettings.Production.json
+appsettings.Staging.json
+**/UserSecrets/
+secrets.json
+
+## Logs & uploads
+logs/
+secure-uploads/
+*.log
+
+## Test results
+TestResults/
+coverage/
+*.trx
+*.cobertura.xml
+
+## Docker
+.dockerignore
+
+## OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+## IDE
+.idea/
+*.swp
+*.swo

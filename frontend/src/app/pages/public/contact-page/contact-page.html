@@ -1,0 +1,67 @@
+<section class="app-page">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-5">
+        <div class="lux-card p-4 h-100">
+          <div class="section-kicker mb-2">Visit Us</div>
+          <div class="section-title mb-4">{{ data?.shopName }}</div>
+          <div class="mb-3">
+            <div class="fw-bold">Address</div>
+            <div class="text-secondary">{{ data?.address }}</div>
+          </div>
+          <div class="mb-3">
+            <div class="fw-bold">Phone</div>
+            <a class="text-secondary" [href]="'tel:' + data?.phone">{{ data?.phone }}</a>
+          </div>
+          <div class="mb-3">
+            <div class="fw-bold">Email</div>
+            <a class="text-secondary" [href]="'mailto:' + data?.email">{{ data?.email }}</a>
+          </div>
+          <div class="mb-3">
+            <div class="fw-bold">WhatsApp</div>
+            <a class="text-secondary" [href]="'https://wa.me/' + data?.whatsAppNumber" target="_blank" rel="noreferrer">
+              Chat on WhatsApp
+            </a>
+          </div>
+          <div>
+            <div class="fw-bold">Hours</div>
+            <div class="text-secondary">{{ data?.businessHours }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-7">
+        <div class="lux-card p-4">
+          <div class="section-kicker mb-2">Contact Form</div>
+          <div class="section-title mb-4">We would love to help</div>
+          <form [formGroup]="form" (ngSubmit)="submit()" class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Name</label>
+              <input class="form-control" formControlName="name">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Phone</label>
+              <input class="form-control" formControlName="phone">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Email</label>
+              <input class="form-control" formControlName="email">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Message</label>
+              <textarea class="form-control" rows="5" formControlName="message"></textarea>
+            </div>
+            <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-3">
+              <button class="btn lux-btn lux-btn-primary" [disabled]="isSubmitting">
+                {{ isSubmitting ? 'Sending...' : 'Send Message' }}
+              </button>
+              <div class="small text-secondary">Your message is saved and shared with the shop team.</div>
+            </div>
+          </form>
+        </div>
+        <div class="lux-card p-3 mt-4">
+          <iframe [attr.src]="data?.mapEmbedUrl" width="100%" height="280" style="border:0; border-radius:1rem;"></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

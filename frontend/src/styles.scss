@@ -1,0 +1,147 @@
+:root {
+  --sj-charcoal: #1a1a2e;
+  --sj-gold: #c9a84c;
+  --sj-gold-soft: #ecdba3;
+  --sj-cream: #faf8f2;
+  --sj-muted: #8b8b9a;
+  --sj-danger: #b94a48;
+  --sj-success: #2f6f54;
+  --sj-surface: rgba(255, 255, 255, 0.82);
+  --sj-shadow: 0 18px 50px rgba(26, 26, 46, 0.12);
+}
+
+body {
+  margin: 0;
+  font-family: 'Lato', sans-serif;
+  color: var(--sj-charcoal);
+  background:
+    radial-gradient(circle at top left, rgba(201, 168, 76, 0.14), transparent 28%),
+    linear-gradient(180deg, #fffdf7 0%, var(--sj-cream) 100%);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.font-display {
+  font-family: 'Cormorant Garamond', serif;
+}
+
+.lux-card {
+  border: 1px solid rgba(201, 168, 76, 0.18);
+  border-radius: 1.25rem;
+  background: var(--sj-surface);
+  box-shadow: var(--sj-shadow);
+  backdrop-filter: blur(14px);
+}
+
+.lux-btn {
+  border-radius: 999px;
+  padding: 0.8rem 1.4rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+  transition: transform 0.2s ease, opacity 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.lux-btn:hover,
+.lux-btn:focus {
+  transform: translateY(-1px);
+  opacity: 0.95;
+}
+
+.lux-btn-primary {
+  background: linear-gradient(135deg, var(--sj-gold) 0%, #b8912d 100%);
+  color: white;
+}
+
+.lux-btn-secondary {
+  background: #f8f6ef;
+  color: var(--sj-charcoal);
+  border-color: rgba(26, 26, 46, 0.15);
+}
+
+.lux-btn-outline,
+.lux-btn-outline-danger {
+  background: transparent;
+  color: var(--sj-charcoal);
+  border-color: rgba(26, 26, 46, 0.18);
+}
+
+.lux-btn-outline-danger {
+  color: var(--sj-danger);
+  border-color: var(--sj-danger);
+}
+
+.lux-btn-warning {
+  background: #f4d07b;
+  color: var(--sj-charcoal);
+}
+
+.lux-btn-danger {
+  background: var(--sj-danger);
+  color: white;
+}
+
+.section-title {
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 700;
+}
+
+.section-kicker {
+  letter-spacing: 0.2rem;
+  text-transform: uppercase;
+  color: var(--sj-gold);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.hero-panel {
+  position: relative;
+  overflow: hidden;
+  border-radius: 2rem;
+  background: linear-gradient(145deg, rgba(26, 26, 46, 0.95), rgba(42, 42, 66, 0.9));
+  color: white;
+  box-shadow: 0 30px 80px rgba(26, 26, 46, 0.28);
+}
+
+.navbar-blur {
+  background: rgba(250, 248, 242, 0.92);
+  backdrop-filter: blur(18px);
+}
+
+.price-strip {
+  background: linear-gradient(90deg, var(--sj-charcoal), #272744);
+  color: white;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.status-active,
+.status-verified,
+.status-paid {
+  background: rgba(47, 111, 84, 0.12);
+  color: var(--sj-success);
+}
+
+.status-pending,
+.status-warning {
+  background: rgba(201, 168, 76, 0.16);
+  color: #8a6d1d;
+}
+
+.status-danger,
+.status-defaulted,
+.status-rejected {
+  background: rgba(185, 74, 72, 0.13);
+  color: var(--sj-danger);
+}

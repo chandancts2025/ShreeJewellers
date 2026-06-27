@@ -1,0 +1,19 @@
+<div class="position-fixed top-0 end-0 p-3" style="z-index:1080; width:min(360px, 92vw);">
+  @for (toast of toastService.messages(); track toast.id) {
+    <div
+      class="lux-card mb-3 p-3"
+      [class.border-success-subtle]="toast.level === 'success'"
+      [class.border-danger-subtle]="toast.level === 'error'"
+      [class.border-warning-subtle]="toast.level === 'warning'">
+      <div class="d-flex align-items-start justify-content-between gap-3">
+        <div>
+          <div class="fw-bold">{{ toast.title }}</div>
+          <div class="small text-secondary">{{ toast.message }}</div>
+        </div>
+        <button class="btn btn-sm btn-link text-secondary p-0" (click)="toastService.dismiss(toast.id)">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,10 @@
+<div class="price-strip py-2 small">
+  <div class="container d-flex flex-wrap justify-content-center gap-4">
+    <span><strong>22K Gold</strong> ₹{{ price?.rate22KPer10g ?? 0 | number:'1.0-0' }}/10g</span>
+    <span><strong>24K Gold</strong> ₹{{ price?.rate24KPer10g ?? 0 | number:'1.0-0' }}/10g</span>
+    <span><strong>Silver</strong> ₹{{ price?.silverRatePerKg ?? 0 | number:'1.0-0' }}/kg</span>
+    <span class="text-warning-emphasis">
+      Updated {{ price?.recordedAt ? (price?.recordedAt | date:'shortTime') : '...' }}
+    </span>
+  </div>
+</div>

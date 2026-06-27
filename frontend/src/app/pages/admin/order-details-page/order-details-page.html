@@ -1,0 +1,273 @@
+<section class="app-page">
+  <div class="container-fluid">
+    <!-- Header with Navigation -->
+    @if (!isLoading && order) {
+      <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+          <div class="section-title mb-2">Order Details</div>
+          <div class="breadcrumb-nav">
+            <a routerLink="/admin/sales/list">Orders</a> / 
+            <span>{{ order.orderNumber }}</span>
+          </div>
+        </div>
+        <div class="btn-group" role="group">
+          <button class="btn lux-btn lux-btn-secondary" type="button" (click)="downloadInvoice()" title="Download Invoice">
+            <i class="bi bi-file-pdf me-2"></i> Invoice
+          </button>
+          @if (order.status === 'Draft' || order.status === 'Confirmed') {
+            <a [routerLink]="['/admin/sales/edit', order.id]" class="btn lux-btn lux-btn-warning" title="Edit Order">
+              <i class="bi bi-pencil me-2"></i> Edit
+            </a>
+          }
+          @if (order.status === 'Confirmed' || order.status === 'Delivered') {
+            <button class="btn lux-btn lux-btn-danger" type="button" (click)="processReturn()" title="Process Return">
+              <i class="bi bi-arrow-counterclockwise me-2"></i> Return
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="row g-4">
+        <!-- LEFT: Order Info & Items -->
+        <div class="col-lg-8">
+          <!-- Order Summary Card -->
+          <div class="lux-card p-4 mb-4">
+            <div class="d-flex align-items-center justify-content-between mb-4">
+              <div>
+                <h4 class="mb-1">{{ order.orderNumber }}</h4>
+                <p class="text-secondary mb-0">{{ formatDate(order.createdAt) }}</p>
+              </div>
+              <div class="status-badges">
+                <span class="badge me-2" [style.background]="getStatusColor(order.status)">
+                  {{ order.status }}
+                </span>
+                <span class="badge" [style.background]="getPaymentStatusColor(order.paymentStatus)">
+                  {{ order.paymentStatus }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Customer Info -->
+            <div class="row mb-4">
+              <div class="col-md-6">
+                <div class="info-label">Customer Name</div>
+                <div class="info-value">{{ order.customerName || order.walkInCustomerName }}</div>
+              </div>
+              <div class="col-md-6">
+                <div class="info-label">Customer Code</div>
+                <div class="info-value">{{ order.customerCode || '—' }}</div>
+              </div>
+              @if (order.walkInCustomerPhone) {
+                <div class="col-md-6">
+                  <div class="info-label">Phone</div>
+                  <div class="info-value">{{ order.walkInCustomerPhone }}</div>
+                </div>
+              }
+              <div class="col-md-6">
+                <div class="info-label">Order Date</div>
+                <div class="info-value">{{ order.orderDate | date:'short' }}</div>
+              </div>
+            </div>
+
+            <!-- Order Notes -->
+            @if (order.notes) {
+              <div class="alert alert-info mb-0">
+                <strong>Notes:</strong> {{ order.notes }}
+              </div>
+            }
+          </div>
+
+          <!-- Order Items Table -->
+          <div class="lux-card p-4 mb-4">
+            <h5 class="mb-3">Order Items</h5>
+            <div class="table-responsive">
+              <table class="table">
+                <thead style="background: rgba(255, 215, 0, 0.1);">
+                  <tr>
+                    <th>Product</th>
+                    <th>SKU</th>
+                    <th>Qty</th>
+                    <th>Weight (g)</th>
+                    <th>Rate/g</th>
+                    <th>Amount</th>
+                    <th>Tax</th>
+                    <th>Line Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (item of order.items; track item.id) {
+                    <tr>
+                      <td>
+                        <strong>{{ item.productName }}</strong><br>
+                        <span class="text-secondary small">{{ item.purity }}</span>
+                      </td>
+                      <td class="small">{{ item.skuCode }}</td>
+                      <td class="text-center">{{ item.quantity }}</td>
+                      <td class="text-end">{{ item.weightGrams | number:'1.0-3' }}</td>
+                      <td class="text-end">₹{{ item.ratePerGram | number:'1.0-2' }}</td>
+                      <td class="text-end">₹{{ (item.weightGrams * item.ratePerGram + item.makingCharges + item.hallmarkCharges + item.stoneValue - (item.discountAmount || 0)) | number:'1.0-2' }}</td>
+                      <td class="text-end">₹{{ item.taxAmount | number:'1.0-2' }}</td>
+                      <td class="text-end fw-bold">₹{{ item.lineTotal | number:'1.0-2' }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Additional Info Cards -->
+          <div class="row g-3">
+            @if ((order.oldGoldExchangeValue || 0) > 0) {
+              <div class="col-md-6">
+                <div class="info-card p-3">
+                  <div class="info-label">Old Gold Exchange Value</div>
+                  <div class="text-success mt-2">Credit: {{ formatCurrency(order.oldGoldExchangeValue) }}</div>
+                </div>
+              </div>
+            }
+            
+            <div class="col-md-6">
+              <div class="info-card p-3">
+                <div class="info-label">Payment Mode</div>
+                <div class="info-value">{{ order.paymentMode }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Financial Summary & Actions -->
+        <div class="col-lg-4">
+          <!-- Financial Summary -->
+          <div class="lux-card p-4 mb-4">
+            <h5 class="mb-3">Financial Summary</h5>
+            
+            <div class="financial-breakdown">
+              <div class="breakdown-row">
+                <span>Gross Amount</span>
+                <strong>{{ formatCurrency(order.grossAmount) }}</strong>
+              </div>
+              <div class="breakdown-row">
+                <span>Item Discount</span>
+                <strong class="text-danger">-{{ formatCurrency(order.discountAmount) }}</strong>
+              </div>
+              <div class="breakdown-row border-bottom pb-2">
+                <span>Subtotal</span>
+                <strong>{{ formatCurrency(order.grossAmount - order.discountAmount) }}</strong>
+              </div>
+
+              <div class="breakdown-row text-secondary small">
+                @if (order.igstAmount > 0) {
+                  <span>IGST (3%)</span>
+                  <strong>{{ formatCurrency(order.igstAmount) }}</strong>
+                } @else {
+                  <span>CGST (1.5%)</span>
+                  <strong>{{ formatCurrency(order.cgstAmount) }}</strong>
+                }
+              </div>
+              @if (order.sgstAmount > 0) {
+                <div class="breakdown-row text-secondary small">
+                  <span>SGST (1.5%)</span>
+                  <strong>{{ formatCurrency(order.sgstAmount) }}</strong>
+                </div>
+              }
+              <div class="breakdown-row border-bottom pb-2">
+                <span>Total Tax</span>
+                <strong>{{ formatCurrency(order.taxAmount) }}</strong>
+              </div>
+
+              @if ((order.oldGoldExchangeValue || 0) > 0) {
+                <div class="breakdown-row text-success">
+                  <span>Old Gold Credit</span>
+                  <strong>-{{ formatCurrency(order.oldGoldExchangeValue) }}</strong>
+                </div>
+              }
+
+              <div class="breakdown-row fs-5 border-top pt-2 mt-2">
+                <span class="fw-bold">Net Amount</span>
+                <strong style="color: #ffd700; font-size: 1.2rem;">{{ formatCurrency(order.netAmount) }}</strong>
+              </div>
+            </div>
+
+            <div class="mt-3 pt-3 border-top">
+              <div class="payment-info mb-2">
+                <div class="info-label small">Amount Paid</div>
+                <div class="info-value">{{ formatCurrency(order.amountPaid) }}</div>
+              </div>
+              @if ((order.advanceAmount || 0) > 0) {
+                <div class="payment-info mb-2">
+                  <div class="info-label small">Advance Amount</div>
+                  <div class="info-value">{{ formatCurrency(order.advanceAmount) }}</div>
+                </div>
+              }
+              <div class="payment-info" [style.color]="order.balanceDue > 0 ? '#ff6b6b' : '#51cf66'">
+                <div class="info-label small fw-bold">{{ order.balanceDue > 0 ? 'BALANCE DUE' : 'CHANGE' }}</div>
+                <div class="info-value fs-5">{{ formatCurrency(Math.abs(order.balanceDue)) }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Send Invoice Card -->
+          <div class="lux-card p-4 mb-4">
+            <h5 class="mb-3">Invoice</h5>
+            <div class="d-grid gap-2">
+              <button class="btn lux-btn lux-btn-secondary" (click)="downloadInvoice()">
+                <i class="bi bi-download me-2"></i> Download PDF
+              </button>
+              <button class="btn lux-btn lux-btn-secondary" (click)="showSendInvoiceForm = !showSendInvoiceForm">
+                <i class="bi bi-send me-2"></i> Send Invoice
+              </button>
+            </div>
+
+            @if (showSendInvoiceForm) {
+              <div class="mt-3 p-3" style="background: rgba(255, 215, 0, 0.05); border-radius: 8px;">
+                <div class="mb-2">
+                  <label class="form-label small mb-1">Email</label>
+                  <input class="form-control form-control-sm" type="email" [(ngModel)]="invoiceEmail" placeholder="customer@example.com">
+                </div>
+                <div class="mb-3">
+                  <label class="form-label small mb-1">Phone (SMS)</label>
+                  <input class="form-control form-control-sm" type="tel" [(ngModel)]="invoicePhone" placeholder="10-digit number">
+                </div>
+                <div class="d-grid gap-2">
+                  <button class="btn btn-sm lux-btn lux-btn-primary" (click)="sendInvoice()" [disabled]="isSendingInvoice">
+                    @if (isSendingInvoice) {
+                      <span class="spinner-border spinner-border-sm me-2"></span>
+                    }
+                    Send
+                  </button>
+                  <button class="btn btn-sm btn-secondary" (click)="showSendInvoiceForm = false">Cancel</button>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Actions Card -->
+          @if (order.status !== 'Cancelled' && order.status !== 'Returned') {
+            <div class="lux-card p-4">
+              <h5 class="mb-3">Actions</h5>
+              <div class="d-grid gap-2">
+                @if (order.status === 'Confirmed' || order.status === 'Delivered') {
+                  <button class="btn btn-outline-danger btn-sm" (click)="processReturn()">
+                    <i class="bi bi-arrow-counterclockwise me-2"></i> Process Return
+                  </button>
+                }
+                @if (order.status === 'Draft') {
+                  <button class="btn btn-outline-danger btn-sm" (click)="cancelOrder()">
+                    <i class="bi bi-x-circle me-2"></i> Cancel Order
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    } @else if (isLoading) {
+      <div class="text-center py-5">
+        <div class="spinner-border text-warning" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="text-secondary mt-2">Loading order details...</p>
+      </div>
+    }
+  </div>
+</section>

@@ -1,0 +1,109 @@
+<section class="app-page">
+  <div class="container">
+    <div class="lux-card p-4 mb-4">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+          <div class="section-kicker mb-2">Loan Detail</div>
+          <div class="section-title">{{ detail?.loanNumber }}</div>
+        </div>
+        <span class="status-badge status-warning">{{ detail?.loanStatus }}</span>
+      </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+      <div class="col-lg-5">
+        <div class="lux-card p-4 h-100">
+          <div class="font-display fs-2 mb-3">Outstanding Balance</div>
+          <div class="small text-secondary mb-2">Principal Remaining</div>
+          <div class="fs-4 mb-3">₹{{ outstanding?.principalRemaining | number:'1.0-0' }}</div>
+          <div class="small text-secondary mb-2">Accrued Interest</div>
+          <div class="fs-4 mb-3">₹{{ outstanding?.accruedInterest | number:'1.0-0' }}</div>
+          <div class="small text-secondary mb-2">Penalty</div>
+          <div class="fs-4 mb-3">₹{{ outstanding?.penaltyInterest | number:'1.0-0' }}</div>
+          <div class="small text-secondary mb-2">Payoff Today</div>
+          <div class="font-display fs-1">₹{{ outstanding?.payoffAmount | number:'1.0-0' }}</div>
+        </div>
+      </div>
+      <div class="col-lg-7">
+        <div class="lux-card p-4 h-100">
+          <div class="font-display fs-2 mb-3">Gold Items Pledged</div>
+          @for (item of detail?.goldItems ?? []; track item.id) {
+            <div class="border rounded-4 p-3 mb-3">
+              <div class="fw-bold">{{ item.itemDescription }}</div>
+              <div class="small text-secondary">{{ item.purity }} · {{ item.weightGrams }}g · Value ₹{{ item.estimatedValue | number:'1.0-0' }}</div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="lux-card p-4 mb-4">
+      <div class="font-display fs-2 mb-3">Repayment History</div>
+      <div class="table-responsive">
+        <table class="table">
+          <thead><tr><th>Date</th><th>Receipt</th><th>Paid</th><th>Principal</th><th>Interest</th><th>Penalty</th></tr></thead>
+          <tbody>
+            @for (repayment of detail?.repayments ?? []; track repayment.id) {
+              <tr>
+                <td>{{ repayment.repaymentDate }}</td>
+                <td>{{ repayment.receiptNumber }}</td>
+                <td>₹{{ repayment.amountPaid | number:'1.0-0' }}</td>
+                <td>₹{{ repayment.principalComponent | number:'1.0-0' }}</td>
+                <td>₹{{ repayment.interestComponent | number:'1.0-0' }}</td>
+                <td>₹{{ repayment.penaltyAmount | number:'1.0-0' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    @if (canManageLoan) {
+      <div class="lux-card p-4 mb-4">
+        <div class="font-display fs-2 mb-3">Admin Loan Actions</div>
+        <div class="row g-4">
+          <div class="col-lg-6">
+            <div class="mb-4">
+              <div class="small text-secondary mb-2">Record Repayment</div>
+              <form [formGroup]="repaymentForm" class="row g-3">
+                <div class="col-12"><label class="form-label">Amount Paid</label><input class="form-control" type="number" formControlName="amountPaid"></div>
+                <div class="col-6"><label class="form-label">Payment Mode</label><select class="form-select" formControlName="paymentMode"><option>Cash</option><option>Card</option><option>UPI</option><option>NEFT</option></select></div>
+                <div class="col-6"><label class="form-label">Notes</label><input class="form-control" formControlName="notes"></div>
+                <div class="col-12"><button class="btn lux-btn lux-btn-primary" type="button" (click)="recordRepayment()">Record Repayment</button></div>
+              </form>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="mb-4">
+              <div class="small text-secondary mb-2">Extend Loan</div>
+              <form [formGroup]="extendForm" class="row g-3">
+                <div class="col-6"><label class="form-label">New Maturity Date</label><input class="form-control" type="date" formControlName="newMaturityDate"></div>
+                <div class="col-6"><label class="form-label">Reason</label><input class="form-control" formControlName="reason"></div>
+                <div class="col-12"><button class="btn lux-btn lux-btn-secondary" type="button" (click)="extendLoan()">Extend</button></div>
+              </form>
+            </div>
+            <div class="mb-4">
+              <div class="small text-secondary mb-2">Close Loan</div>
+              <form [formGroup]="closeForm" class="row g-3">
+                <div class="col-12"><label class="form-label">Notes</label><textarea class="form-control" rows="2" formControlName="notes"></textarea></div>
+                <div class="col-12"><button class="btn lux-btn lux-btn-outline-danger" type="button" (click)="closeLoan()">Close Loan</button></div>
+              </form>
+            </div>
+            <div>
+              <div class="small text-secondary mb-2">Auction Loan</div>
+              <form [formGroup]="auctionForm" class="row g-3">
+                <div class="col-6"><label class="form-label">Auction Proceeds</label><input class="form-control" type="number" formControlName="auctionProceeds"></div>
+                <div class="col-6"><label class="form-label">Auction Date</label><input class="form-control" type="date" formControlName="auctionDate"></div>
+                <div class="col-12"><label class="form-label">Notes</label><input class="form-control" formControlName="notes"></div>
+                <div class="col-12"><button class="btn lux-btn lux-btn-warning" type="button" (click)="auctionLoan()">Auction Loan</button></div>
+              </form>
+            </div>
+          </div>
+        </div>
+        @if (actionMessage) {
+          <div class="alert alert-success mt-4">{{ actionMessage }}</div>
+        }
+      </div>
+    }
+  </div>
+</section>

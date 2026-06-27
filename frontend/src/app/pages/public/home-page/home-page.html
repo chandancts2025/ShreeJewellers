@@ -1,0 +1,83 @@
+<section class="app-page">
+  <div class="container">
+    <section class="hero-panel p-4 p-lg-5 mb-5">
+      <div class="row align-items-center g-4">
+        <div class="col-lg-7">
+          <div class="section-kicker mb-3">Luxury Jewellery House</div>
+          <h1 class="display-3 font-display mb-3">{{ data?.heroHeadline }}</h1>
+          <p class="lead text-white-50 mb-4">{{ data?.heroSubheadline }}</p>
+          <div class="d-flex flex-wrap gap-3">
+            <a class="btn lux-btn lux-btn-primary" routerLink="/register">Begin Your Journey</a>
+            <a class="btn lux-btn lux-btn-outline text-white border-light" routerLink="/gold-loan">Explore Gold Loans</a>
+          </div>
+        </div>
+        <div class="col-lg-5">
+          <div class="lux-card p-4 h-100 text-dark">
+            <div class="section-kicker mb-2">Why Families Choose Us</div>
+            @for (highlight of data?.highlights ?? []; track highlight.title) {
+              <div class="d-flex gap-3 mb-3">
+                <div class="text-warning fs-4"><i class="bi {{ highlight.icon }}"></i></div>
+                <div>
+                  <div class="fw-bold">{{ highlight.title }}</div>
+                  <div class="text-secondary small">{{ highlight.description }}</div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="mb-5">
+      <div class="section-kicker mb-2">Featured Categories</div>
+      <div class="section-title mb-4">Crafted for moments that matter</div>
+      <div class="row g-4">
+        @for (category of data?.featuredCategories ?? []; track category.categoryId) {
+          <div class="col-sm-6 col-xl-3">
+            <div class="lux-card h-100 p-4">
+              <div class="small text-uppercase text-secondary mb-2">{{ category.metalType }}</div>
+              <h3 class="font-display">{{ category.name }}</h3>
+              <p class="text-secondary">{{ category.description }}</p>
+              <div class="fw-bold">{{ category.productCount }} items</div>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <section class="row g-4 mb-5">
+      <div class="col-lg-6">
+        <div class="lux-card p-4 h-100">
+          <div class="section-kicker mb-2">About The Shop</div>
+          <div class="section-title mb-3">Trusted heritage, modern service</div>
+          <p class="text-secondary mb-0">{{ data?.aboutSummary }}</p>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="lux-card p-4 h-100">
+          <div class="section-kicker mb-2">Testimonials</div>
+          @for (testimonial of data?.testimonials ?? []; track testimonial.customerName) {
+            <blockquote class="mb-3">
+              <p class="mb-1">“{{ testimonial.quote }}”</p>
+              <footer class="small text-secondary">{{ testimonial.customerName }} · {{ testimonial.location }}</footer>
+            </blockquote>
+          }
+        </div>
+      </div>
+    </section>
+
+    <section class="lux-card p-4">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+          <div class="section-kicker mb-2">Quick Links</div>
+          <div class="section-title">Everything important, one tap away</div>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+          @for (link of data?.quickLinks ?? []; track link.route) {
+            <a class="btn lux-btn lux-btn-outline" [routerLink]="link.route">{{ link.title }}</a>
+          }
+        </div>
+      </div>
+    </section>
+  </div>
+</section>

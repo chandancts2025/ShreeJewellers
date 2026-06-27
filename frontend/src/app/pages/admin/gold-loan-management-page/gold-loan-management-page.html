@@ -1,0 +1,138 @@
+<section class="app-page">
+  <div class="container">
+    <div class="section-title mb-4">Gold Loan Management</div>
+    <div class="row g-4">
+      <div class="col-lg-5">
+        <div class="lux-card p-4 mb-4">
+          <div class="font-display fs-2 mb-3">Create New Loan</div>
+          <form [formGroup]="createLoanForm" class="row g-3">
+            <div class="col-12"><label class="form-label">Customer User ID</label><input class="form-control" formControlName="customerUserId"></div>
+            <div class="col-6"><label class="form-label">Loan Date</label><input class="form-control" type="date" formControlName="loanDate"></div>
+            <div class="col-6"><label class="form-label">Principal Amount</label><input class="form-control" type="number" formControlName="principalAmount"></div>
+            <div class="col-12"><label class="form-label">Gold Purity</label><select class="form-select" formControlName="goldPurity"><option>22K</option><option>24K</option><option>18K</option></select></div>
+            <div class="col-12"><label class="form-label">Notes</label><textarea class="form-control" rows="3" formControlName="notes"></textarea></div>
+            <div class="col-12"><div class="section-kicker mb-2">Pledged Item</div></div>
+            <div class="col-12"><label class="form-label">Description</label><input class="form-control" [formControl]="loanItemForm.controls.itemDescription"></div>
+            <div class="col-4"><label class="form-label">Weight (g)</label><input class="form-control" type="number" [formControl]="loanItemForm.controls.weightGrams"></div>
+            <div class="col-4"><label class="form-label">Purity</label><select class="form-select" [formControl]="loanItemForm.controls.purity"><option>22K</option><option>24K</option><option>18K</option></select></div>
+            <div class="col-4"><label class="form-label">Estimated Value</label><input class="form-control" type="number" [formControl]="loanItemForm.controls.estimatedValue"></div>
+            <div class="col-12"><label class="form-label">Hallmark Number</label><input class="form-control" [formControl]="loanItemForm.controls.hallmarkNumber"></div>
+            <div class="col-12"><button class="btn lux-btn lux-btn-primary" type="button" (click)="createLoan()">Create Loan</button></div>
+          </form>
+        </div>
+
+        <div class="lux-card p-4">
+          <div class="font-display fs-2 mb-3">Check Loan Eligibility</div>
+          <form [formGroup]="eligibilityForm" class="row g-3">
+            <div class="col-12"><label class="form-label">Customer User ID</label><input class="form-control" formControlName="customerUserId"></div>
+            <div class="col-12"><label class="form-label">Pledged Gold Description</label><input class="form-control" formControlName="itemDescription"></div>
+            <div class="col-6"><label class="form-label">Weight (g)</label><input class="form-control" type="number" formControlName="weightGrams"></div>
+            <div class="col-6"><label class="form-label">Purity</label><select class="form-select" formControlName="purity"><option>22K</option><option>24K</option><option>18K</option></select></div>
+            <div class="col-12"><label class="form-label">Estimated Value</label><input class="form-control" type="number" formControlName="estimatedValue"></div>
+            <div class="col-12"><button class="btn lux-btn lux-btn-secondary" type="button" (click)="checkEligibility()">Check Eligibility</button></div>
+          </form>
+          @if (eligibilityResult) {
+            <div class="mt-4">
+              <div class="small text-secondary">Eligibility</div>
+              <div class="fw-bold mb-2">{{ eligibilityResult.isEligible ? 'Eligible' : 'Not eligible' }}</div>
+              @if (eligibilityResult.isEligible) {
+                <div>Max eligible amount: ₹{{ eligibilityResult.maxEligibleLoanAmount | number:'1.0-0' }}</div>
+                <div>Rate: {{ eligibilityResult.interestRatePercent }}%</div>
+                <div>Maturity date: {{ eligibilityResult.proposedMaturityDate }}</div>
+              } @else {
+                <div class="text-danger">{{ eligibilityResult.ineligibilityReason }}</div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="col-lg-7">
+        <div class="lux-card p-4 mb-4">
+          <div class="font-display fs-2 mb-3">Loans Due This Week</div>
+          @for (loan of dueThisWeek; track loan.id) {
+            <div class="d-flex justify-content-between border-bottom py-2">
+              <span>{{ loan.loanNumber }}</span>
+              <span>{{ loan.maturityDate }}</span>
+            </div>
+          }
+        </div>
+
+        <div class="lux-card p-4 mb-4">
+          <div class="font-display fs-2 mb-3">All Active Loans</div>
+          <div class="table-responsive">
+            <table class="table">
+              <thead><tr><th>Loan</th><th>Customer</th><th>Principal</th><th>Outstanding</th><th>Status</th><th></th></tr></thead>
+              <tbody>
+                @for (loan of activeLoans; track loan.id) {
+                  <tr>
+                    <td>{{ loan.loanNumber }}</td>
+                    <td>{{ loan.customerName }}</td>
+                    <td>₹{{ loan.principalAmount | number:'1.0-0' }}</td>
+                    <td>₹{{ loan.outstandingBalance | number:'1.0-0' }}</td>
+                    <td>{{ loan.loanStatus }}</td>
+                    <td><button class="btn lux-btn lux-btn-secondary" type="button" (click)="selectLoan(loan)">Manage</button></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        @if (selectedLoan) {
+          <div class="lux-card p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <div>
+                <div class="font-display fs-2 mb-1">Manage Loan</div>
+                <div class="small text-secondary">{{ selectedLoan.loanNumber }} · {{ selectedLoan.loanStatus }}</div>
+              </div>
+              <span class="badge bg-info text-dark">Selected</span>
+            </div>
+
+            <div class="row g-4">
+              <div class="col-lg-6">
+                <div class="mb-4">
+                  <div class="small text-secondary mb-2">Record Repayment</div>
+                  <form [formGroup]="repaymentForm" class="row g-3">
+                    <div class="col-12"><label class="form-label">Amount Paid</label><input class="form-control" type="number" formControlName="amountPaid"></div>
+                    <div class="col-6"><label class="form-label">Payment Mode</label><select class="form-select" formControlName="paymentMode"><option>Cash</option><option>Card</option><option>UPI</option><option>NEFT</option></select></div>
+                    <div class="col-6"><label class="form-label">Notes</label><input class="form-control" formControlName="notes"></div>
+                    <div class="col-12"><button class="btn lux-btn lux-btn-primary" type="button" (click)="recordRepayment()">Record Repayment</button></div>
+                  </form>
+                </div>
+              </div>
+
+              <div class="col-lg-6">
+                <div class="mb-4">
+                  <div class="small text-secondary mb-2">Extend Loan</div>
+                  <form [formGroup]="extendForm" class="row g-3">
+                    <div class="col-6"><label class="form-label">New Maturity Date</label><input class="form-control" type="date" formControlName="newMaturityDate"></div>
+                    <div class="col-6"><label class="form-label">Reason</label><input class="form-control" formControlName="reason"></div>
+                    <div class="col-12"><button class="btn lux-btn lux-btn-secondary" type="button" (click)="extendLoan()">Extend</button></div>
+                  </form>
+                </div>
+                <div>
+                  <div class="small text-secondary mb-2">Close / Auction</div>
+                  <form [formGroup]="closeForm" class="row g-3 mb-3">
+                    <div class="col-12"><label class="form-label">Close Notes</label><textarea class="form-control" rows="2" formControlName="notes"></textarea></div>
+                    <div class="col-12"><button class="btn lux-btn lux-btn-outline-danger" type="button" (click)="closeLoan()">Close Loan</button></div>
+                  </form>
+                  <form [formGroup]="auctionForm" class="row g-3">
+                    <div class="col-6"><label class="form-label">Auction Proceeds</label><input class="form-control" type="number" formControlName="auctionProceeds"></div>
+                    <div class="col-6"><label class="form-label">Auction Date</label><input class="form-control" type="date" formControlName="auctionDate"></div>
+                    <div class="col-12"><label class="form-label">Auction Notes</label><input class="form-control" formControlName="notes"></div>
+                    <div class="col-12"><button class="btn lux-btn lux-btn-warning" type="button" (click)="auctionLoan()">Record Auction</button></div>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            @if (actionMessage) {
+              <div class="alert alert-success mt-4">{{ actionMessage }}</div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</section>

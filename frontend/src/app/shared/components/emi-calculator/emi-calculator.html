@@ -1,0 +1,76 @@
+<section class="lux-card p-4 emi-calculator">
+  <div class="section-kicker mb-2">EMI Calculator</div>
+  <h3 class="font-display mb-2">Estimate your repayment in one view</h3>
+  <p class="text-secondary mb-4">Enter your loan amount, annual rate, tenure and payment frequency to compare weekly, monthly, quarterly or yearly installments instantly.</p>
+
+  <div class="row g-3 align-items-end">
+    <div class="col-lg-3 col-md-6">
+      <label class="form-label">Loan Amount</label>
+      <div class="input-group">
+        <span class="input-group-text">₹</span>
+        <input class="form-control" type="number" [(ngModel)]="principal" min="1000" step="100" placeholder="Enter amount">
+      </div>
+      <div class="form-text">Required loan amount, minimum ₹1,000.</div>
+    </div>
+
+    <div class="col-lg-3 col-md-6">
+      <label class="form-label">Annual Interest Rate</label>
+      <div class="input-group">
+        <input class="form-control" type="number" [(ngModel)]="annualRate" min="0" step="0.1" placeholder="e.g. 12">
+        <span class="input-group-text">%</span>
+      </div>
+      <div class="form-text">Annual rate used to calculate each payment period.</div>
+    </div>
+
+    <div class="col-lg-3 col-md-6">
+      <label class="form-label">Tenure</label>
+      <div class="input-group">
+        <input class="form-control" type="number" [(ngModel)]="tenureMonths" min="1" step="1" placeholder="Months">
+        <span class="input-group-text">months</span>
+      </div>
+      <div class="form-text">Loan duration in months.</div>
+    </div>
+
+    <div class="col-lg-3 col-md-6">
+      <label class="form-label">Payment Frequency</label>
+      <select class="form-select" [(ngModel)]="paymentFrequency">
+        <option *ngFor="let option of frequencyOptions" [value]="option.value">{{ option.label }}</option>
+      </select>
+      <div class="form-text">Choose how often you want to pay.</div>
+    </div>
+  </div>
+
+  <div class="row g-3 mt-4">
+    <div class="col-lg-3 col-md-6">
+      <div class="lux-card p-3 result-card h-100">
+        <div class="small text-secondary">Installment Amount</div>
+        <div class="font-display fs-2">₹{{ emi | number:'1.0-0' }}</div>
+        <div class="small text-secondary mt-2">per {{ selectedFrequency.label.toLowerCase() }}</div>
+      </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6">
+      <div class="lux-card p-3 result-card h-100">
+        <div class="small text-secondary">Periodic Rate</div>
+        <div class="font-display fs-2">{{ rateLabel }}</div>
+        <div class="small text-secondary mt-2">based on selected frequency</div>
+      </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6">
+      <div class="lux-card p-3 result-card h-100">
+        <div class="small text-secondary">Total Interest</div>
+        <div class="font-display fs-2">₹{{ totalInterest | number:'1.0-0' }}</div>
+        <div class="small text-secondary mt-2">interest paid over the loan term</div>
+      </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6">
+      <div class="lux-card p-3 result-card h-100">
+        <div class="small text-secondary">Total Payments</div>
+        <div class="font-display fs-2">{{ totalPayments }}</div>
+        <div class="small text-secondary mt-2">number of installments</div>
+      </div>
+    </div>
+  </div>
+</section>

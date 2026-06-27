@@ -1,0 +1,348 @@
+<section class="app-page">
+  <div class="container-fluid">
+    <div class="section-title mb-4">Create New Sales Order</div>
+    
+    <form [formGroup]="orderForm" class="row g-4">
+      <!-- LEFT COLUMN: Order Details -->
+      <div class="col-lg-6">
+        <!-- Customer Info Section -->
+        <div class="lux-card p-4 mb-4">
+          <div class="font-display fs-3 mb-3">Customer Information</div>
+          
+          <!-- Customer Type Toggle -->
+          <div class="customer-type-toggle mb-4">
+            <label class="form-label">Customer Type</label>
+            <div class="btn-group w-100" role="group">
+              <input type="radio" class="btn-check" name="customerType" id="registered" 
+                     value="registered" formControlName="customerType">
+              <label class="btn lux-btn lux-btn-secondary" for="registered">
+                <i class="bi bi-person-check me-2"></i> Registered Customer
+              </label>
+              
+              <input type="radio" class="btn-check" name="customerType" id="walkIn" 
+                     value="walkIn" formControlName="customerType">
+              <label class="btn lux-btn lux-btn-secondary" for="walkIn">
+                <i class="bi bi-person me-2"></i> Walk-in Customer
+              </label>
+            </div>
+          </div>
+
+          <!-- Registered Customer -->
+          @if (orderForm.get('customerType')?.value === 'registered') {
+            <div class="mb-3">
+              <label class="form-label">Select Customer <span class="text-danger">*</span></label>
+              <select class="form-select" formControlName="customerUserId">
+                <option value="">-- Select Customer --</option>
+                @for (customer of customers; track customer.userId) {
+                  <option value="{{ customer.userId }}">{{ customer.fullName || customer.name }} {{ customer.customerCode ? '(' + customer.customerCode + ')' : '' }}</option>
+                }
+              </select>
+              @if (orderForm.get('customerUserId')?.invalid && orderForm.get('customerUserId')?.touched) {
+                <div class="text-danger small mt-1">Customer is required</div>
+              }
+            </div>
+          }
+
+          <!-- Walk-in Customer -->
+          @if (orderForm.get('customerType')?.value === 'walkIn') {
+            <div class="mb-3">
+              <label class="form-label">Customer Name <span class="text-danger">*</span></label>
+              <input class="form-control" type="text" formControlName="walkInCustomerName" 
+                     placeholder="Enter customer name">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Phone Number <span class="text-danger">*</span></label>
+              <input class="form-control" type="tel" formControlName="walkInCustomerPhone" 
+                     placeholder="Enter 10-digit phone number">
+              @if (orderForm.get('walkInCustomerPhone')?.invalid && orderForm.get('walkInCustomerPhone')?.touched) {
+                <div class="text-danger small mt-1">Enter a valid 10-digit phone number</div>
+              }
+            </div>
+          }
+
+          <!-- Order Date -->
+          <div class="mb-3">
+            <label class="form-label">Order Date <span class="text-danger">*</span></label>
+            <input class="form-control" type="date" formControlName="orderDate">
+          </div>
+        </div>
+
+        <!-- Payment Section -->
+        <div class="lux-card p-4 mb-4">
+          <div class="font-display fs-3 mb-3">Payment Details</div>
+          
+          <div class="mb-3">
+            <label class="form-label">Payment Mode <span class="text-danger">*</span></label>
+            <select class="form-select" formControlName="paymentMode">
+              <option value="Cash">💵 Cash</option>
+              <option value="Card">💳 Card</option>
+              <option value="UPI">📱 UPI</option>
+              <option value="NEFT">🏦 NEFT</option>
+              <option value="Cheque">📝 Cheque</option>
+              <option value="Split">🔄 Split Payment</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Amount Paid <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <span class="input-group-text">₹</span>
+              <input class="form-control" type="number" formControlName="amountPaid" 
+                     placeholder="0" (change)="onAmountPaidChange()">
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Advance Amount</label>
+            <div class="input-group">
+              <span class="input-group-text">₹</span>
+              <input class="form-control" type="number" formControlName="advanceAmount" placeholder="0">
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Order-level Discount</label>
+            <div class="input-group">
+              <span class="input-group-text">₹</span>
+              <input class="form-control" type="number" formControlName="discountAmount" 
+                     placeholder="0" (change)="onDiscountChange()">
+            </div>
+          </div>
+        </div>
+
+        <!-- Old Gold Exchange Section -->
+        <div class="lux-card p-4 mb-4">
+          <div class="font-display fs-3 mb-3">Old Gold Exchange</div>
+          
+          <div class="mb-3">
+            <label class="form-label">Exchange Value</label>
+            <div class="input-group">
+              <span class="input-group-text">₹</span>
+              <input class="form-control" type="number" formControlName="oldGoldExchangeValue" 
+                     placeholder="0" (change)="onOldGoldChange()">
+            </div>
+            <small class="text-secondary">Amount credited to customer</small>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Weight (Grams)</label>
+            <input class="form-control" type="number" formControlName="oldGoldWeightGrams" 
+                   placeholder="0" step="0.001">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Purity</label>
+            <select class="form-select" formControlName="oldGoldPurity">
+              <option value="18K">18K</option>
+              <option value="20K">20K</option>
+              <option value="22K">22K</option>
+              <option value="24K">24K</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Additional Options -->
+        <div class="lux-card p-4 mb-4">
+          <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="isInterState" formControlName="isInterState">
+            <label class="form-check-label" for="isInterState">
+              Inter-State Order (IGST applicable)
+            </label>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Notes</label>
+            <textarea class="form-control" formControlName="notes" rows="3" 
+                      placeholder="Add any special instructions or notes"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN: Items & Totals -->
+      <div class="col-lg-6">
+        <!-- Add Items Section -->
+        <div class="lux-card p-4 mb-4">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <div class="font-display fs-3">Order Items</div>
+            <button class="btn lux-btn lux-btn-primary" type="button" (click)="showProductSearch = !showProductSearch">
+              <i class="bi bi-plus-lg me-2"></i> Add Item
+            </button>
+          </div>
+
+          <!-- Product Search -->
+          @if (showProductSearch) {
+            <div class="search-box mb-4 p-3" style="background: rgba(255, 215, 0, 0.05); border-radius: 8px;">
+              <input class="form-control mb-2" type="text" placeholder="Search by product name, SKU, or category..."
+                     [value]="searchQuery" (input)="onProductSearch($event.target.value)">
+              <div class="product-suggestions" style="max-height: 300px; overflow-y: auto;">
+                @for (product of filteredProducts | slice:0:10; track product.id) {
+                  <div class="product-item p-2 cursor-pointer hover" (click)="selectProduct(product)"
+                       style="border-bottom: 1px solid rgba(255, 215, 0, 0.1); cursor: pointer; transition: all 0.2s;">
+                    <div class="d-flex justify-content-between align-items-start">
+                      <div>
+                        <div class="fw-bold">{{ product.name }}</div>
+                        <small class="text-secondary">{{ product.skuCode }} • {{ product.categoryName }} • {{ product.purity }}</small>
+                        <div class="mt-1">
+                          <span class="badge lux-badge-info me-2">Stock: {{ product.stockQuantity }}</span>
+                          <span class="badge" [class.lux-badge-warning]="product.stockQuantity <= product.reorderLevel"
+                                [class.lux-badge-success]="product.stockQuantity > product.reorderLevel">
+                            {{ product.stockQuantity <= product.reorderLevel ? 'Low Stock' : 'In Stock' }}
+                          </span>
+                        </div>
+                      </div>
+                      <div class="text-end">
+                        <div class="text-muted small">Weight:</div>
+                        <div class="fw-bold">{{ product.weight ?? product.netWeightGrams }}g</div>
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Order Items Table -->
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr style="background: rgba(255, 215, 0, 0.1);">
+                  <th>Product</th>
+                  <th>Qty</th>
+                  <th>Weight (g)</th>
+                  <th>Rate/g (₹)</th>
+                  <th>Making (₹)</th>
+                  <th>Line Total (₹)</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of orderItems; track item._tempId || item.id; let idx = $index) {
+                  <tr [style.background]="selectedProductIdx === idx ? 'rgba(255, 215, 0, 0.05)' : ''">
+                    <td class="small">
+                      <strong>{{ item.productName }}</strong><br>
+                      <span class="text-secondary">{{ item.purity }}</span>
+                    </td>
+                    <td>
+                      <input class="form-control form-control-sm" type="number" 
+                             [value]="item.quantity" 
+                             (change)="updateLineItem(idx, 'quantity', $event.target.value)"
+                             style="width: 60px;">
+                    </td>
+                    <td>
+                      <input class="form-control form-control-sm" type="number" step="0.001"
+                             [value]="item.weightGrams | number:'1.0-3'" 
+                             (change)="updateLineItem(idx, 'weightGrams', $event.target.value)"
+                             style="width: 80px;">
+                    </td>
+                    <td>
+                      <input class="form-control form-control-sm" type="number"
+                             [value]="item.ratePerGram" 
+                             (change)="updateLineItem(idx, 'ratePerGram', $event.target.value)"
+                             style="width: 80px;">
+                    </td>
+                    <td>
+                      <input class="form-control form-control-sm" type="number"
+                             [value]="item.makingCharges" 
+                             (change)="updateLineItem(idx, 'makingCharges', $event.target.value)"
+                             style="width: 80px;">
+                    </td>
+                    <td class="fw-bold">₹{{ item.lineTotal | number:'1.0-2' }}</td>
+                    <td>
+                      <button class="btn btn-sm btn-outline-danger" type="button"
+                              (click)="removeLineItem(idx)" title="Remove item">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          @if (orderItems.length === 0) {
+            <div class="text-center py-5 text-secondary">
+              <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+              <p class="mt-2">No items added. Click "Add Item" to start.</p>
+            </div>
+          }
+        </div>
+
+        <!-- Financial Summary -->
+        <div class="lux-card p-4">
+          <div class="font-display fs-3 mb-4">Order Summary</div>
+          
+          <div class="financial-summary">
+            <div class="summary-row">
+              <span>Gross Amount:</span>
+              <strong>₹{{ grossAmount | number:'1.0-2' }}</strong>
+            </div>
+            <div class="summary-row">
+              <span>Discount:</span>
+              <strong class="text-danger">-₹{{ discountAmount | number:'1.0-2' }}</strong>
+            </div>
+            <div class="summary-row">
+              <span>Subtotal:</span>
+              <strong>₹{{ subtotalBeforeTax | number:'1.0-2' }}</strong>
+            </div>
+            
+            <div class="summary-row border-top mt-2 pt-2" style="border-color: rgba(255, 215, 0, 0.2);">
+              @if (orderForm.get('isInterState')?.value) {
+                <span>IGST (3%):</span>
+                <strong>₹{{ igstAmount | number:'1.0-2' }}</strong>
+              } @else {
+                <div class="summary-row">
+                  <span>CGST (1.5%):</span>
+                  <strong>₹{{ cgstAmount | number:'1.0-2' }}</strong>
+                </div>
+                <div class="summary-row">
+                  <span>SGST (1.5%):</span>
+                  <strong>₹{{ sgstAmount | number:'1.0-2' }}</strong>
+                </div>
+              }
+            </div>
+
+            <div class="summary-row">
+              <span>Total Tax:</span>
+              <strong>₹{{ totalTax | number:'1.0-2' }}</strong>
+            </div>
+
+            @if ((orderForm.get('oldGoldExchangeValue')?.value || 0) > 0) {
+              <div class="summary-row">
+                <span>Old Gold Credit:</span>
+                <strong class="text-success">-₹{{ orderForm.get('oldGoldExchangeValue')?.value | number:'1.0-2' }}</strong>
+              </div>
+            }
+
+            <div class="summary-row border-top mt-2 pt-2 fs-5" style="border-color: rgba(255, 215, 0, 0.3);">
+              <span>Net Amount (Payable):</span>
+              <strong style="color: #ffd700;">₹{{ netAmount | number:'1.0-2' }}</strong>
+            </div>
+
+            <div class="summary-row mt-3">
+              <span>Amount Paid:</span>
+              <strong>₹{{ orderForm.get('amountPaid')?.value | number:'1.0-2' }}</strong>
+            </div>
+
+            <div class="summary-row" [style.color]="balanceDue > 0 ? '#ff6b6b' : '#51cf66'">
+              <span class="fw-bold">{{ balanceDue > 0 ? 'Balance Due' : 'Change' }}:</span>
+              <strong>₹{{ Math.abs(balanceDue) | number:'1.0-2' }}</strong>
+            </div>
+          </div>
+
+          <div class="d-grid gap-2 mt-4">
+            <button class="btn lux-btn lux-btn-primary btn-lg" type="button" (click)="submitOrder()"
+                    [disabled]="isLoading || orderItems.length === 0">
+              @if (isLoading) {
+                <span class="spinner-border spinner-border-sm me-2"></span>
+                Creating Order...
+              } @else {
+                <i class="bi bi-check-circle me-2"></i>
+                Generate Invoice & Create Order
+              }
+            </button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+</section>
