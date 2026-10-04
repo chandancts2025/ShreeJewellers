@@ -12,6 +12,7 @@ namespace ShreeJewellers.Infrastructure.Services;
 public interface ISalesOrderService
 {
     Task<SalesOrderResponseDto> CreateOrderAsync(CreateSalesOrderDto dto, string userId);
+    Task<SalesOrderResponseDto> UpdateOrderAsync(int id, UpdateSalesOrderDto dto, string userId);
     Task<SalesOrderResponseDto> GetOrderAsync(int id);
     Task<(List<SalesOrderSummaryDto> items, int total)> GetOrdersAsync(SalesFilterDto filter);
     Task<SalesOrderResponseDto> ProcessReturnAsync(ReturnOrderDto dto, string userId);
@@ -381,6 +382,114 @@ public class SalesOrderService : ISalesOrderService
             await _notifications.SendEmailAsync(email, subject, body);
         if (phone is not null)
             await _notifications.SendSmsAsync(phone, $"Shree Jewellers Invoice {order.OrderNumber}: Rs.{order.NetAmount:N0}");
+    }
+
+    public async Task<SalesOrderResponseDto> UpdateOrderAsync(int id, UpdateSalesOrderDto dto, string userId)
+    {
+        var order = await GetFullOrderAsync(id);
+
+        if (!string.IsNullOrWhiteSpace(dto.CustomerUserId))
+        {
+            order.CustomerUserId = dto.CustomerUserId;
+        }
+
+        order.OrderDate = dto.OrderDate.ToDateTime(TimeOnly.MinValue);
+
+        if (Enum.TryParse<PaymentMode>(dto.PaymentMode, true, out var pm))
+            order.PaymentMode = pm;
+
+        order.Notes = dto.Notes;
+        order.DiscountAmount = Math.Max(0, dto.DiscountAmount);
+        order.AdvanceAmount = Math.Max(0, dto.AdvanceAmount);
+        order.OldGoldExchangeValue = Math.Max(0, dto.OldGoldExchangeValue);
+
+        if (dto.Items != null && dto.Items.Count > 0)
+        {
+            _db.SalesOrderItems.RemoveRange(order.Items);
+            order.Items.Clear();
+
+            decimal gross = 0;
+            decimal totalTax = 0;
+
+            foreach (var lineDto in dto.Items)
+            {
+                var p = await _productRepo.GetByIdAsync(lineDto.ProductId)
+                    ?? throw new KeyNotFoundException($"Product {lineDto.ProductId} not found.");
+
+                var metalValue = lineDto.WeightGrams * lineDto.RatePerGram;
+                var wastageAmt = metalValue * (p.WastagePercent / 100m);
+                var subtotal = metalValue + wastageAmt + lineDto.MakingCharges +
+                               lineDto.HallmarkCharges + lineDto.StoneValue - lineDto.DiscountAmount;
+                subtotal = Math.Max(0, subtotal);
+
+                var taxPct = p.GSTRatePercent;
+                var taxAmt = Math.Round(subtotal * (taxPct / 100m), 2);
+
+                var item = new SalesOrderItem
+                {
+                    SalesOrderId = order.Id,
+                    ProductId = lineDto.ProductId,
+                    Quantity = lineDto.Quantity,
+                    WeightGrams = lineDto.WeightGrams,
+                    RatePerGram = lineDto.RatePerGram,
+                    MakingCharges = lineDto.MakingCharges,
+                    HallmarkCharges = lineDto.HallmarkCharges,
+                    StoneValue = lineDto.StoneValue,
+                    DiscountAmount = lineDto.DiscountAmount,
+                    TaxPercent = taxPct,
+                    TaxAmount = taxAmt,
+                    LineTotal = Math.Round(subtotal + taxAmt, 2)
+                };
+                order.Items.Add(item);
+                gross += subtotal;
+                totalTax += taxAmt;
+            }
+
+            order.GrossAmount = gross;
+            order.TaxAmount = totalTax;
+
+            if (dto.IsInterState)
+            {
+                order.IGSTAmount = totalTax;
+                order.CGSTAmount = 0;
+                order.SGSTAmount = 0;
+            }
+            else
+            {
+                order.CGSTAmount = Math.Round(totalTax / 2m, 2);
+                order.SGSTAmount = totalTax - order.CGSTAmount;
+                order.IGSTAmount = 0;
+            }
+
+            order.NetAmount = Math.Max(0, gross + totalTax - order.DiscountAmount - order.OldGoldExchangeValue);
+        }
+
+        order.AmountPaid = Math.Max(0, dto.AmountPaid);
+
+        if (order.AmountPaid >= order.NetAmount && order.NetAmount > 0)
+        {
+            order.PaymentStatus = PaymentStatus.Paid;
+        }
+        else if (order.AmountPaid > 0)
+        {
+            order.PaymentStatus = PaymentStatus.PartiallyPaid;
+        }
+        else if (Enum.TryParse<PaymentStatus>(dto.PaymentStatus, true, out var ps))
+        {
+            order.PaymentStatus = ps;
+        }
+
+        if (Enum.TryParse<OrderStatus>(dto.Status, true, out var os))
+        {
+            order.Status = os;
+        }
+
+        order.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
+
+        _logger.LogInformation("Sales Order {OrderNumber} (ID: {Id}) updated by {UserId}", order.OrderNumber, order.Id, userId);
+
+        return _mapper.Map<SalesOrderResponseDto>(order);
     }
 
     // ── Helper ────────────────────────────────────────────────────────────

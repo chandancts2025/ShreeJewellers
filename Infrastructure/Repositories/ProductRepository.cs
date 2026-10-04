@@ -35,9 +35,40 @@ public class ProductRepository : IProductRepository
             .FirstOrDefaultAsync(p => p.Id == id);
 
     public async Task<Product?> GetBySkuAsync(string skuCode)
-        => await _db.Products
+    {
+        if (string.IsNullOrWhiteSpace(skuCode)) return null;
+        var clean = skuCode.Trim();
+        var lower = clean.ToLower();
+
+        // 1. Exact SKU match (case-insensitive)
+        var product = await _db.Products
             .Include(p => p.Category)
-            .FirstOrDefaultAsync(p => p.SKUCode == skuCode && p.IsActive);
+            .FirstOrDefaultAsync(p => p.IsActive && p.SKUCode.ToLower() == lower);
+        if (product != null) return product;
+
+        // 2. Barcode match
+        product = await _db.Products
+            .Include(p => p.Category)
+            .FirstOrDefaultAsync(p => p.IsActive && p.BarcodeData == clean);
+        if (product != null) return product;
+
+        // 3. Hallmark number match
+        product = await _db.Products
+            .Include(p => p.Category)
+            .FirstOrDefaultAsync(p => p.IsActive && p.HallmarkNumber != null && p.HallmarkNumber.ToLower() == lower);
+        if (product != null) return product;
+
+        // 4. SKU contains or Name contains or Category contains (smart fallback for POS / cashier lookup)
+        product = await _db.Products
+            .Include(p => p.Category)
+            .FirstOrDefaultAsync(p => p.IsActive && (
+                p.SKUCode.ToLower().Contains(lower) ||
+                p.Name.ToLower().Contains(lower) ||
+                (p.Category != null && p.Category.Name.ToLower().Contains(lower))
+            ));
+
+        return product;
+    }
 
     public async Task<(List<Product> items, int total)> SearchAsync(ProductSearchDto filter)
     {

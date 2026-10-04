@@ -2,25 +2,25 @@
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: rgba(255, 215, 0, 0.6);
+  color: #585868;
   margin-bottom: 0.25rem;
   font-weight: 600;
 }
 
 .info-value {
   font-size: 1rem;
-  color: #ffd700;
-  font-weight: 500;
+  color: #1a1a2e;
+  font-weight: 600;
 }
 
 .items-list {
   .item-row {
-    border-bottom: 1px solid rgba(255, 215, 0, 0.1);
+    border-bottom: 1px solid #ebe4d4;
     transition: all 0.2s ease;
     cursor: pointer;
 
     &:hover {
-      background: rgba(255, 215, 0, 0.05) !important;
+      background: #faf8f2 !important;
     }
 
     &:last-child {
@@ -28,64 +28,72 @@
     }
 
     .form-check-input {
-      border-color: rgba(255, 215, 0, 0.3);
-      accent-color: #ffd700;
+      border-color: #c9bda5;
+      accent-color: #8c6a18;
       cursor: pointer;
 
       &:checked {
-        background-color: #ffd700;
-        border-color: #ffd700;
+        background-color: #8c6a18;
+        border-color: #8c6a18;
       }
     }
 
     .form-check-label {
       cursor: pointer;
+      color: #1a1a2e;
     }
   }
 }
 
 .summary-section {
+  background: #faf8f2;
+  border: 1px solid #e2dac7;
+  border-radius: 8px;
+  padding: 1.25rem;
+
   .summary-label {
     font-size: 0.85rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: rgba(255, 215, 0, 0.6);
+    color: #585868;
     margin-bottom: 0.5rem;
+    font-weight: 600;
   }
 
   .summary-value {
     font-size: 1.5rem;
     font-weight: bold;
-    color: #ffd700;
+    color: #8c6a18;
   }
 
   .summary-sub-label {
     font-size: 0.8rem;
-    color: rgba(255, 215, 0, 0.6);
+    color: #585868;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    font-weight: 600;
   }
 
   .summary-amount {
     font-size: 1.25rem;
     font-weight: bold;
-    color: #ffd700;
+    color: #1a1a2e;
   }
 }
 
 .alert-info {
-  background: rgba(13, 202, 240, 0.1);
-  border-color: rgba(13, 202, 240, 0.3);
-  color: #0dcaf0;
+  background: #eef6fc;
+  border-color: #b8daff;
+  color: #0c5460;
 }
 
 .alert-warning {
-  background: rgba(255, 193, 7, 0.1);
-  border-color: rgba(255, 193, 7, 0.3);
-  color: #ffc107;
+  background: #fff8e6;
+  border-color: #ffeeba;
+  color: #856404;
 
   small {
-    color: #ffc107;
+    color: #856404;
   }
 }
 
@@ -105,5 +113,5 @@
 }
 
 .sticky-top {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(26, 26, 46, 0.06);
 }

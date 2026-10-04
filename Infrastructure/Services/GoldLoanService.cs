@@ -355,7 +355,7 @@ public class GoldLoanService : IGoldLoanService
             : $"Repayment of ₹{dto.AmountPaid:N2} recorded for loan {loan.LoanNumber}. " +
               $"Remaining balance: ₹{principalBalanceAfter:N2} (principal).";
 
-        await _notificationService.SendInAppAsync(customer.Id, "Repayment Recorded", message, "GoldLoan", loan.Id);
+        await _notificationService.SendInAppAsync(customer.Id, isFullyPaid ? "Gold Loan Closed" : "Repayment Recorded", message, "GoldLoan", loan.Id);
 
         if (isFullyPaid)
         {

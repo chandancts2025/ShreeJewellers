@@ -145,3 +145,74 @@ h6,
   background: rgba(185, 74, 72, 0.13);
   color: var(--sj-danger);
 }
+
+/* ─────────────────────────────────────────────────────────────
+   High Contrast & Accessibility Typography Utilities
+───────────────────────────────────────────────────────────── */
+.text-gold {
+  color: #8c6a18 !important;
+  font-weight: 600;
+}
+
+.text-gold-bright {
+  color: #d4af37 !important;
+}
+
+.text-charcoal {
+  color: var(--sj-charcoal) !important;
+}
+
+.text-secondary {
+  color: #585868 !important;
+}
+
+.bg-gold-subtle {
+  background: rgba(201, 168, 76, 0.08) !important;
+}
+
+.border-gold-subtle {
+  border-color: rgba(201, 168, 76, 0.25) !important;
+}
+
+/* Form inputs high-contrast styling */
+.form-control,
+.form-select {
+  border-color: #d0c8b6;
+  color: var(--sj-charcoal);
+  background-color: #ffffff;
+
+  &:focus {
+    border-color: var(--sj-gold);
+    box-shadow: 0 0 0 0.2rem rgba(201, 168, 76, 0.22);
+  }
+
+  &::placeholder {
+    color: #8b8b9a;
+  }
+}
+
+.form-label {
+  color: var(--sj-charcoal);
+  font-weight: 600;
+}
+
+/* Clean high-contrast table styling */
+.table {
+  color: var(--sj-charcoal);
+
+  thead th {
+    background: #f5f2e9;
+    color: #27273a;
+    font-weight: 700;
+    border-bottom: 2px solid rgba(201, 168, 76, 0.3);
+    font-size: 0.86rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  tbody td {
+    color: #1a1a2e;
+    vertical-align: middle;
+    border-bottom-color: rgba(201, 168, 76, 0.12);
+  }
+}

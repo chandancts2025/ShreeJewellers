@@ -123,7 +123,7 @@ public class GoldLoanServiceTests : IDisposable
     public async Task CreateLoan_WithVerifiedKYC_CreatesSuccessfully()
     {
         // Arrange
-        var dto = BuildCreateLoanDto(VerifiedCustomerId, principalAmount: 50_000m);
+        var dto = BuildCreateLoanDto(VerifiedCustomerId, principalAmount: 20_000m);
         SetupLoanRepoForCreate();
 
         // Act
@@ -132,7 +132,7 @@ public class GoldLoanServiceTests : IDisposable
         // Assert
         result.Should().NotBeNull();
         result.LoanNumber.Should().StartWith("GL-");
-        result.PrincipalAmount.Should().Be(50_000m);
+        result.PrincipalAmount.Should().Be(20_000m);
         result.CustomerUserId.Should().Be(VerifiedCustomerId);
 
         _loanRepoMock.Verify(r => r.AddAsync(It.IsAny<GoldLoan>()), Times.Once);
@@ -204,7 +204,7 @@ public class GoldLoanServiceTests : IDisposable
     public async Task CreateLoan_SendsNotificationToCustomer()
     {
         // Arrange
-        var dto = BuildCreateLoanDto(VerifiedCustomerId, principalAmount: 25_000m);
+        var dto = BuildCreateLoanDto(VerifiedCustomerId, principalAmount: 20_000m);
         SetupLoanRepoForCreate();
 
         // Act

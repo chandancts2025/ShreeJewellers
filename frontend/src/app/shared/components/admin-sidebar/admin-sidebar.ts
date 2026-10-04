@@ -89,8 +89,8 @@ interface SidebarItem {
           </a>
         </div>
 
-        <!-- Configuration Section (SuperAdmin Only) -->
-        @if (auth.hasAnyRole(['SuperAdmin'])) {
+        <!-- Configuration Section (Admin & SuperAdmin) -->
+        @if (auth.hasAnyRole(['SuperAdmin', 'Admin'])) {
           <div class="sidebar-section">
             <div class="sidebar-section-title">Configuration</div>
 

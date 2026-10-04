@@ -29,17 +29,20 @@ public class AuthControllerTests : IClassFixture<WebApplicationFactory<Program>>
 
     public AuthControllerTests(WebApplicationFactory<Program> factory)
     {
+        var dbName = "IntegrationTestDb_" + Guid.NewGuid();
         _factory = factory.WithWebHostBuilder(builder =>
         {
             builder.ConfigureServices(services =>
             {
                 // Replace SQL Server with InMemory for tests
-                var descriptor = services.SingleOrDefault(d =>
-                    d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
-                if (descriptor != null) services.Remove(descriptor);
+                var descriptors = services.Where(d =>
+                    d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>) ||
+                    d.ServiceType == typeof(DbContextOptions) ||
+                    d.ServiceType == typeof(ApplicationDbContext)).ToList();
+                foreach (var d in descriptors) services.Remove(d);
 
                 services.AddDbContext<ApplicationDbContext>(options =>
-                    options.UseInMemoryDatabase("IntegrationTestDb_" + Guid.NewGuid()));
+                    options.UseInMemoryDatabase(dbName));
             });
         });
 
@@ -102,7 +105,8 @@ public class AuthControllerTests : IClassFixture<WebApplicationFactory<Program>>
             password = "SecureP@ss1", confirmPassword = "SecureP@ss1"
         }));
 
-        res.StatusCode.Should().Be(HttpStatusCode.OK);
+        var content = await res.Content.ReadAsStringAsync();
+        res.StatusCode.Should().Be(HttpStatusCode.OK, because: content);
         var body = await res.Content.ReadFromJsonAsync<JsonElement>();
         body.TryGetProperty("userId", out _).Should().BeTrue("response must contain userId");
         body.TryGetProperty("customerCode", out _).Should().BeTrue("response must contain customerCode");

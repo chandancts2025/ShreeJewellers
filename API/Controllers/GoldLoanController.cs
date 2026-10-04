@@ -243,6 +243,17 @@ public class GoldLoanController : ControllerBase
         return Ok(loans);
     }
 
+    /// <summary>
+    /// Trigger check to mark overdue loans (90+ days past maturity) as defaulted.
+    /// </summary>
+    [HttpPost("check-defaults")]
+    [Authorize(Roles = "SuperAdmin,Admin")]
+    public async Task<IActionResult> CheckDefaults()
+    {
+        await _loanService.CheckAndMarkDefaultedLoansAsync();
+        return Ok(new { message = "Overdue default check completed successfully." });
+    }
+
     // ─── GET /api/goldloan/due-this-week ─────────────────────────────────
 
     /// <summary>

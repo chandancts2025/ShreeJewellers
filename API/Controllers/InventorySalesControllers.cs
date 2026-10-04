@@ -287,6 +287,21 @@ public class SalesOrderController : ControllerBase
     }
 
     /// <summary>
+    /// Update an existing sales order (payments, status, notes, line items).
+    /// </summary>
+    [HttpPut("{id:int}")]
+    [Authorize(Roles = "SuperAdmin,Admin,Staff")]
+    [ProducesResponseType(typeof(SalesOrderResponseDto), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> UpdateOrder(int id, [FromBody] UpdateSalesOrderDto dto)
+    {
+        if (dto.Id != id) return BadRequest(new { message = "Order ID mismatch." });
+        var result = await _salesService.UpdateOrderAsync(id, dto, GetUserId());
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Get full sales order details including all line items and GST breakdown.
     /// Customers can only access their own orders.
     /// </summary>

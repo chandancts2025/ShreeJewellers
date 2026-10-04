@@ -1,134 +1,576 @@
 <section class="app-page">
-  <div class="container">
-    <div class="section-title mb-4">Gold Loan Management</div>
+  <div class="container-fluid px-lg-4">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+      <div>
+        <h1 class="font-display fs-2 mb-1 text-gold">Gold Loan Portfolio & Vault Management</h1>
+        <div class="text-secondary small fw-medium">
+          Pawn loan disbursements, LTV valuations, repayment waterfall, overdue default checks & auction recovery
+        </div>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <button class="btn lux-btn lux-btn-secondary" type="button" (click)="load()" title="Refresh loans">
+          <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+        </button>
+        <button class="btn lux-btn lux-btn-outline-warning" type="button" (click)="runDefaultCheck()" [disabled]="isCheckingDefaults">
+          @if (isCheckingDefaults) {
+            <span class="spinner-border spinner-border-sm me-1"></span> Checking...
+          } @else {
+            <i class="bi bi-shield-exclamation me-1"></i> Run Overdue Default Check
+          }
+        </button>
+      </div>
+    </div>
+
     <div class="row g-4">
-      <div class="col-lg-5">
+      <!-- LEFT COLUMN: Loan Origination & Eligibility -->
+      <div class="col-xl-4 col-lg-5">
+        <!-- Create New Loan Card -->
         <div class="lux-card p-4 mb-4">
-          <div class="font-display fs-2 mb-3">Create New Loan</div>
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <div class="font-display fs-4 text-gold"><i class="bi bi-plus-circle me-2"></i>Issue New Gold Loan</div>
+            <span class="badge lux-badge-info">LTV &le; 75%</span>
+          </div>
+
           <form [formGroup]="createLoanForm" class="row g-3">
-            <div class="col-12"><label class="form-label">Customer User ID</label><input class="form-control" formControlName="customerUserId"></div>
-            <div class="col-6"><label class="form-label">Loan Date</label><input class="form-control" type="date" formControlName="loanDate"></div>
-            <div class="col-6"><label class="form-label">Principal Amount</label><input class="form-control" type="number" formControlName="principalAmount"></div>
-            <div class="col-12"><label class="form-label">Gold Purity</label><select class="form-select" formControlName="goldPurity"><option>22K</option><option>24K</option><option>18K</option></select></div>
-            <div class="col-12"><label class="form-label">Notes</label><textarea class="form-control" rows="3" formControlName="notes"></textarea></div>
-            <div class="col-12"><div class="section-kicker mb-2">Pledged Item</div></div>
-            <div class="col-12"><label class="form-label">Description</label><input class="form-control" [formControl]="loanItemForm.controls.itemDescription"></div>
-            <div class="col-4"><label class="form-label">Weight (g)</label><input class="form-control" type="number" [formControl]="loanItemForm.controls.weightGrams"></div>
-            <div class="col-4"><label class="form-label">Purity</label><select class="form-select" [formControl]="loanItemForm.controls.purity"><option>22K</option><option>24K</option><option>18K</option></select></div>
-            <div class="col-4"><label class="form-label">Estimated Value</label><input class="form-control" type="number" [formControl]="loanItemForm.controls.estimatedValue"></div>
-            <div class="col-12"><label class="form-label">Hallmark Number</label><input class="form-control" [formControl]="loanItemForm.controls.hallmarkNumber"></div>
-            <div class="col-12"><button class="btn lux-btn lux-btn-primary" type="button" (click)="createLoan()">Create Loan</button></div>
+            <div class="col-12">
+              <label class="form-label small fw-semibold text-charcoal">Customer <span class="text-danger">*</span></label>
+              <select class="form-select form-select-sm" formControlName="customerUserId">
+                <option value="">-- Select Registered Customer --</option>
+                @for (c of customers; track c.userId) {
+                  <option [value]="c.userId">{{ c.fullName }} ({{ c.phoneNumber }})</option>
+                }
+              </select>
+              @if (createLoanForm.get('customerUserId')?.invalid && createLoanForm.get('customerUserId')?.touched) {
+                <div class="text-danger small mt-1">Please select a customer</div>
+              }
+            </div>
+
+            <div class="col-sm-6">
+              <label class="form-label small fw-semibold text-charcoal">Loan Date <span class="text-danger">*</span></label>
+              <input class="form-control form-control-sm" type="date" formControlName="loanDate">
+            </div>
+
+            <div class="col-sm-6">
+              <label class="form-label small fw-semibold text-charcoal">Disbursement (₹) <span class="text-danger">*</span></label>
+              <input class="form-control form-control-sm" type="number" formControlName="principalAmount" placeholder="Amount to disburse">
+            </div>
+
+            <div class="col-12">
+              <label class="form-label small fw-semibold text-charcoal">Gold Purity</label>
+              <select class="form-select form-select-sm" formControlName="goldPurity">
+                <option value="22K">22 Karat (91.6% Gold)</option>
+                <option value="24K">24 Karat (99.9% Pure)</option>
+                <option value="18K">18 Karat (75.0% Gold)</option>
+              </select>
+            </div>
+
+            <!-- Pledged Ornaments Detail -->
+            <div class="col-12 pt-2">
+              <div class="p-3 vault-ornament-box">
+                <div class="fw-semibold text-gold small mb-2"><i class="bi bi-box-seam me-1"></i> Pledged Vault Ornament</div>
+                <div class="row g-2">
+                  <div class="col-12">
+                    <label class="form-label small text-secondary">Description</label>
+                    <input class="form-control form-control-sm" placeholder="e.g. 22K Gold Necklace & Bangles" [formControl]="loanItemForm.controls.itemDescription">
+                  </div>
+                  <div class="col-4">
+                    <label class="form-label small text-secondary">Weight (g)</label>
+                    <input class="form-control form-control-sm" type="number" step="0.001" placeholder="0.000" [formControl]="loanItemForm.controls.weightGrams">
+                  </div>
+                  <div class="col-4">
+                    <label class="form-label small text-secondary">Purity</label>
+                    <select class="form-select form-select-sm" [formControl]="loanItemForm.controls.purity">
+                      <option value="22K">22K</option>
+                      <option value="24K">24K</option>
+                      <option value="18K">18K</option>
+                    </select>
+                  </div>
+                  <div class="col-4">
+                    <label class="form-label small text-secondary">Market Value (₹)</label>
+                    <input class="form-control form-control-sm" type="number" placeholder="Est. value" [formControl]="loanItemForm.controls.estimatedValue">
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label small text-secondary">Hallmark / HUID Code</label>
+                    <input class="form-control form-control-sm" placeholder="6-digit alphanumeric HUID" [formControl]="loanItemForm.controls.hallmarkNumber">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label small fw-semibold text-charcoal">Disbursement Notes</label>
+              <textarea class="form-control form-control-sm" rows="2" formControlName="notes" placeholder="Optional internal notes"></textarea>
+            </div>
+
+            <div class="col-12">
+              <button class="btn lux-btn lux-btn-primary w-100" type="button" (click)="createLoan()">
+                <i class="bi bi-safe2 me-1"></i> Disburse Loan & Vault Gold
+              </button>
+            </div>
           </form>
         </div>
 
+        <!-- Eligibility Calculator Card -->
         <div class="lux-card p-4">
-          <div class="font-display fs-2 mb-3">Check Loan Eligibility</div>
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <div class="font-display fs-4 text-gold"><i class="bi bi-calculator me-2"></i>Eligibility Check</div>
+            <span class="badge lux-badge-secondary">Instant</span>
+          </div>
+
           <form [formGroup]="eligibilityForm" class="row g-3">
-            <div class="col-12"><label class="form-label">Customer User ID</label><input class="form-control" formControlName="customerUserId"></div>
-            <div class="col-12"><label class="form-label">Pledged Gold Description</label><input class="form-control" formControlName="itemDescription"></div>
-            <div class="col-6"><label class="form-label">Weight (g)</label><input class="form-control" type="number" formControlName="weightGrams"></div>
-            <div class="col-6"><label class="form-label">Purity</label><select class="form-select" formControlName="purity"><option>22K</option><option>24K</option><option>18K</option></select></div>
-            <div class="col-12"><label class="form-label">Estimated Value</label><input class="form-control" type="number" formControlName="estimatedValue"></div>
-            <div class="col-12"><button class="btn lux-btn lux-btn-secondary" type="button" (click)="checkEligibility()">Check Eligibility</button></div>
+            <div class="col-12">
+              <label class="form-label small fw-semibold text-charcoal">Customer</label>
+              <select class="form-select form-select-sm" formControlName="customerUserId">
+                <option value="">-- Select Customer --</option>
+                @for (c of customers; track c.userId) {
+                  <option [value]="c.userId">{{ c.fullName }} ({{ c.phoneNumber }})</option>
+                }
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-semibold text-charcoal">Ornament Description</label>
+              <input class="form-control form-control-sm" formControlName="itemDescription" placeholder="Gold ornament description">
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold text-charcoal">Weight (g)</label>
+              <input class="form-control form-control-sm" type="number" step="0.001" formControlName="weightGrams">
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold text-charcoal">Purity</label>
+              <select class="form-select form-select-sm" formControlName="purity">
+                <option value="22K">22K</option>
+                <option value="24K">24K</option>
+                <option value="18K">18K</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-semibold text-charcoal">Assessed Gold Value (₹)</label>
+              <input class="form-control form-control-sm" type="number" formControlName="estimatedValue" placeholder="Market value">
+            </div>
+            <div class="col-12">
+              <button class="btn lux-btn lux-btn-secondary w-100" type="button" (click)="checkEligibility()">
+                <i class="bi bi-search me-1"></i> Calculate Max Eligible Loan
+              </button>
+            </div>
           </form>
+
           @if (eligibilityResult) {
-            <div class="mt-4">
-              <div class="small text-secondary">Eligibility</div>
-              <div class="fw-bold mb-2">{{ eligibilityResult.isEligible ? 'Eligible' : 'Not eligible' }}</div>
+            <div class="mt-4 p-3 rounded" [class.bg-success-subtle]="eligibilityResult.isEligible" [class.bg-danger-subtle]="!eligibilityResult.isEligible" style="border: 1px solid rgba(201,168,76,0.3);">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="fw-bold" [class.text-success]="eligibilityResult.isEligible" [class.text-danger]="!eligibilityResult.isEligible">
+                  <i class="bi" [class.bi-check-circle-fill]="eligibilityResult.isEligible" [class.bi-x-circle-fill]="!eligibilityResult.isEligible"></i>
+                  {{ eligibilityResult.isEligible ? 'Eligible for Gold Loan' : 'Not Eligible' }}
+                </span>
+                <span class="badge bg-dark">LTV {{ eligibilityResult.ltvPercent || 75 }}%</span>
+              </div>
               @if (eligibilityResult.isEligible) {
-                <div>Max eligible amount: ₹{{ eligibilityResult.maxEligibleLoanAmount | number:'1.0-0' }}</div>
-                <div>Rate: {{ eligibilityResult.interestRatePercent }}%</div>
-                <div>Maturity date: {{ eligibilityResult.proposedMaturityDate }}</div>
+                <div class="d-flex justify-content-between py-1 border-bottom small">
+                  <span class="text-secondary">Max Sanctionable:</span>
+                  <strong class="text-gold">₹{{ eligibilityResult.maxEligibleLoanAmount | number:'1.0-0' }}</strong>
+                </div>
+                <div class="d-flex justify-content-between py-1 border-bottom small">
+                  <span class="text-secondary">Interest Rate:</span>
+                  <strong class="text-charcoal">{{ eligibilityResult.interestRatePercent }}% p.a.</strong>
+                </div>
+                <div class="d-flex justify-content-between py-1 small">
+                  <span class="text-secondary">Proposed Maturity:</span>
+                  <strong class="text-charcoal">{{ eligibilityResult.proposedMaturityDate }}</strong>
+                </div>
               } @else {
-                <div class="text-danger">{{ eligibilityResult.ineligibilityReason }}</div>
+                <div class="text-danger small mt-1">{{ eligibilityResult.ineligibilityReason }}</div>
               }
             </div>
           }
         </div>
       </div>
 
-      <div class="col-lg-7">
-        <div class="lux-card p-4 mb-4">
-          <div class="font-display fs-2 mb-3">Loans Due This Week</div>
-          @for (loan of dueThisWeek; track loan.id) {
-            <div class="d-flex justify-content-between border-bottom py-2">
-              <span>{{ loan.loanNumber }}</span>
-              <span>{{ loan.maturityDate }}</span>
+      <!-- RIGHT COLUMN: Active Portfolio, Filters & Management Panel -->
+      <div class="col-xl-8 col-lg-7">
+        <!-- Portfolio Navigation Tabs & Filter -->
+        <div class="lux-card p-3 mb-4">
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <!-- Tabs -->
+            <ul class="nav nav-pills gap-2" role="tablist">
+              <li class="nav-item">
+                <button class="nav-link py-2 px-3" [class.active]="activeTab === 'active'" (click)="setTab('active')" type="button">
+                  <i class="bi bi-collection me-1"></i> Active Loans
+                  <span class="badge ms-1" [class.bg-secondary]="activeTab !== 'active'">{{ activeLoans.length }}</span>
+                </button>
+              </li>
+              <li class="nav-item">
+                <button class="nav-link py-2 px-3" [class.active]="activeTab === 'due'" (click)="setTab('due')" type="button">
+                  <i class="bi bi-clock-history me-1"></i> Due This Week
+                  <span class="badge ms-1" [class.bg-warning]="activeTab !== 'due'" [class.text-dark]="activeTab !== 'due'">{{ dueThisWeek.length }}</span>
+                </button>
+              </li>
+              <li class="nav-item">
+                <button class="nav-link py-2 px-3" [class.active]="activeTab === 'defaulted'" (click)="setTab('defaulted')" type="button">
+                  <i class="bi bi-exclamation-triangle-fill me-1 text-danger"></i> Defaulted / Overdue
+                  <span class="badge ms-1" [class.bg-danger]="activeTab !== 'defaulted'">{{ defaultedLoans.length }}</span>
+                </button>
+              </li>
+            </ul>
+
+            <!-- Search -->
+            <div class="search-input-group" style="min-width: 220px;">
+              <div class="input-group input-group-sm">
+                <span class="input-group-text bg-white border-end-0 text-secondary"><i class="bi bi-search"></i></span>
+                <input class="form-control border-start-0" type="text" [(ngModel)]="searchTerm" (ngModelChange)="onSearch()" placeholder="Search loan # or name...">
+              </div>
             </div>
-          }
+          </div>
         </div>
 
+        <!-- Loans Table Card -->
         <div class="lux-card p-4 mb-4">
-          <div class="font-display fs-2 mb-3">All Active Loans</div>
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <div class="font-display fs-4 text-charcoal">
+              @if (activeTab === 'active') { Active Loan Portfolio }
+              @else if (activeTab === 'due') { Loans Maturing / Due This Week }
+              @else { Defaulted & Overdue Loans }
+            </div>
+            <span class="text-secondary small">Click "Manage" to view ledger, inspect vault ornaments, or record repayments</span>
+          </div>
+
           <div class="table-responsive">
-            <table class="table">
-              <thead><tr><th>Loan</th><th>Customer</th><th>Principal</th><th>Outstanding</th><th>Status</th><th></th></tr></thead>
+            <table class="table align-middle">
+              <thead>
+                <tr>
+                  <th>Loan Number</th>
+                  <th>Customer</th>
+                  <th>Principal</th>
+                  <th>Outstanding</th>
+                  <th>Maturity</th>
+                  <th>Status</th>
+                  <th class="text-end">Action</th>
+                </tr>
+              </thead>
               <tbody>
-                @for (loan of activeLoans; track loan.id) {
-                  <tr>
-                    <td>{{ loan.loanNumber }}</td>
-                    <td>{{ loan.customerName }}</td>
-                    <td>₹{{ loan.principalAmount | number:'1.0-0' }}</td>
-                    <td>₹{{ loan.outstandingBalance | number:'1.0-0' }}</td>
-                    <td>{{ loan.loanStatus }}</td>
-                    <td><button class="btn lux-btn lux-btn-secondary" type="button" (click)="selectLoan(loan)">Manage</button></td>
-                  </tr>
+                @if (activeTab === 'active') {
+                  @for (loan of activeLoans; track loan.id) {
+                    <tr [class.table-active]="selectedLoan?.id === loan.id">
+                      <td>
+                        <strong class="text-gold">{{ loan.loanNumber }}</strong>
+                      </td>
+                      <td class="fw-semibold text-charcoal">{{ loan.customerName || loan.customerCode || 'Registered Customer' }}</td>
+                      <td>₹{{ loan.principalAmount | number:'1.0-0' }}</td>
+                      <td class="fw-bold text-charcoal">₹{{ loan.outstandingBalance | number:'1.0-0' }}</td>
+                      <td class="text-secondary">{{ loan.maturityDate }}</td>
+                      <td>
+                        <span class="badge" [class.lux-badge-success]="loan.loanStatus === 'Active'" [class.lux-badge-warning]="loan.loanStatus === 'Overdue'" [class.lux-badge-danger]="loan.loanStatus === 'Defaulted'">
+                          {{ loan.loanStatus }}
+                        </span>
+                      </td>
+                      <td class="text-end">
+                        <button class="btn btn-sm" [class.lux-btn-primary]="selectedLoan?.id === loan.id" [class.lux-btn-secondary]="selectedLoan?.id !== loan.id" type="button" (click)="selectLoan(loan)">
+                          <i class="bi bi-gear-fill me-1"></i> Manage
+                        </button>
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="7" class="text-center py-4 text-secondary">No active loans found.</td></tr>
+                  }
+                } @else if (activeTab === 'due') {
+                  @for (loan of dueThisWeek; track loan.id) {
+                    <tr [class.table-active]="selectedLoan?.id === loan.id">
+                      <td><strong class="text-gold">{{ loan.loanNumber }}</strong></td>
+                      <td class="fw-semibold text-charcoal">{{ loan.customerName || 'Registered Customer' }}</td>
+                      <td>₹{{ loan.principalAmount | number:'1.0-0' }}</td>
+                      <td class="fw-bold text-warning">₹{{ loan.outstandingBalance | number:'1.0-0' }}</td>
+                      <td><span class="badge bg-warning text-dark">{{ loan.maturityDate }}</span></td>
+                      <td><span class="badge lux-badge-warning">{{ loan.loanStatus }}</span></td>
+                      <td class="text-end">
+                        <button class="btn btn-sm lux-btn-secondary" type="button" (click)="selectLoan(loan)">
+                          <i class="bi bi-gear-fill me-1"></i> Manage
+                        </button>
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="7" class="text-center py-4 text-secondary">No loans due this week.</td></tr>
+                  }
+                } @else {
+                  @for (loan of defaultedLoans; track loan.id) {
+                    <tr [class.table-active]="selectedLoan?.id === loan.id">
+                      <td><strong class="text-danger">{{ loan.loanNumber }}</strong></td>
+                      <td class="fw-semibold text-charcoal">{{ loan.customerName || 'Registered Customer' }}</td>
+                      <td>₹{{ loan.principalAmount | number:'1.0-0' }}</td>
+                      <td class="fw-bold text-danger">₹{{ loan.outstandingBalance | number:'1.0-0' }}</td>
+                      <td class="text-secondary">{{ loan.maturityDate }}</td>
+                      <td><span class="badge lux-badge-danger">{{ loan.loanStatus }}</span></td>
+                      <td class="text-end">
+                        <button class="btn btn-sm lux-btn-secondary" type="button" (click)="selectLoan(loan)">
+                          <i class="bi bi-gear-fill me-1"></i> Manage
+                        </button>
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="7" class="text-center py-4 text-secondary">No defaulted loans currently on record.</td></tr>
+                  }
                 }
               </tbody>
             </table>
           </div>
         </div>
 
+        <!-- SELECTED LOAN DETAIL & MANAGEMENT PANEL -->
         @if (selectedLoan) {
-          <div class="lux-card p-4">
-            <div class="d-flex justify-content-between align-items-center mb-4">
+          <div class="lux-card p-4 border-gold shadow-sm mb-4">
+            <!-- Header -->
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom gap-3" style="border-color: #e5dfd1 !important;">
               <div>
-                <div class="font-display fs-2 mb-1">Manage Loan</div>
-                <div class="small text-secondary">{{ selectedLoan.loanNumber }} · {{ selectedLoan.loanStatus }}</div>
+                <div class="d-flex align-items-center gap-2">
+                  <span class="font-display fs-3 text-gold">{{ selectedLoan.loanNumber }}</span>
+                  <span class="badge" [class.lux-badge-success]="selectedLoan.loanStatus === 'Active'" [class.lux-badge-warning]="selectedLoan.loanStatus === 'Overdue'" [class.lux-badge-danger]="selectedLoan.loanStatus === 'Defaulted'">
+                    {{ selectedLoan.loanStatus }}
+                  </span>
+                  @if (selectedLoanOutstanding?.isOverdue) {
+                    <span class="badge lux-badge-danger">⚠️ {{ selectedLoanOutstanding?.daysOverdue }} Days Overdue</span>
+                  }
+                </div>
+                <div class="small text-secondary mt-1">
+                  Customer: <strong class="text-charcoal">{{ selectedLoan.customerName || selectedLoanDetail?.customerName || 'Customer' }}</strong> · 
+                  Sanction Date: <strong class="text-charcoal">{{ selectedLoanDetail?.loanDate || selectedLoan.loanDate }}</strong> · 
+                  Maturity: <strong class="text-charcoal">{{ selectedLoanOutstanding?.maturityDate || selectedLoan.maturityDate }}</strong> · 
+                  Rate: <strong class="text-charcoal">{{ selectedLoanDetail?.interestRatePercent || selectedLoanOutstanding?.interestRatePercent || 18 }}% p.a.</strong>
+                </div>
               </div>
-              <span class="badge bg-info text-dark">Selected</span>
+              <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-sm lux-btn-secondary" type="button" (click)="printPawnTicket()">
+                  <i class="bi bi-printer me-1"></i> Print Pawn Ticket
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" type="button" (click)="clearSelectedLoan()">
+                  <i class="bi bi-x-lg me-1"></i> Close View
+                </button>
+              </div>
             </div>
 
+            <!-- Financial Breakdown Stat Cards (High Contrast) -->
+            <div class="row g-3 mb-4">
+              <div class="col-sm-6 col-md-3">
+                <div class="metric-box">
+                  <div class="metric-label">Principal Remaining</div>
+                  <div class="metric-val text-charcoal">
+                    ₹{{ (selectedLoanOutstanding?.principalRemaining ?? selectedLoan.principalAmount) | number:'1.0-0' }}
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-6 col-md-3">
+                <div class="metric-box metric-warn">
+                  <div class="metric-label">Accrued Interest</div>
+                  <div class="metric-val">
+                    ₹{{ (selectedLoanOutstanding?.accruedInterest ?? 0) | number:'1.0-0' }}
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-6 col-md-3">
+                <div class="metric-box metric-danger">
+                  <div class="metric-label">Penal Interest</div>
+                  <div class="metric-val">
+                    ₹{{ (selectedLoanOutstanding?.penaltyInterest ?? 0) | number:'1.0-0' }}
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-6 col-md-3">
+                <div class="metric-box metric-total">
+                  <div class="metric-label">Total Settlement Due</div>
+                  <div class="metric-val">
+                    ₹{{ (selectedLoanOutstanding?.totalOutstanding ?? selectedLoan.outstandingBalance) | number:'1.0-0' }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Vault Pledged Ornaments -->
+            @if (selectedLoanDetail?.goldItems && selectedLoanDetail!.goldItems.length > 0) {
+              <div class="mb-4 p-3 rounded" style="background: #fbf9f4; border: 1px solid #e5dfd1;">
+                <div class="fw-semibold text-gold small mb-2"><i class="bi bi-safe me-1"></i> Pledged Vault Ornaments (Collateral)</div>
+                <div class="table-responsive">
+                  <table class="table table-sm align-middle mb-0">
+                    <thead>
+                      <tr>
+                        <th>Ornament Description</th>
+                        <th>Gross Weight</th>
+                        <th>Purity</th>
+                        <th>Estimated Value</th>
+                        <th>Hallmark / HUID</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (item of selectedLoanDetail!.goldItems; track item.id) {
+                        <tr>
+                          <td><strong class="text-charcoal">{{ item.itemDescription }}</strong></td>
+                          <td class="text-charcoal">{{ item.weightGrams }} g</td>
+                          <td><span class="badge lux-badge-info">{{ item.purity }}</span></td>
+                          <td class="fw-semibold text-charcoal">₹{{ item.estimatedValue | number:'1.0-0' }}</td>
+                          <td><code>{{ item.hallmarkNumber || 'N/A' }}</code></td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            }
+
+            <!-- Management Actions: Repayment / Extend / Close / Auction -->
             <div class="row g-4">
+              <!-- Repayment Waterfall Form -->
               <div class="col-lg-6">
-                <div class="mb-4">
-                  <div class="small text-secondary mb-2">Record Repayment</div>
+                <div class="loan-panel-card h-100">
+                  <div class="fw-semibold text-gold mb-3"><i class="bi bi-cash-coin me-1"></i> Record Repayment</div>
                   <form [formGroup]="repaymentForm" class="row g-3">
-                    <div class="col-12"><label class="form-label">Amount Paid</label><input class="form-control" type="number" formControlName="amountPaid"></div>
-                    <div class="col-6"><label class="form-label">Payment Mode</label><select class="form-select" formControlName="paymentMode"><option>Cash</option><option>Card</option><option>UPI</option><option>NEFT</option></select></div>
-                    <div class="col-6"><label class="form-label">Notes</label><input class="form-control" formControlName="notes"></div>
-                    <div class="col-12"><button class="btn lux-btn lux-btn-primary" type="button" (click)="recordRepayment()">Record Repayment</button></div>
+                    <div class="col-12">
+                      <label class="form-label small fw-semibold text-charcoal">Amount Paid (₹) <span class="text-danger">*</span></label>
+                      <input class="form-control" type="number" formControlName="amountPaid" placeholder="Amount">
+                      <div class="form-text small text-secondary">
+                        Waterfall order: Penalties &rarr; Accrued Interest &rarr; Principal
+                      </div>
+                    </div>
+                    <div class="col-sm-6">
+                      <label class="form-label small fw-semibold text-charcoal">Payment Mode</label>
+                      <select class="form-select" formControlName="paymentMode">
+                        <option value="Cash">Cash</option>
+                        <option value="UPI">UPI</option>
+                        <option value="Card">Card</option>
+                        <option value="NEFT">NEFT / RTGS</option>
+                        <option value="Cheque">Cheque</option>
+                      </select>
+                    </div>
+                    <div class="col-sm-6">
+                      <label class="form-label small fw-semibold text-charcoal">Receipt Notes</label>
+                      <input class="form-control" formControlName="notes" placeholder="e.g. Partial interest payment">
+                    </div>
+                    <div class="col-12 pt-2">
+                      <button class="btn lux-btn lux-btn-primary w-100" type="button" (click)="recordRepayment()" [disabled]="isProcessingPayment">
+                        @if (isProcessingPayment) {
+                          <span class="spinner-border spinner-border-sm me-1"></span> Processing...
+                        } @else {
+                          <i class="bi bi-receipt me-1"></i> Post Repayment & Issue Receipt
+                        }
+                      </button>
+                    </div>
                   </form>
                 </div>
               </div>
 
+              <!-- Loan Lifecycle Operations: Extend / Close / Auction -->
               <div class="col-lg-6">
-                <div class="mb-4">
-                  <div class="small text-secondary mb-2">Extend Loan</div>
-                  <form [formGroup]="extendForm" class="row g-3">
-                    <div class="col-6"><label class="form-label">New Maturity Date</label><input class="form-control" type="date" formControlName="newMaturityDate"></div>
-                    <div class="col-6"><label class="form-label">Reason</label><input class="form-control" formControlName="reason"></div>
-                    <div class="col-12"><button class="btn lux-btn lux-btn-secondary" type="button" (click)="extendLoan()">Extend</button></div>
+                <div class="loan-panel-card h-100">
+                  <div class="fw-semibold text-gold mb-3"><i class="bi bi-clock-history me-1"></i> Loan Maturity Extension</div>
+                  <form [formGroup]="extendForm" class="row g-2 mb-4">
+                    <div class="col-sm-6">
+                      <label class="form-label small fw-semibold text-charcoal">New Maturity Date</label>
+                      <input class="form-control form-control-sm" type="date" formControlName="newMaturityDate">
+                    </div>
+                    <div class="col-sm-6">
+                      <label class="form-label small fw-semibold text-charcoal">Extension Reason</label>
+                      <input class="form-control form-control-sm" formControlName="reason" placeholder="Reason for extension">
+                    </div>
+                    <div class="col-12 mt-2">
+                      <button class="btn lux-btn lux-btn-secondary w-100 btn-sm" type="button" (click)="extendLoan()">
+                        <i class="bi bi-calendar-plus me-1"></i> Extend Loan Term
+                      </button>
+                    </div>
                   </form>
-                </div>
-                <div>
-                  <div class="small text-secondary mb-2">Close / Auction</div>
-                  <form [formGroup]="closeForm" class="row g-3 mb-3">
-                    <div class="col-12"><label class="form-label">Close Notes</label><textarea class="form-control" rows="2" formControlName="notes"></textarea></div>
-                    <div class="col-12"><button class="btn lux-btn lux-btn-outline-danger" type="button" (click)="closeLoan()">Close Loan</button></div>
-                  </form>
-                  <form [formGroup]="auctionForm" class="row g-3">
-                    <div class="col-6"><label class="form-label">Auction Proceeds</label><input class="form-control" type="number" formControlName="auctionProceeds"></div>
-                    <div class="col-6"><label class="form-label">Auction Date</label><input class="form-control" type="date" formControlName="auctionDate"></div>
-                    <div class="col-12"><label class="form-label">Auction Notes</label><input class="form-control" formControlName="notes"></div>
-                    <div class="col-12"><button class="btn lux-btn lux-btn-warning" type="button" (click)="auctionLoan()">Record Auction</button></div>
-                  </form>
+
+                  <div class="border-top pt-3" style="border-color: #e5dfd1 !important;">
+                    <div class="fw-semibold text-gold mb-2 small"><i class="bi bi-door-closed me-1"></i> Settlement & Vault Release</div>
+                    <form [formGroup]="closeForm" class="row g-2 mb-3">
+                      <div class="col-12">
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" id="goldReturnedCheck" formControlName="goldReturned">
+                          <label class="form-check-label small fw-semibold text-charcoal" for="goldReturnedCheck">
+                            Pledged gold ornaments handed over to customer
+                          </label>
+                        </div>
+                      </div>
+                      <div class="col-12">
+                        <input class="form-control form-control-sm" formControlName="notes" placeholder="Closing settlement remarks">
+                      </div>
+                      <div class="col-12">
+                        <button class="btn lux-btn lux-btn-outline-danger w-100 btn-sm" type="button" (click)="closeLoan()">
+                          <i class="bi bi-check2-all me-1"></i> Close Loan & Release Gold
+                        </button>
+                      </div>
+                    </form>
+
+                    <!-- Default Auction Form -->
+                    @if (selectedLoan.loanStatus === 'Defaulted' || selectedLoanOutstanding?.isOverdue) {
+                      <div class="border-top pt-3 mt-3" style="border-color: #f9c6c6 !important;">
+                        <div class="fw-semibold text-danger mb-2 small"><i class="bi bi-hammer me-1"></i> Default Collateral Auction</div>
+                        <form [formGroup]="auctionForm" class="row g-2">
+                          <div class="col-6">
+                            <label class="form-label small text-secondary">Proceeds (₹)</label>
+                            <input class="form-control form-control-sm" type="number" formControlName="auctionProceeds" placeholder="Amount">
+                          </div>
+                          <div class="col-6">
+                            <label class="form-label small text-secondary">Auction Date</label>
+                            <input class="form-control form-control-sm" type="date" formControlName="auctionDate">
+                          </div>
+                          <div class="col-12">
+                            <input class="form-control form-control-sm" formControlName="notes" placeholder="Auction details & bidder name">
+                          </div>
+                          <div class="col-12">
+                            <button class="btn lux-btn lux-btn-warning w-100 btn-sm" type="button" (click)="auctionLoan()">
+                              <i class="bi bi-gavel me-1"></i> Record Auction & Settle Balance
+                            </button>
+                          </div>
+                        </form>
+                      </div>
+                    }
+                  </div>
                 </div>
               </div>
             </div>
+
+            <!-- Repayment Receipts History Table -->
+            @if (selectedLoanRepayments.length > 0) {
+              <div class="mt-4 pt-4 border-top" style="border-color: #e5dfd1 !important;">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                  <div class="font-display fs-5 text-gold"><i class="bi bi-journal-text me-2"></i>Repayment Ledger & Receipts</div>
+                  <span class="badge lux-badge-secondary">{{ selectedLoanRepayments.length }} Receipts</span>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-sm align-middle">
+                    <thead>
+                      <tr>
+                        <th>Receipt #</th>
+                        <th>Date</th>
+                        <th>Amount Paid</th>
+                        <th>Principal</th>
+                        <th>Interest</th>
+                        <th>Penalty</th>
+                        <th>Mode</th>
+                        <th>Balance After</th>
+                        <th class="text-end">Print</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (rep of selectedLoanRepayments; track rep.id || rep.receiptNumber) {
+                        <tr>
+                          <td><strong class="text-gold">{{ rep.receiptNumber }}</strong></td>
+                          <td class="text-charcoal">{{ rep.repaymentDate | slice:0:10 }}</td>
+                          <td class="fw-bold text-charcoal">₹{{ rep.amountPaid | number:'1.0-0' }}</td>
+                          <td class="text-charcoal">₹{{ rep.principalComponent | number:'1.0-0' }}</td>
+                          <td class="text-charcoal">₹{{ rep.interestComponent | number:'1.0-0' }}</td>
+                          <td class="text-danger">₹{{ (rep.penaltyAmount || 0) | number:'1.0-0' }}</td>
+                          <td><span class="badge bg-light text-dark border">{{ rep.paymentMode }}</span></td>
+                          <td class="fw-semibold text-charcoal">₹{{ rep.principalBalanceAfter | number:'1.0-0' }}</td>
+                          <td class="text-end">
+                            <button class="btn btn-xs btn-outline-secondary py-0 px-2" type="button" (click)="printReceipt(rep)" title="Print Repayment Voucher">
+                              <i class="bi bi-printer"></i>
+                            </button>
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            }
 
             @if (actionMessage) {
-              <div class="alert alert-success mt-4">{{ actionMessage }}</div>
+              <div class="alert alert-success mt-4 mb-0"><i class="bi bi-check-circle me-1"></i> {{ actionMessage }}</div>
             }
           </div>
         }
@@ -136,3 +578,198 @@
     </div>
   </div>
 </section>
+
+<!-- PAWN TICKET / LOAN AGREEMENT MODAL -->
+@if (showPawnTicketModal && selectedLoan) {
+  <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.6);" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header border-bottom py-3" style="background: #fbf9f4;">
+          <h5 class="modal-title font-display text-gold">
+            <i class="bi bi-file-earmark-text me-2"></i>Gold Loan Pawn Ticket & Agreement
+          </h5>
+          <button type="button" class="btn-close" (click)="closePawnTicket()"></button>
+        </div>
+        <div class="modal-body p-4" id="printablePawnTicket">
+          <!-- Ticket Header -->
+          <div class="text-center pb-3 border-bottom mb-4">
+            <h3 class="font-display fw-bold mb-1" style="color: #8c6a18; letter-spacing: 0.05em;">SHREE JEWELLERS</h3>
+            <div class="small text-secondary">Authorized Gold Loan & Pawn Broking Department</div>
+            <div class="small text-secondary">108 Jewellery Plaza, Zaveri Market, Mumbai 400002 · GSTIN: 27AABCS1234F1Z8</div>
+            <div class="badge bg-dark mt-2 px-3 py-1">PAWN TICKET / GOLD PLEDGE MEMORANDUM</div>
+          </div>
+
+          <!-- Basic Loan Meta -->
+          <div class="row g-3 mb-4 small">
+            <div class="col-6">
+              <div class="text-secondary">Pawn Loan Reference:</div>
+              <strong class="fs-5 text-gold">{{ selectedLoan.loanNumber }}</strong>
+            </div>
+            <div class="col-6 text-end">
+              <div class="text-secondary">Sanction Date:</div>
+              <strong class="text-charcoal">{{ selectedLoanDetail?.loanDate || selectedLoan.loanDate }}</strong>
+            </div>
+            <div class="col-6">
+              <div class="text-secondary">Customer Name:</div>
+              <strong class="text-charcoal">{{ selectedLoan.customerName || selectedLoanDetail?.customerName || 'Registered Borrower' }}</strong>
+            </div>
+            <div class="col-6 text-end">
+              <div class="text-secondary">Maturity / Due Date:</div>
+              <strong class="text-danger">{{ selectedLoanOutstanding?.maturityDate || selectedLoan.maturityDate }}</strong>
+            </div>
+          </div>
+
+          <!-- Collateral Details -->
+          <div class="p-3 rounded mb-4" style="background: #fbf9f4; border: 1px solid #e5dfd1;">
+            <div class="fw-bold small text-charcoal mb-2"><i class="bi bi-safe me-1"></i> Pledged Ornaments Kept in Vault Custody</div>
+            <table class="table table-sm mb-0">
+              <thead>
+                <tr>
+                  <th>Ornament Description</th>
+                  <th>Weight</th>
+                  <th>Purity</th>
+                  <th>Assessed Value</th>
+                  <th>HUID</th>
+                </tr>
+              </thead>
+              <tbody>
+                @if (selectedLoanDetail?.goldItems && selectedLoanDetail!.goldItems.length > 0) {
+                  @for (it of selectedLoanDetail!.goldItems; track it.id) {
+                    <tr>
+                      <td>{{ it.itemDescription }}</td>
+                      <td>{{ it.weightGrams }} g</td>
+                      <td>{{ it.purity }}</td>
+                      <td>₹{{ it.estimatedValue | number:'1.0-0' }}</td>
+                      <td>{{ it.hallmarkNumber || 'N/A' }}</td>
+                    </tr>
+                  }
+                } @else {
+                  <tr>
+                    <td>Gold Collateral Pledged</td>
+                    <td>{{ selectedLoan.goldDepositedWeightGrams || '—' }} g</td>
+                    <td>{{ selectedLoan.goldPurity || '22K' }}</td>
+                    <td>₹{{ selectedLoan.principalAmount * 1.33 | number:'1.0-0' }}</td>
+                    <td>Verified</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Financial Terms -->
+          <div class="row g-3 mb-4 small">
+            <div class="col-sm-4">
+              <div class="p-2 border rounded text-center">
+                <div class="text-secondary">Sanctioned Amount</div>
+                <div class="fs-5 fw-bold text-charcoal mt-1">₹{{ selectedLoan.principalAmount | number:'1.0-0' }}</div>
+              </div>
+            </div>
+            <div class="col-sm-4">
+              <div class="p-2 border rounded text-center">
+                <div class="text-secondary">Interest Rate</div>
+                <div class="fs-5 fw-bold text-charcoal mt-1">{{ selectedLoanDetail?.interestRatePercent || 18 }}% p.a.</div>
+              </div>
+            </div>
+            <div class="col-sm-4">
+              <div class="p-2 border rounded text-center">
+                <div class="text-secondary">Current Balance</div>
+                <div class="fs-5 fw-bold text-gold mt-1">₹{{ (selectedLoanOutstanding?.totalOutstanding ?? selectedLoan.outstandingBalance) | number:'1.0-0' }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Undertaking -->
+          <div class="small text-secondary mb-4 p-3 border rounded" style="font-size: 0.8rem; background: #fafafa;">
+            <strong>Terms & Custody Undertaking:</strong> The borrower pledges the above gold ornaments as collateral against the loan sanctioned.
+            Interest is payable monthly. On full repayment of principal and interest, pledged ornaments will be returned. If default exceeds 90 days
+            from maturity, the lender reserves the right to recover dues through public auction after statutory notice.
+          </div>
+
+          <!-- Signatures -->
+          <div class="row pt-4 text-center small text-secondary">
+            <div class="col-6">
+              <div style="height: 40px;"></div>
+              <div class="border-top mx-4 pt-1 text-charcoal fw-semibold">Borrower's Signature</div>
+            </div>
+            <div class="col-6">
+              <div style="height: 40px;"></div>
+              <div class="border-top mx-4 pt-1 text-charcoal fw-semibold">For SHREE JEWELLERS (Authorised Signatory)</div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-top py-2">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="closePawnTicket()">Close</button>
+          <button type="button" class="btn lux-btn lux-btn-primary btn-sm" (click)="executePrint()">
+            <i class="bi bi-printer me-1"></i> Print Pawn Ticket
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- REPAYMENT RECEIPT VOUCHER MODAL -->
+@if (selectedReceiptForPrint && selectedLoan) {
+  <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.6);" role="dialog">
+    <div class="modal-dialog modal-md modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header border-bottom py-3" style="background: #fbf9f4;">
+          <h5 class="modal-title font-display text-gold">
+            <i class="bi bi-receipt me-2"></i>Gold Loan Repayment Voucher
+          </h5>
+          <button type="button" class="btn-close" (click)="closeReceipt()"></button>
+        </div>
+        <div class="modal-body p-4" id="printableReceipt">
+          <div class="text-center pb-2 border-bottom mb-3">
+            <h4 class="font-display fw-bold mb-0 text-gold">SHREE JEWELLERS</h4>
+            <div class="small text-secondary">Pawn Loan Repayment Voucher</div>
+          </div>
+
+          <div class="row g-2 small mb-3">
+            <div class="col-6">Receipt #: <strong class="text-gold">{{ selectedReceiptForPrint.receiptNumber }}</strong></div>
+            <div class="col-6 text-end">Date: <strong class="text-charcoal">{{ selectedReceiptForPrint.repaymentDate | slice:0:10 }}</strong></div>
+            <div class="col-6">Loan #: <strong class="text-charcoal">{{ selectedLoan.loanNumber }}</strong></div>
+            <div class="col-6 text-end">Payment Mode: <strong class="text-charcoal">{{ selectedReceiptForPrint.paymentMode }}</strong></div>
+            <div class="col-12">Customer: <strong class="text-charcoal">{{ selectedLoan.customerName }}</strong></div>
+          </div>
+
+          <div class="border rounded p-3 mb-3" style="background: #fbf9f4;">
+            <div class="d-flex justify-content-between py-1 border-bottom small">
+              <span class="text-secondary">Principal Allocation:</span>
+              <strong class="text-charcoal">₹{{ selectedReceiptForPrint.principalComponent | number:'1.0-0' }}</strong>
+            </div>
+            <div class="d-flex justify-content-between py-1 border-bottom small">
+              <span class="text-secondary">Interest Component:</span>
+              <strong class="text-charcoal">₹{{ selectedReceiptForPrint.interestComponent | number:'1.0-0' }}</strong>
+            </div>
+            @if (selectedReceiptForPrint.penaltyAmount > 0) {
+              <div class="d-flex justify-content-between py-1 border-bottom small">
+                <span class="text-danger">Penal Interest:</span>
+                <strong class="text-danger">₹{{ selectedReceiptForPrint.penaltyAmount | number:'1.0-0' }}</strong>
+              </div>
+            }
+            <div class="d-flex justify-content-between py-2 border-bottom fw-bold fs-5">
+              <span class="text-gold">Total Amount Paid:</span>
+              <span class="text-gold">₹{{ selectedReceiptForPrint.amountPaid | number:'1.0-0' }}</span>
+            </div>
+            <div class="d-flex justify-content-between pt-2 small">
+              <span class="text-secondary">Remaining Principal Balance:</span>
+              <strong class="text-charcoal">₹{{ selectedReceiptForPrint.principalBalanceAfter | number:'1.0-0' }}</strong>
+            </div>
+          </div>
+
+          <div class="text-center pt-3 small text-secondary">
+            <div>Thank you for your repayment.</div>
+            <div class="mt-4 pt-2 border-top mx-5 text-charcoal">Authorized Signature / Cashier Stamp</div>
+          </div>
+        </div>
+        <div class="modal-footer border-top py-2">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="closeReceipt()">Close</button>
+          <button type="button" class="btn lux-btn lux-btn-primary btn-sm" (click)="executePrint()">
+            <i class="bi bi-printer me-1"></i> Print Receipt
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

@@ -5,6 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>ShreeJewellers.API</RootNamespace>
     <UserSecretsId>shreejewellers-api-secrets</UserSecretsId>
+    <PreserveCompilationContext>true</PreserveCompilationContext>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Domain\ShreeJewellers.Domain.csproj" />

@@ -65,4 +65,8 @@ export class LoanService {
   auctionLoan(id: number, payload: unknown): Observable<any> {
     return this.api.post(`/api/goldloan/${id}/auction`, payload);
   }
+
+  checkDefaults(): Observable<{ message: string }> {
+    return this.api.post<{ message: string }>('/api/goldloan/check-defaults', {});
+  }
 }

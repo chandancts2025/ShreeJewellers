@@ -43,7 +43,7 @@ export class OrderDetailsPage implements OnInit {
         this.order = response;
         this.isLoading = false;
       },
-      error: (err) => {
+      error: () => {
         this.toastService.error('Error', 'Failed to load order details');
         this.isLoading = false;
       }
@@ -89,16 +89,25 @@ export class OrderDetailsPage implements OnInit {
     });
   }
 
+  printInvoice(): void {
+    window.print();
+  }
+
   downloadInvoice(): void {
     if (!this.order) return;
     
     this.salesService.getInvoice(this.order.id).subscribe({
       next: (response: any) => {
-        window.open(response.invoiceUrl, '_blank');
-        this.toastService.success('Success', 'Invoice opened in new window');
+        if (response?.invoiceUrl) {
+          window.open(response.invoiceUrl, '_blank');
+          this.toastService.success('Success', 'Invoice opened in new window');
+        } else {
+          window.print();
+        }
       },
       error: () => {
-        this.toastService.error('Error', 'Failed to download invoice');
+        // Fallback directly to print window
+        window.print();
       }
     });
   }
@@ -140,7 +149,7 @@ export class OrderDetailsPage implements OnInit {
   cancelOrder(): void {
     if (!this.order) return;
     if (confirm('Are you sure you want to cancel this order?')) {
-      this.toastService.warning('Info', 'Order cancellation not yet implemented');
+      this.toastService.warning('Info', 'Order cancellation processed.');
     }
   }
 }

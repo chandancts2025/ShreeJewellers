@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api';
-import { CreateSalesOrderDto, DailySalesSummaryDto, PagedResponse, ReturnOrderDto, SalesFilterDto, SalesOrderResponse, SalesOrderSummary } from '../models';
+import { CreateSalesOrderDto, UpdateSalesOrderDto, DailySalesSummaryDto, PagedResponse, ReturnOrderDto, SalesFilterDto, SalesOrderResponse, SalesOrderSummary } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class SalesService {
@@ -31,6 +31,10 @@ export class SalesService {
 
   createOrder(payload: CreateSalesOrderDto): Observable<SalesOrderResponse> {
     return this.api.post<SalesOrderResponse>('/api/sales', payload);
+  }
+
+  updateOrder(id: number, payload: UpdateSalesOrderDto): Observable<SalesOrderResponse> {
+    return this.api.put<SalesOrderResponse>(`/api/sales/${id}`, payload);
   }
 
   getInvoice(id: number): Observable<{ invoiceUrl: string }> {

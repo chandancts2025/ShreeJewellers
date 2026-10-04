@@ -1,54 +1,143 @@
 <section class="app-page">
-  <div class="container">
+  <div class="container py-3">
+    <!-- Hero Banner -->
     <div class="hero-panel p-4 p-lg-5 mb-5">
       <div class="row g-4 align-items-center">
         <div class="col-lg-7">
-          <div class="section-kicker mb-2">Gold Loan Information</div>
-          <h1 class="font-display display-4 mb-3">Secure liquidity against your gold</h1>
+          <div class="section-kicker mb-2">Instant Liquidity & Pawn Loans</div>
+          <h1 class="font-display display-4 mb-3">Instant Financial Freedom Against Your Gold</h1>
           <p class="lead text-white-50">
-            {{ data?.interestRatePercent }}% {{ data?.interestCalculationType }} interest, up to
-            {{ data?.loanToValuePercent }}% LTV, with transparent documentation and repayment visibility.
+            Transparent gold loans starting at {{ data?.interestRatePercent || 1 }}% {{ data?.interestCalculationType || 'Monthly' }} interest. Disbursal in 15 minutes up to {{ data?.loanToValuePercent || 75 }}% LTV with insured vault security.
           </p>
 
-          @if (isAuthenticated) {
-            @if (isCustomer) {
-              <a class="btn lux-btn lux-btn-primary mt-3 me-2" routerLink="/customer/loans">View My Loans</a>
-              <span class="text-white-75 d-block mt-3">You are logged in as a customer. To apply for a new gold loan, please contact branch staff or visit the admin desk.</span>
+          <div class="d-flex flex-wrap gap-2 mt-4">
+            @if (isAuthenticated) {
+              @if (isCustomer) {
+                <a class="btn lux-btn lux-btn-primary" routerLink="/customer/loans">
+                  <i class="bi bi-wallet2 me-2"></i> View My Active Loans
+                </a>
+              }
+              @if (!isCustomer && isStaffOrAdmin) {
+                <a class="btn lux-btn lux-btn-primary" routerLink="/admin/loans">
+                  <i class="bi bi-safe2 me-2"></i> Manage Loans Desk
+                </a>
+              }
+            } @else {
+              <a class="btn lux-btn lux-btn-primary" routerLink="/register">
+                <i class="bi bi-person-plus me-2"></i> Open Account / Apply
+              </a>
+              <a class="btn lux-btn lux-btn-secondary" routerLink="/login">
+                <i class="bi bi-box-arrow-in-right me-2"></i> Customer Sign In
+              </a>
             }
-            @if (!isCustomer && isStaffOrAdmin) {
-              <a class="btn lux-btn lux-btn-primary mt-3" routerLink="/admin/loans">Manage Loans</a>
-            }
-          }
-          @if (!isAuthenticated) {
-            <a class="btn lux-btn lux-btn-primary mt-3 me-2" routerLink="/login">Log in</a>
-            <a class="btn lux-btn lux-btn-secondary mt-3" routerLink="/register">Register</a>
-          }
+          </div>
         </div>
+
         <div class="col-lg-5">
-          <div class="lux-card p-4 text-dark">
-            <div class="small text-uppercase text-secondary mb-2">Loan Snapshot</div>
-            <div class="mb-2"><strong>Tenure:</strong> {{ data?.defaultTenureMonths }} months</div>
-            <div class="mb-2"><strong>Interest Type:</strong> {{ data?.interestCalculationType }}</div>
-            <div><strong>Documents:</strong> {{ data?.requiredDocuments?.join(', ') }}</div>
+          <div class="lux-card p-4 text-dark bg-white shadow">
+            <div class="small text-uppercase text-secondary fw-bold mb-3">Key Features & Trust</div>
+            <div class="d-flex align-items-center gap-3 mb-3">
+              <i class="bi bi-shield-lock-fill fs-2 text-gold"></i>
+              <div>
+                <strong class="d-block text-charcoal">Insured Bank-Grade Vault</strong>
+                <span class="small text-secondary">100% insured physical storage under CCTV</span>
+              </div>
+            </div>
+            <div class="d-flex align-items-center gap-3 mb-3">
+              <i class="bi bi-percent fs-2 text-gold"></i>
+              <div>
+                <strong class="d-block text-charcoal">Up to {{ data?.loanToValuePercent || 75 }}% Loan-to-Value</strong>
+                <span class="small text-secondary">Highest statutory valuation per RBI guidelines</span>
+              </div>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+              <i class="bi bi-cash-coin fs-2 text-gold"></i>
+              <div>
+                <strong class="d-block text-charcoal">Zero Hidden Fees</strong>
+                <span class="small text-secondary">Clear interest waterfall & flexible closures</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- Prominent Interactive EMI & Valuation Calculator -->
+    <div class="mb-5">
+      <app-emi-calculator></app-emi-calculator>
+    </div>
+
+    <!-- Process & Journey Section -->
     <div class="row g-4 mb-5">
-      <div class="col-lg-6">
-        <div class="lux-card p-4 h-100">
-          <div class="section-kicker mb-2">Process</div>
-          <div class="section-title mb-3">Step-by-step journey</div>
-          <ol class="mb-0">
-            @for (step of data?.steps ?? []; track step) {
-              <li class="mb-3">{{ step }}</li>
-            }
-          </ol>
+      <div class="col-lg-7">
+        <div class="lux-card p-4 h-100 bg-white shadow-sm">
+          <div class="section-kicker mb-1">Simple 4-Step Process</div>
+          <h3 class="font-display fs-2 mb-4 text-charcoal">How to Get a Gold Loan</h3>
+          
+          <div class="timeline-process">
+            <div class="d-flex gap-3 mb-4">
+              <div class="process-num">1</div>
+              <div>
+                <strong class="text-charcoal fs-6 d-block mb-1">Walk-in with Your Gold Ornaments</strong>
+                <span class="text-secondary small">Bring your gold jewelry, coins, or bars along with Government photo ID (Aadhaar / PAN).</span>
+              </div>
+            </div>
+            <div class="d-flex gap-3 mb-4">
+              <div class="process-num">2</div>
+              <div>
+                <strong class="text-charcoal fs-6 d-block mb-1">Electronic Purity & Weight Appraisal</strong>
+                <span class="text-secondary small">Carat testing and precise gross/net weight measurement done right before your eyes.</span>
+              </div>
+            </div>
+            <div class="d-flex gap-3 mb-4">
+              <div class="process-num">3</div>
+              <div>
+                <strong class="text-charcoal fs-6 d-block mb-1">Instant Sanction & Paperless Pledge</strong>
+                <span class="text-secondary small">Digital pawn pledge ticket with full itemized photo evidence and transparent repayment terms.</span>
+              </div>
+            </div>
+            <div class="d-flex gap-3">
+              <div class="process-num">4</div>
+              <div>
+                <strong class="text-charcoal fs-6 d-block mb-1">Immediate Cash / Bank Disbursal</strong>
+                <span class="text-secondary small">Collect cash immediately or receive instant transfer via IMPS/NEFT to your verified bank account.</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="col-lg-6">
-        <app-emi-calculator></app-emi-calculator>
+
+      <div class="col-lg-5">
+        <div class="lux-card p-4 h-100 bg-white shadow-sm">
+          <div class="section-kicker mb-1">Documentation</div>
+          <h3 class="font-display fs-2 mb-3 text-charcoal">Eligibility Checklist</h3>
+          
+          <ul class="list-unstyled mb-4">
+            <li class="d-flex align-items-center gap-2 mb-3 text-charcoal">
+              <i class="bi bi-check-circle-fill text-success fs-5"></i>
+              <span>Age 18+ years (Indian Citizens)</span>
+            </li>
+            <li class="d-flex align-items-center gap-2 mb-3 text-charcoal">
+              <i class="bi bi-check-circle-fill text-success fs-5"></i>
+              <span>Valid Aadhaar Card (Address Proof)</span>
+            </li>
+            <li class="d-flex align-items-center gap-2 mb-3 text-charcoal">
+              <i class="bi bi-check-circle-fill text-success fs-5"></i>
+              <span>PAN Card (for loans exceeding ₹50,000)</span>
+            </li>
+            <li class="d-flex align-items-center gap-2 text-charcoal">
+              <i class="bi bi-check-circle-fill text-success fs-5"></i>
+              <span>Gold Jewellery purity 18K to 24K</span>
+            </li>
+          </ul>
+
+          <div class="alert alert-warning border-gold-subtle bg-gold-subtle p-3 mb-0">
+            <small class="text-charcoal">
+              <i class="bi bi-info-circle me-1 text-gold"></i>
+              <strong>Have questions?</strong> Contact branch desk at <a href="tel:+912212345678" class="text-gold fw-bold">+91-22-12345678</a> or visit our store during operating hours.
+            </small>
+          </div>
+        </div>
       </div>
     </div>
   </div>

@@ -89,8 +89,8 @@
         </div>
       } @else {
         <div class="table-responsive">
-          <table class="table">
-            <thead style="background: rgba(255, 215, 0, 0.1);">
+          <table class="table align-middle">
+            <thead>
               <tr>
                 <th>Invoice #</th>
                 <th>Date</th>
@@ -99,25 +99,25 @@
                 <th>Order Status</th>
                 <th>Payment Status</th>
                 <th>Balance Due</th>
-                <th>Actions</th>
+                <th class="text-end">Actions</th>
               </tr>
             </thead>
             <tbody>
               @for (order of orders; track order.id) {
-                <tr style="border-bottom: 1px solid rgba(255, 215, 0, 0.1);">
+                <tr>
                   <td>
-                    <strong class="text-warning">{{ order.orderNumber }}</strong>
+                    <strong class="text-gold font-monospace fs-6">{{ order.orderNumber }}</strong>
                   </td>
                   <td class="small text-secondary">{{ formatDate(order.orderDate) }}</td>
                   <td>
                     <div class="customer-info">
-                      <strong>{{ order.customerName || order.walkInCustomerName }}</strong>
+                      <strong class="text-charcoal">{{ order.customerName || order.walkInCustomerName }}</strong>
                       @if (order.customerCode) {
                         <div class="small text-secondary">{{ order.customerCode }}</div>
                       }
                     </div>
                   </td>
-                  <td class="font-weight-bold">{{ formatCurrency(order.netAmount) }}</td>
+                  <td class="fw-bold text-charcoal">{{ formatCurrency(order.netAmount) }}</td>
                   <td>
                     <span [class]="'badge ' + getStatusBadgeClass(order.status)">
                       {{ order.status }}
@@ -128,15 +128,15 @@
                       {{ order.paymentStatus }}
                     </span>
                   </td>
-                  <td [style.color]="order.balanceDue > 0 ? '#ff6b6b' : '#51cf66'">
+                  <td class="fw-bold" [class.text-danger]="order.balanceDue > 0" [class.text-success]="order.balanceDue <= 0">
                     {{ order.balanceDue > 0 ? '+' : '' }}{{ formatCurrency(order.balanceDue) }}
                   </td>
-                  <td>
+                  <td class="text-end">
                     <div class="btn-group btn-group-sm" role="group">
-                      <a [routerLink]="['/admin/sales/view', order.id]" class="btn btn-outline-info" title="View">
+                      <a [routerLink]="['/admin/sales/view', order.id]" class="btn btn-outline-secondary" title="View Invoice">
                         <i class="bi bi-eye"></i>
                       </a>
-                      <a [routerLink]="['/admin/sales/edit', order.id]" class="btn btn-outline-warning" title="Edit">
+                      <a [routerLink]="['/admin/sales/edit', order.id]" class="btn btn-outline-secondary" title="Edit Order">
                         <i class="bi bi-pencil"></i>
                       </a>
                       @if (order.status === 'Confirmed' || order.status === 'Delivered') {

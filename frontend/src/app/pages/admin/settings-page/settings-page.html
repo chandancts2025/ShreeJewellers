@@ -1,6 +1,96 @@
 <section class="app-page">
-  <div class="container">
-    <div class="section-title mb-4">Settings</div>
+  <div class="container py-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+      <div>
+        <div class="section-kicker mb-1">SuperAdmin Configuration</div>
+        <div class="section-title">System & Shop Settings</div>
+      </div>
+      <button class="btn lux-btn lux-btn-secondary" type="button" (click)="load()">
+        <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+      </button>
+    </div>
+
+    <!-- Daily Gold/Silver Price Override Panel -->
+    <div class="lux-card p-4 mb-4">
+      <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+        <div>
+          <div class="font-display fs-2 mb-1">Daily Market Rates Override</div>
+          <div class="small text-secondary">
+            Set custom opening market rates for 22K/24K Gold and Silver. Overrides external API until end of trading day.
+          </div>
+        </div>
+        @if (currentRates) {
+          <span class="badge" [ngClass]="currentRates.isManualOverride ? 'bg-warning text-dark' : 'bg-success'">
+            {{ currentRates.isManualOverride ? 'Manual Override Active' : 'Live API Active' }}
+          </span>
+        }
+      </div>
+
+      <div class="row g-4 align-items-center">
+        <div class="col-lg-6">
+          <form [formGroup]="manualPriceForm" class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label fw-bold">22K Gold (₹/10g)</label>
+              <input class="form-control" type="number" formControlName="goldRate22KPer10g" placeholder="e.g. 68500">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-bold">24K Gold (₹/10g)</label>
+              <input class="form-control" type="number" formControlName="goldRate24KPer10g" placeholder="e.g. 74500">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-bold">Silver (₹/kg)</label>
+              <input class="form-control" type="number" formControlName="silverRatePerKg" placeholder="e.g. 89000">
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-bold">Override Reason / Notes</label>
+              <input class="form-control" formControlName="reason" placeholder="e.g. Market opening rate from Zaveri Bazaar">
+            </div>
+            <div class="col-12">
+              <button class="btn lux-btn lux-btn-primary" type="button" [disabled]="isSavingPrice" (click)="setManualPriceOverride()">
+                <i class="bi bi-check2-circle me-1"></i> Apply Today's Rate Override
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="p-3 rounded-4 bg-light-subtle border">
+            <div class="small fw-bold text-uppercase text-secondary mb-2">Recent Price Logs</div>
+            <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+              <table class="table table-sm table-borderless align-middle mb-0">
+                <thead class="text-secondary small border-bottom">
+                  <tr>
+                    <th>Date/Time</th>
+                    <th>22K / 10g</th>
+                    <th>24K / 10g</th>
+                    <th>Silver / kg</th>
+                    <th>Source</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (record of priceHistory; track record.recordedAt) {
+                    <tr class="small">
+                      <td>{{ record.recordedAt | date:'short' }}</td>
+                      <td>₹{{ record.rate22KPer10g | number:'1.0-0' }}</td>
+                      <td>₹{{ record.rate24KPer10g | number:'1.0-0' }}</td>
+                      <td>₹{{ record.silverRatePerKg | number:'1.0-0' }}</td>
+                      <td>
+                        <span class="badge" [ngClass]="record.isManualOverride ? 'bg-warning text-dark' : 'bg-secondary'">
+                          {{ record.isManualOverride ? 'Manual' : 'API' }}
+                        </span>
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="5" class="text-secondary text-center py-2">No historical logs available</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="row g-4">
       <div class="col-lg-7">
         <div class="lux-card p-4 mb-4">
@@ -11,44 +101,125 @@
             <div class="col-12"><label class="form-label">Address</label><input class="form-control" formControlName="shopAddress"></div>
             <div class="col-md-6"><label class="form-label">Phone</label><input class="form-control" formControlName="shopPhone"></div>
             <div class="col-md-6"><label class="form-label">Email</label><input class="form-control" formControlName="shopEmail"></div>
-            <div class="col-12"><button class="btn lux-btn lux-btn-primary" type="button" (click)="saveShop()">Save Shop Settings</button></div>
+            <div class="col-md-6"><label class="form-label">WhatsApp Number</label><input class="form-control" formControlName="whatsAppNumber"></div>
+            <div class="col-md-6"><label class="form-label">Established Year</label><input class="form-control" formControlName="trustedSinceYear"></div>
+            <div class="col-12"><label class="form-label">Business Hours</label><input class="form-control" formControlName="businessHours"></div>
+            <div class="col-12"><label class="form-label">About Story</label><textarea class="form-control" rows="3" formControlName="aboutStory"></textarea></div>
+            <div class="col-12"><button class="btn lux-btn lux-btn-primary" type="button" (click)="saveShop()"><i class="bi bi-save me-1"></i> Save Shop Settings</button></div>
           </form>
         </div>
+
         <div class="lux-card p-4 mb-4">
-          <div class="font-display fs-2 mb-3">Interest Rate Settings</div>
+          <div class="font-display fs-2 mb-3">Gold Loan Interest Settings</div>
           <form [formGroup]="interestForm" class="row g-3">
-            <div class="col-md-4"><label class="form-label">Interest %</label><input class="form-control" type="number" formControlName="interestRatePercent"></div>
-            <div class="col-md-4"><label class="form-label">Calculation Type</label><select class="form-select" formControlName="calculationType"><option [ngValue]="1">Monthly</option><option [ngValue]="0">Daily</option><option [ngValue]="2">Yearly</option></select></div>
-            <div class="col-md-4"><label class="form-label">Effective From</label><input class="form-control" type="date" formControlName="effectiveFrom"></div>
-            <div class="col-12"><button class="btn lux-btn lux-btn-outline" type="button" (click)="saveInterest()">Add Interest Rate</button></div>
+            <div class="col-md-4">
+              <label class="form-label">Interest Rate %</label>
+              <input class="form-control" type="number" formControlName="interestRatePercent">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Calculation Type</label>
+              <select class="form-select" formControlName="calculationType">
+                <option [ngValue]="0">Daily</option>
+                <option [ngValue]="1">Monthly</option>
+                <option [ngValue]="2">Yearly</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Effective From</label>
+              <input class="form-control" type="date" formControlName="effectiveFrom">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Max LTV %</label>
+              <input class="form-control" type="number" formControlName="loanToValuePercent">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Default Tenure (Months)</label>
+              <input class="form-control" type="number" formControlName="defaultTenureMonths">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Penalty Rate % (Overdue)</label>
+              <input class="form-control" type="number" formControlName="penaltyRatePercent">
+            </div>
+            <div class="col-12">
+              <button class="btn lux-btn lux-btn-primary" type="button" (click)="saveInterest()">
+                <i class="bi bi-plus-circle me-1"></i> Add Active Interest Setting
+              </button>
+            </div>
           </form>
+
           <div class="mt-4">
-            @for (rate of interestRates; track rate.id) {
-              <div class="d-flex justify-content-between border-bottom py-2">
-                <span>{{ rate.interestRatePercent }}% {{ rate.calculationType }}</span>
-                <span>{{ rate.effectiveFrom }}</span>
-              </div>
-            }
+            <div class="section-kicker mb-2">Historical & Active Rates</div>
+            <div class="table-responsive">
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th>Rate</th>
+                    <th>LTV</th>
+                    <th>Tenure</th>
+                    <th>Effective From</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (rate of interestRates; track rate.id) {
+                    <tr>
+                      <td class="fw-bold">{{ rate.interestRatePercent }}% ({{ rate.calculationType }})</td>
+                      <td>{{ rate.loanToValuePercent }}%</td>
+                      <td>{{ rate.defaultTenureMonths }} mo</td>
+                      <td>{{ rate.effectiveFrom }}</td>
+                      <td>
+                        <span class="badge" [ngClass]="rate.effectiveTo ? 'bg-secondary' : 'bg-success'">
+                          {{ rate.effectiveTo ? 'Archived' : 'Active' }}
+                        </span>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
+
       <div class="col-lg-5">
         <div class="lux-card p-4 mb-4">
           <div class="font-display fs-2 mb-3">Gold Price API</div>
           <form [formGroup]="priceSettingsForm" class="row g-3">
-            <div class="col-12"><label class="form-label">API Key</label><input class="form-control" formControlName="apiKey"></div>
+            <div class="col-12"><label class="form-label">API Key (GoldAPI.io)</label><input class="form-control" formControlName="apiKey" type="password"></div>
             <div class="col-12"><label class="form-label">Refresh Interval (Minutes)</label><input class="form-control" formControlName="refreshIntervalMinutes"></div>
-            <div class="col-12"><button class="btn lux-btn lux-btn-outline" type="button" (click)="savePriceSettings()">Save API Settings</button></div>
+            <div class="col-12"><button class="btn lux-btn lux-btn-secondary" type="button" (click)="savePriceSettings()"><i class="bi bi-gear me-1"></i> Save API Settings</button></div>
           </form>
         </div>
+
         <div class="lux-card p-4">
-          <div class="font-display fs-2 mb-3">User Management</div>
-          @for (user of users; track user.userId) {
-            <div class="d-flex justify-content-between border-bottom py-2">
-              <span>{{ user.fullName }}</span>
-              <span class="small text-secondary">{{ user.role }}</span>
-            </div>
-          }
+          <div class="font-display fs-2 mb-3">System Staff & Users</div>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (user of users; track user.userId) {
+                  <tr>
+                    <td>
+                      <div class="fw-bold">{{ user.fullName }}</div>
+                      <div class="small text-secondary">{{ user.email }}</div>
+                    </td>
+                    <td><span class="badge bg-dark">{{ user.role }}</span></td>
+                    <td>
+                      <span class="status-badge" [ngClass]="user.isActive ? 'status-active' : 'status-danger'">
+                        {{ user.isActive ? 'Active' : 'Inactive' }}
+                      </span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

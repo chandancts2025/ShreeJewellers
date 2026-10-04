@@ -1,0 +1,211 @@
+.app-page {
+  padding-bottom: 3rem;
+}
+
+.text-gold {
+  color: #8c6a18 !important;
+  font-weight: 600;
+}
+
+.text-charcoal {
+  color: #1a1a2e !important;
+}
+
+.text-secondary {
+  color: #585868 !important;
+}
+
+.border-gold {
+  border: 1.5px solid rgba(201, 168, 76, 0.4) !important;
+}
+
+/* Nav Pills High Contrast Styling */
+.nav-pills .nav-link {
+  color: #1a1a2e;
+  background: #ffffff;
+  border: 1px solid #dcd4c3;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    color: #8c6a18;
+    background: #f7f4ec;
+    border-color: #c9a84c;
+  }
+
+  &.active {
+    background: #1a1a2e;
+    color: #ffffff;
+    font-weight: 700;
+    border-color: #1a1a2e;
+    box-shadow: 0 4px 12px rgba(26, 26, 46, 0.15);
+
+    .badge {
+      background-color: #ecdba3 !important;
+      color: #1a1a2e !important;
+      font-weight: 700;
+    }
+  }
+}
+
+/* High Contrast Table Styling */
+.table {
+  color: #1a1a2e;
+
+  thead th {
+    background-color: #f7f4ec;
+    border-bottom: 2px solid #e2dac8;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #585868;
+    font-weight: 700;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid #ede8dc;
+    transition: background-color 0.15s ease;
+
+    &:hover {
+      background-color: #fbf9f2 !important;
+    }
+
+    &.table-active {
+      background-color: #f5eedc !important;
+    }
+  }
+
+  td {
+    color: #1a1a2e;
+    font-size: 0.9rem;
+  }
+}
+
+/* Financial Stat Cards in Management View */
+.metric-box {
+  background: #ffffff;
+  border: 1px solid #e5dfd1;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  box-shadow: 0 2px 8px rgba(26, 26, 46, 0.04);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  .metric-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #585868;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .metric-val {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #1a1a2e;
+    margin-top: 0.25rem;
+    font-family: 'Lato', sans-serif;
+  }
+
+  &.metric-total {
+    background: linear-gradient(135deg, #fffcf5 0%, #fdf5e2 100%);
+    border: 1.5px solid #d4af37;
+
+    .metric-label {
+      color: #8c6a18;
+    }
+
+    .metric-val {
+      color: #8c6a18;
+    }
+  }
+
+  &.metric-warn {
+    .metric-val {
+      color: #b87a00;
+    }
+  }
+
+  &.metric-danger {
+    .metric-val {
+      color: #b94a48;
+    }
+  }
+}
+
+/* Operation Panels */
+.loan-panel-card {
+  background: #ffffff;
+  border: 1px solid #e5dfd1;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  box-shadow: 0 2px 8px rgba(26, 26, 46, 0.03);
+}
+
+.vault-ornament-box {
+  background: #fbf9f4;
+  border: 1px dashed #dcd4c3;
+  border-radius: 0.75rem;
+}
+
+/* Badges High Contrast */
+.lux-badge-success {
+  background-color: #e8f5ed !important;
+  color: #1e6b37 !important;
+  border: 1px solid #c0e6ce;
+  font-weight: 700;
+}
+
+.lux-badge-warning {
+  background-color: #fff8e6 !important;
+  color: #996500 !important;
+  border: 1px solid #ffe3a3;
+  font-weight: 700;
+}
+
+.lux-badge-danger {
+  background-color: #fdeeee !important;
+  color: #a82323 !important;
+  border: 1px solid #f9c6c6;
+  font-weight: 700;
+}
+
+.lux-badge-info {
+  background-color: #eaf3fa !important;
+  color: #1d5f8a !important;
+  border: 1px solid #c5dfef;
+  font-weight: 700;
+}
+
+.lux-badge-secondary {
+  background-color: #f0edf4 !important;
+  color: #4b4556 !important;
+  border: 1px solid #dad4e3;
+  font-weight: 700;
+}
+
+/* Print-specific styling for Pawn Ticket / Loan Agreement */
+@media print {
+  .app-header,
+  .app-sidebar,
+  .navbar-blur,
+  .btn,
+  .nav-pills,
+  .search-input-group,
+  .col-xl-4 {
+    display: none !important;
+  }
+
+  .col-xl-8 {
+    width: 100% !important;
+  }
+
+  .pawn-ticket-modal {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+  }
+}

@@ -1,76 +1,288 @@
-<section class="lux-card p-4 emi-calculator">
-  <div class="section-kicker mb-2">EMI Calculator</div>
-  <h3 class="font-display mb-2">Estimate your repayment in one view</h3>
-  <p class="text-secondary mb-4">Enter your loan amount, annual rate, tenure and payment frequency to compare weekly, monthly, quarterly or yearly installments instantly.</p>
-
-  <div class="row g-3 align-items-end">
-    <div class="col-lg-3 col-md-6">
-      <label class="form-label">Loan Amount</label>
-      <div class="input-group">
-        <span class="input-group-text">₹</span>
-        <input class="form-control" type="number" [(ngModel)]="principal" min="1000" step="100" placeholder="Enter amount">
-      </div>
-      <div class="form-text">Required loan amount, minimum ₹1,000.</div>
+<section class="lux-card p-4 p-md-5 emi-calculator-container shadow-sm">
+  <!-- Mode Switcher Tabs -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom border-gold-subtle gap-3">
+    <div>
+      <div class="section-kicker">Interactive Tool</div>
+      <h3 class="font-display fs-2 mb-0 text-charcoal">Gold Loan & EMI Calculator</h3>
     </div>
-
-    <div class="col-lg-3 col-md-6">
-      <label class="form-label">Annual Interest Rate</label>
-      <div class="input-group">
-        <input class="form-control" type="number" [(ngModel)]="annualRate" min="0" step="0.1" placeholder="e.g. 12">
-        <span class="input-group-text">%</span>
-      </div>
-      <div class="form-text">Annual rate used to calculate each payment period.</div>
-    </div>
-
-    <div class="col-lg-3 col-md-6">
-      <label class="form-label">Tenure</label>
-      <div class="input-group">
-        <input class="form-control" type="number" [(ngModel)]="tenureMonths" min="1" step="1" placeholder="Months">
-        <span class="input-group-text">months</span>
-      </div>
-      <div class="form-text">Loan duration in months.</div>
-    </div>
-
-    <div class="col-lg-3 col-md-6">
-      <label class="form-label">Payment Frequency</label>
-      <select class="form-select" [(ngModel)]="paymentFrequency">
-        <option *ngFor="let option of frequencyOptions" [value]="option.value">{{ option.label }}</option>
-      </select>
-      <div class="form-text">Choose how often you want to pay.</div>
+    <div class="nav nav-pills calculator-nav" role="tablist">
+      <button class="nav-link" [class.active]="activeTab === 'eligibility'" (click)="activeTab = 'eligibility'" type="button">
+        <i class="bi bi-gem me-1"></i> Gold Valuation & Limit
+      </button>
+      <button class="nav-link" [class.active]="activeTab === 'repayment'" (click)="activeTab = 'repayment'" type="button">
+        <i class="bi bi-calculator me-1"></i> EMI & Repayment
+      </button>
     </div>
   </div>
 
-  <div class="row g-3 mt-4">
-    <div class="col-lg-3 col-md-6">
-      <div class="lux-card p-3 result-card h-100">
-        <div class="small text-secondary">Installment Amount</div>
-        <div class="font-display fs-2">₹{{ emi | number:'1.0-0' }}</div>
-        <div class="small text-secondary mt-2">per {{ selectedFrequency.label.toLowerCase() }}</div>
-      </div>
-    </div>
+  <!-- TAB 1: GOLD ELIGIBILITY & VALUATION -->
+  @if (activeTab === 'eligibility') {
+    <div class="tab-pane-content">
+      <div class="row g-4 align-items-center">
+        <!-- Controls Column -->
+        <div class="col-lg-7">
+          <!-- Purity Selection -->
+          <div class="mb-4">
+            <label class="form-label d-flex justify-content-between">
+              <span>Gold Purity</span>
+              <span class="text-gold fw-bold">{{ purity }} Hallmark</span>
+            </label>
+            <div class="btn-group w-100 purity-selector" role="group">
+              <button type="button" class="btn" [class.btn-gold-active]="purity === '18K'" (click)="onPurityChange('18K')">
+                18K (75.0%)
+              </button>
+              <button type="button" class="btn" [class.btn-gold-active]="purity === '22K'" (click)="onPurityChange('22K')">
+                22K (91.6% Hallmark)
+              </button>
+              <button type="button" class="btn" [class.btn-gold-active]="purity === '24K'" (click)="onPurityChange('24K')">
+                24K (99.9% Pure)
+              </button>
+            </div>
+          </div>
 
-    <div class="col-lg-3 col-md-6">
-      <div class="lux-card p-3 result-card h-100">
-        <div class="small text-secondary">Periodic Rate</div>
-        <div class="font-display fs-2">{{ rateLabel }}</div>
-        <div class="small text-secondary mt-2">based on selected frequency</div>
-      </div>
-    </div>
+          <!-- Weight Slider & Input -->
+          <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <label class="form-label mb-0">Deposited Gold Weight</label>
+              <div class="input-group input-group-sm" style="width: 140px;">
+                <input type="number" class="form-control text-end fw-bold" [(ngModel)]="goldWeightGrams" min="1" max="500" step="0.5">
+                <span class="input-group-text bg-light text-charcoal">grams</span>
+              </div>
+            </div>
+            <input type="range" class="form-range custom-gold-range" [(ngModel)]="goldWeightGrams" min="1" max="250" step="0.5">
+            <!-- Quick Add Chips -->
+            <div class="d-flex flex-wrap gap-2 mt-2">
+              <span class="small text-secondary align-self-center me-1">Quick add:</span>
+              @for (qw of quickWeights; track qw) {
+                <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 quick-chip" (click)="addWeight(qw)">
+                  +{{ qw }}g
+                </button>
+              }
+              <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2 quick-chip ms-auto" (click)="setWeight(10)">
+                Reset (10g)
+              </button>
+            </div>
+          </div>
 
-    <div class="col-lg-3 col-md-6">
-      <div class="lux-card p-3 result-card h-100">
-        <div class="small text-secondary">Total Interest</div>
-        <div class="font-display fs-2">₹{{ totalInterest | number:'1.0-0' }}</div>
-        <div class="small text-secondary mt-2">interest paid over the loan term</div>
-      </div>
-    </div>
+          <!-- Rate per Gram & LTV -->
+          <div class="row g-3 mb-3">
+            <div class="col-sm-6">
+              <label class="form-label small">Market Rate (Per Gram)</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light text-charcoal">₹</span>
+                <input type="number" class="form-control fw-bold" [(ngModel)]="goldRatePerGram" step="10">
+              </div>
+              <div class="form-text small text-secondary">Based on today's {{ purity }} rate</div>
+            </div>
 
-    <div class="col-lg-3 col-md-6">
-      <div class="lux-card p-3 result-card h-100">
-        <div class="small text-secondary">Total Payments</div>
-        <div class="font-display fs-2">{{ totalPayments }}</div>
-        <div class="small text-secondary mt-2">number of installments</div>
+            <div class="col-sm-6">
+              <label class="form-label small d-flex justify-content-between">
+                <span>Loan to Value (LTV)</span>
+                <span class="text-gold fw-bold">{{ ltvPercent }}%</span>
+              </label>
+              <input type="range" class="form-range custom-gold-range mt-2" [(ngModel)]="ltvPercent" min="50" max="75" step="1">
+              <div class="form-text small text-secondary">RBI Statutory Cap: Max 75% LTV</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Outcome Card Column -->
+        <div class="col-lg-5">
+          <div class="eligibility-result-card p-4 text-center">
+            <div class="gold-icon-badge mb-3">
+              <i class="bi bi-shield-check fs-1 text-gold"></i>
+            </div>
+            <div class="text-uppercase small letter-spacing-1 text-secondary mb-1">Total Gold Asset Value</div>
+            <div class="fs-3 fw-bold text-charcoal mb-3">₹{{ totalGoldValuation | number:'1.0-0' }}</div>
+
+            <div class="p-3 rounded-3 max-loan-box mb-4">
+              <div class="small text-gold fw-semibold text-uppercase">Maximum Eligible Loan Disbursal</div>
+              <div class="display-6 fw-bold text-gold my-1">₹{{ maxEligibleLoan | number:'1.0-0' }}</div>
+              <div class="small text-secondary">At {{ ltvPercent }}% LTV against {{ goldWeightGrams }}g of {{ purity }} gold</div>
+            </div>
+
+            <button class="btn lux-btn lux-btn-primary w-100 py-3 mb-2" type="button" (click)="transferToLoanCalculator()">
+              Calculate Repayment Schedule <i class="bi bi-arrow-right ms-2"></i>
+            </button>
+            <div class="small text-secondary">Instant approval · Zero pre-payment penalties</div>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
+  }
+
+  <!-- TAB 2: EMI & REPAYMENT CALCULATOR -->
+  @if (activeTab === 'repayment') {
+    <div class="tab-pane-content">
+      <!-- Scheme Selector -->
+      <div class="scheme-toggle-wrapper mb-4 p-3 rounded-3">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+          <div>
+            <div class="fw-bold text-charcoal">Select Repayment Scheme:</div>
+            <div class="small text-secondary">Choose how you wish to service your pawn gold loan</div>
+          </div>
+          <div class="btn-group scheme-button-group" role="group">
+            <button type="button" class="btn" [class.btn-gold-active]="loanScheme === 'bullet'" (click)="loanScheme = 'bullet'">
+              <i class="bi bi-calendar-month me-1"></i> Monthly Interest Only (Pawn Standard)
+            </button>
+            <button type="button" class="btn" [class.btn-gold-active]="loanScheme === 'emi'" (click)="loanScheme = 'emi'">
+              <i class="bi bi-pie-chart me-1"></i> Regular Reducing EMI
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4">
+        <!-- Sliders & Inputs -->
+        <div class="col-lg-6">
+          <!-- Principal -->
+          <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <label class="form-label mb-0">Loan Amount</label>
+              <div class="input-group input-group-sm" style="width: 170px;">
+                <span class="input-group-text bg-light text-charcoal">₹</span>
+                <input type="number" class="form-control text-end fw-bold" [(ngModel)]="principal" min="10000" max="2500000" step="5000">
+              </div>
+            </div>
+            <input type="range" class="form-range custom-gold-range" [(ngModel)]="principal" min="10000" max="1000000" step="5000">
+            <!-- Chips -->
+            <div class="d-flex flex-wrap gap-2 mt-2">
+              @for (qp of quickPrincipals; track qp) {
+                <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 quick-chip" (click)="setPrincipal(qp)">
+                  ₹{{ qp >= 100000 ? (qp / 100000) + 'L' : (qp / 1000) + 'K' }}
+                </button>
+              }
+            </div>
+          </div>
+
+          <!-- Interest Rate -->
+          <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <label class="form-label mb-0">Interest Rate (Per Annum)</label>
+              <div class="input-group input-group-sm" style="width: 130px;">
+                <input type="number" class="form-control text-end fw-bold" [(ngModel)]="annualRate" min="6" max="30" step="0.5">
+                <span class="input-group-text bg-light text-charcoal">% p.a.</span>
+              </div>
+            </div>
+            <input type="range" class="form-range custom-gold-range" [(ngModel)]="annualRate" min="6" max="30" step="0.5">
+            <div class="small text-secondary mt-1">
+              Equivalent to <strong class="text-charcoal">{{ (annualRate / 12) | number:'1.2-2' }}% per month</strong>
+            </div>
+          </div>
+
+          <!-- Tenure -->
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <label class="form-label mb-0">Loan Tenure</label>
+              <div class="input-group input-group-sm" style="width: 140px;">
+                <input type="number" class="form-control text-end fw-bold" [(ngModel)]="tenureMonths" min="1" max="36" step="1">
+                <span class="input-group-text bg-light text-charcoal">Months</span>
+              </div>
+            </div>
+            <input type="range" class="form-range custom-gold-range" [(ngModel)]="tenureMonths" min="1" max="36" step="1">
+            <div class="d-flex flex-wrap gap-2 mt-2">
+              @for (qt of quickTenures; track qt) {
+                <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 quick-chip" (click)="setTenure(qt)">
+                  {{ qt }} Months
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Repayment Metrics Output -->
+        <div class="col-lg-6">
+          <div class="row g-3 mb-4">
+            <div class="col-sm-6">
+              <div class="summary-metric-card p-3 h-100">
+                <div class="metric-title">{{ loanScheme === 'bullet' ? 'Monthly Interest' : 'Monthly EMI' }}</div>
+                <div class="metric-amount text-gold">₹{{ monthlyPayment | number:'1.0-0' }}</div>
+                <div class="metric-sub">{{ loanScheme === 'bullet' ? 'Serviced each month' : 'Principal + Interest' }}</div>
+              </div>
+            </div>
+
+            <div class="col-sm-6">
+              <div class="summary-metric-card p-3 h-100">
+                <div class="metric-title">Total Interest</div>
+                <div class="metric-amount text-charcoal">₹{{ totalInterest | number:'1.0-0' }}</div>
+                <div class="metric-sub">Over {{ tenureMonths }} months</div>
+              </div>
+            </div>
+
+            <div class="col-sm-6">
+              <div class="summary-metric-card p-3 h-100">
+                <div class="metric-title">Principal Amount</div>
+                <div class="metric-amount text-charcoal">₹{{ principal | number:'1.0-0' }}</div>
+                <div class="metric-sub">Net Cash Disbursed</div>
+              </div>
+            </div>
+
+            <div class="col-sm-6">
+              <div class="summary-metric-card p-3 h-100 highlight-card">
+                <div class="metric-title">Total Outflow</div>
+                <div class="metric-amount text-charcoal fw-bold">₹{{ totalRepayment | number:'1.0-0' }}</div>
+                <div class="metric-sub">Principal + All Interest</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Proportion Progress Bar -->
+          <div class="mb-4">
+            <div class="d-flex justify-content-between small fw-bold mb-1">
+              <span class="text-charcoal"><i class="bi bi-circle-fill text-gold me-1" style="font-size: 0.6rem;"></i> Principal ({{ principalPercentage }}%)</span>
+              <span class="text-secondary"><i class="bi bi-circle-fill text-secondary me-1" style="font-size: 0.6rem;"></i> Interest ({{ interestPercentage }}%)</span>
+            </div>
+            <div class="progress" style="height: 10px; border-radius: 999px;">
+              <div class="progress-bar bg-gold" [style.width.%]="principalPercentage"></div>
+              <div class="progress-bar bg-secondary opacity-50" [style.width.%]="interestPercentage"></div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="d-flex flex-wrap gap-2">
+            <button class="btn btn-outline-secondary flex-grow-1" type="button" (click)="showAmortization = !showAmortization">
+              <i class="bi" [class.bi-table]="!showAmortization" [class.bi-chevron-up]="showAmortization"></i>
+              {{ showAmortization ? 'Hide Amortization Table' : 'View Monthly Breakdown' }}
+            </button>
+            <a routerLink="/register" class="btn lux-btn lux-btn-primary px-4">
+              Apply For Loan <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Amortization Table Accordion -->
+      @if (showAmortization) {
+        <div class="mt-4 pt-4 border-top">
+          <h5 class="font-display fs-4 mb-3 text-charcoal">Month-by-Month Amortization Schedule</h5>
+          <div class="table-responsive" style="max-height: 350px;">
+            <table class="table table-sm table-bordered align-middle text-center small mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Month</th>
+                  <th>Opening Principal</th>
+                  <th>Principal Paid</th>
+                  <th>Interest Paid</th>
+                  <th>Total Payment</th>
+                  <th>Closing Balance</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of amortizationSchedule; track row.period) {
+                  <tr>
+                    <td class="fw-bold">{{ row.period }}</td>
+                    <td>₹{{ row.openingBalance | number:'1.0-0' }}</td>
+                    <td class="text-success fw-bold">₹{{ row.principalComponent | number:'1.0-0' }}</td>
+                    <td class="text-danger">₹{{ row.interestComponent | number:'1.0-0' }}</td>
+                    <td class="fw-bold text-charcoal">₹{{ row.totalPayment | number:'1.0-0' }}</td>
+                    <td>₹{{ row.closingBalance | number:'1.0-0' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+    </div>
+  }
 </section>

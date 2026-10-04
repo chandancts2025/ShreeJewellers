@@ -37,4 +37,8 @@ export class SettingsService {
   getReport(endpoint: string, params: Record<string, string | number | boolean | null | undefined>): Observable<any> {
     return this.api.get(`/api/reports/${endpoint}`, params);
   }
+
+  downloadReport(endpoint: string, params: Record<string, string | number | boolean | null | undefined>): Observable<Blob> {
+    return this.api.getBlob(`/api/reports/${endpoint}`, params);
+  }
 }

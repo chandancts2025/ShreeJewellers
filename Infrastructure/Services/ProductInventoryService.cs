@@ -395,7 +395,13 @@ public class InventoryService : IInventoryService
         await _productRepo.UpdateAsync(product);
         await _invRepo.SaveAsync();
 
-        return _mapper.Map<InventoryTransactionResponseDto>(txn);
+        return _mapper != null
+            ? _mapper.Map<InventoryTransactionResponseDto>(txn)
+            : new InventoryTransactionResponseDto(
+                txn.Id, txn.ProductId, product.Name, product.SKUCode,
+                txn.TransactionType.ToString(), txn.Quantity, txn.WeightGrams,
+                txn.RatePerGram, txn.TotalValue, txn.ReferenceNo, txn.Notes,
+                userId, txn.CreatedAt);
     }
 
     public async Task<InventoryTransactionResponseDto> RecordAdjustmentAsync(
@@ -438,7 +444,13 @@ public class InventoryService : IInventoryService
                 $"Product {product.SKUCode} — {product.Name} has only " +
                 $"{product.StockQuantity} pieces left (reorder level: {product.ReorderLevel}).");
 
-        return _mapper.Map<InventoryTransactionResponseDto>(txn);
+        return _mapper != null
+            ? _mapper.Map<InventoryTransactionResponseDto>(txn)
+            : new InventoryTransactionResponseDto(
+                txn.Id, txn.ProductId, product.Name, product.SKUCode,
+                txn.TransactionType.ToString(), txn.Quantity, txn.WeightGrams,
+                txn.RatePerGram, txn.TotalValue, txn.ReferenceNo, txn.Notes,
+                userId, txn.CreatedAt);
     }
 
     public async Task RecordGoldLoanMovementAsync(int productId, TransactionType type,

@@ -478,6 +478,26 @@ export interface CreateSalesOrderDto {
   notes?: string;
 }
 
+export interface UpdateSalesOrderDto {
+  id: number;
+  customerUserId?: string | null;
+  walkInCustomerName?: string;
+  walkInCustomerPhone?: string;
+  orderDate: string;
+  paymentMode: 'Cash' | 'Card' | 'UPI' | 'NEFT' | 'Cheque' | 'Split' | string;
+  paymentStatus: 'Pending' | 'PartiallyPaid' | 'Paid' | 'Refunded' | string;
+  status: 'Draft' | 'Confirmed' | 'Delivered' | 'Cancelled' | 'Returned' | string;
+  amountPaid: number;
+  advanceAmount?: number;
+  discountAmount?: number;
+  oldGoldExchangeValue?: number;
+  oldGoldWeightGrams?: number;
+  oldGoldPurity?: string;
+  isInterState?: boolean;
+  notes?: string;
+  items?: CreateSalesOrderItemDto[];
+}
+
 export interface CreateSalesOrderItemDto {
   productId: number;
   quantity: number;

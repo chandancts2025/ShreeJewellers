@@ -11,8 +11,11 @@
           </div>
         </div>
         <div class="btn-group" role="group">
+          <button class="btn lux-btn lux-btn-primary" type="button" (click)="printInvoice()" title="Print Tax Invoice">
+            <i class="bi bi-printer me-2"></i> Print Invoice
+          </button>
           <button class="btn lux-btn lux-btn-secondary" type="button" (click)="downloadInvoice()" title="Download Invoice">
-            <i class="bi bi-file-pdf me-2"></i> Invoice
+            <i class="bi bi-file-pdf me-2"></i> PDF
           </button>
           @if (order.status === 'Draft' || order.status === 'Confirmed') {
             <a [routerLink]="['/admin/sales/edit', order.id]" class="btn lux-btn lux-btn-warning" title="Edit Order">
@@ -82,7 +85,7 @@
             <h5 class="mb-3">Order Items</h5>
             <div class="table-responsive">
               <table class="table">
-                <thead style="background: rgba(255, 215, 0, 0.1);">
+                <thead>
                   <tr>
                     <th>Product</th>
                     <th>SKU</th>

@@ -225,6 +225,26 @@ namespace ShreeJewelers.Application.DTOs
         string? Notes
     );
 
+    public record UpdateSalesOrderDto(
+        int Id,
+        string? CustomerUserId,
+        string? WalkInCustomerName,
+        string? WalkInCustomerPhone,
+        DateOnly OrderDate,
+        string PaymentMode,
+        string PaymentStatus,
+        string Status,
+        decimal AmountPaid,
+        decimal AdvanceAmount,
+        decimal DiscountAmount,
+        decimal OldGoldExchangeValue,
+        decimal OldGoldWeightGrams,
+        string? OldGoldPurity,
+        bool IsInterState,
+        string? Notes,
+        List<CreateSalesOrderItemDto>? Items
+    );
+
     public record CreateSalesOrderItemDto(
         int ProductId,
         int Quantity,

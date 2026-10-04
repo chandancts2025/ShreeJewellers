@@ -1,126 +1,199 @@
 <section class="app-page">
-  <div class="container">
-    <div class="section-title mb-4">Reports & Analytics</div>
+  <div class="container-fluid px-lg-4">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3 no-print">
+      <div>
+        <h1 class="font-display fs-2 mb-1 text-gold">Executive Reports & Business Analytics</h1>
+        <div class="text-secondary small fw-medium">
+          Comprehensive compliance, statutory GST, inventory movement, gold pledge portfolio & P&L statements
+        </div>
+      </div>
+    </div>
 
-    <div class="lux-card p-4 mb-4">
-      <div class="d-flex justify-content-between align-items-center mb-4">
+    <!-- Filter & Configuration Card -->
+    <div class="lux-card p-4 mb-4 no-print">
+      <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
         <div>
-          <div class="font-display fs-4">Generate Report</div>
-          <div class="small text-secondary">Select report type and date range</div>
+          <div class="font-display fs-4 text-charcoal">Report Generator</div>
+          <div class="small text-secondary">Select statement category, accounting period, and optional customer</div>
+        </div>
+
+        <!-- Quick Date Range Presets -->
+        <div class="d-flex flex-wrap gap-1 align-items-center">
+          <span class="small text-secondary me-1 fw-semibold">Quick Presets:</span>
+          <button class="btn preset-btn" type="button" (click)="setPreset('today')">Today</button>
+          <button class="btn preset-btn" type="button" (click)="setPreset('this-month')">This Month</button>
+          <button class="btn preset-btn" type="button" (click)="setPreset('last-30')">Last 30 Days</button>
+          <button class="btn preset-btn" type="button" (click)="setPreset('this-fy')">Current FY</button>
+          <button class="btn preset-btn" type="button" (click)="setPreset('all-time')">All Time</button>
         </div>
       </div>
 
       <form [formGroup]="form" class="row g-3">
-        <div class="col-lg-3">
-          <label class="form-label fw-bold">Report Type</label>
-          <select class="form-select" formControlName="endpoint">
+        <div class="col-xl-4 col-md-6">
+          <label class="form-label small fw-semibold text-charcoal">Select Report <span class="text-danger">*</span></label>
+          <select class="form-select form-select-sm" formControlName="endpoint">
             @for (option of reportOptions; track option.value) {
               <option [value]="option.value">{{ option.label }}</option>
             }
           </select>
         </div>
-        <div class="col-lg-2">
-          <label class="form-label fw-bold">From Date</label>
-          <input class="form-control" type="date" formControlName="dateFrom">
+
+        <div class="col-xl-2 col-sm-6">
+          <label class="form-label small fw-semibold text-charcoal">Date From <span class="text-danger">*</span></label>
+          <input class="form-control form-control-sm" type="date" formControlName="dateFrom">
         </div>
-        <div class="col-lg-2">
-          <label class="form-label fw-bold">To Date</label>
-          <input class="form-control" type="date" formControlName="dateTo">
+
+        <div class="col-xl-2 col-sm-6">
+          <label class="form-label small fw-semibold text-charcoal">Date To <span class="text-danger">*</span></label>
+          <input class="form-control form-control-sm" type="date" formControlName="dateTo">
         </div>
-        <div class="col-lg-2">
-          <label class="form-label fw-bold">Customer ID (optional)</label>
-          <input class="form-control" placeholder="Customer ID" formControlName="customerId">
+
+        <div class="col-xl-4 col-md-6">
+          <label class="form-label small fw-semibold text-charcoal">
+            Customer
+            @if (isCustomerReport()) {
+              <span class="text-danger">* (Required for History)</span>
+            } @else {
+              <span class="text-secondary fw-normal">(Optional filter)</span>
+            }
+          </label>
+          <select class="form-select form-select-sm" formControlName="customerId" [class.border-danger]="isCustomerReport() && !form.get('customerId')?.value">
+            <option value="">-- All / Select Customer --</option>
+            @for (c of customers; track c.userId) {
+              <option [value]="c.userId">{{ c.fullName }} ({{ c.customerCode || c.phoneNumber }})</option>
+            }
+          </select>
         </div>
-        <div class="col-lg-3 d-flex align-items-end gap-2">
-          <button class="btn lux-btn lux-btn-primary w-100" type="button" (click)="generate()" [disabled]="isLoading">
+
+        <div class="col-12 d-flex justify-content-end gap-2 pt-2">
+          <button class="btn lux-btn lux-btn-primary px-4 py-2" type="button" (click)="generate()" [disabled]="isLoading">
             @if (isLoading) {
               <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              Generating Statement...
+            } @else {
+              <i class="bi bi-graph-up-arrow me-2"></i> Generate Statement
             }
-            {{ isLoading ? 'Generating...' : 'Generate Report' }}
           </button>
         </div>
       </form>
     </div>
 
     @if (errorMessage) {
-      <div class="alert alert-danger mb-4">{{ errorMessage }}</div>
+      <div class="alert alert-danger mb-4 shadow-sm">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ errorMessage }}
+      </div>
     }
 
+    <!-- REPORT STATEMENT RENDER -->
     @if (reportData) {
-      <div class="lux-card p-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+      <div class="lux-card p-4 shadow-sm">
+        <!-- Statement Printable Header -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom gap-3" style="border-color: #e5dfd1 !important;">
           <div>
-            <div class="font-display fs-4">{{ reportType }}</div>
-            <div class="small text-secondary">Generated on {{ reportData.asOf || reportData.fromDate || 'Today' }}</div>
+            <div class="d-flex align-items-center gap-2">
+              <span class="font-display fs-3 text-gold">{{ getReportLabel(reportType) }}</span>
+              <span class="badge lux-badge-info">Audited Ledger</span>
+            </div>
+            <div class="small text-secondary mt-1">
+              Period: <strong class="text-charcoal">{{ form.get('dateFrom')?.value }}</strong> to <strong class="text-charcoal">{{ form.get('dateTo')?.value }}</strong>
+              @if (selectedCustomerName) {
+                · Customer: <strong class="text-charcoal">{{ selectedCustomerName }}</strong>
+              }
+              · Generated: <strong class="text-charcoal">{{ reportData.asOf || (reportData.fromDate + ' to ' + reportData.toDate) || 'Live' }}</strong>
+            </div>
           </div>
-          <button class="btn lux-btn lux-btn-secondary" type="button" (click)="exportReport('json')">📥 Export JSON</button>
+
+          <!-- Actions Toolbar -->
+          <div class="d-flex align-items-center gap-2 export-buttons no-print">
+            <button class="btn btn-sm lux-btn-secondary" type="button" (click)="exportReport('pdf')" title="Print / Save PDF">
+              <i class="bi bi-printer me-1"></i> Print Statement
+            </button>
+            <button class="btn btn-sm lux-btn-secondary" type="button" (click)="exportReport('xlsx')" [disabled]="isExporting" title="Download Excel Sheet">
+              @if (isExporting) {
+                <span class="spinner-border spinner-border-sm me-1"></span> Exporting...
+              } @else {
+                <i class="bi bi-file-earmark-spreadsheet me-1 text-success"></i> Download Excel
+              }
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" type="button" (click)="exportReport('json')" title="Export Raw JSON">
+              <i class="bi bi-code-square me-1"></i> JSON
+            </button>
+          </div>
         </div>
 
-        <!-- Sales Summary Report -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- 1. SALES SUMMARY REPORT -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
         @if (reportType === 'sales/summary' && reportData.totalOrders !== undefined) {
-          <div class="row g-4 mb-4">
-            <div class="col-lg-3">
+          <div class="row g-3 mb-4">
+            <div class="col-xl-3 col-sm-6">
               <div class="stat-card">
-                <div class="small text-secondary">Total Orders</div>
-                <div class="fs-3 fw-bold">{{ reportData.totalOrders }}</div>
+                <div class="stat-label">Total Invoices</div>
+                <div class="stat-val text-charcoal">{{ reportData.totalOrders }}</div>
               </div>
             </div>
-            <div class="col-lg-3">
+            <div class="col-xl-3 col-sm-6">
               <div class="stat-card">
-                <div class="small text-secondary">Gross Amount</div>
-                <div class="fs-3 fw-bold">₹{{ reportData.totalGrossAmount | number:'1.0-0' }}</div>
+                <div class="stat-label">Gross Value</div>
+                <div class="stat-val text-charcoal">₹{{ reportData.totalGrossAmount | number:'1.0-0' }}</div>
               </div>
             </div>
-            <div class="col-lg-3">
+            <div class="col-xl-3 col-sm-6">
               <div class="stat-card">
-                <div class="small text-secondary">Total Tax</div>
-                <div class="fs-3 fw-bold">₹{{ reportData.totalTax | number:'1.0-0' }}</div>
+                <div class="stat-label">Tax Collected (GST)</div>
+                <div class="stat-val stat-gold">₹{{ reportData.totalTax | number:'1.0-0' }}</div>
               </div>
             </div>
-            <div class="col-lg-3">
+            <div class="col-xl-3 col-sm-6">
               <div class="stat-card">
-                <div class="small text-secondary">Net Amount</div>
-                <div class="fs-3 fw-bold">₹{{ reportData.totalNetAmount | number:'1.0-0' }}</div>
+                <div class="stat-label">Net Billed Revenue</div>
+                <div class="stat-val stat-gold">₹{{ reportData.totalNetAmount | number:'1.0-0' }}</div>
               </div>
             </div>
           </div>
 
           <div class="row g-4">
             <div class="col-lg-6">
-              <div class="section-kicker mb-2">Sales by Category</div>
+              <div class="section-kicker mb-2"><i class="bi bi-tag me-1"></i> Sales by Jewellery Category</div>
               <div class="table-responsive">
                 <table class="table">
                   <thead>
-                    <tr><th>Category</th><th>Orders</th><th>Amount</th><th>%</th></tr>
+                    <tr><th>Category</th><th>Orders</th><th>Pieces</th><th>Net Revenue</th><th>Contribution</th></tr>
                   </thead>
                   <tbody>
                     @for (row of reportData.byCategory; track row.categoryName) {
                       <tr>
-                        <td>{{ row.categoryName }}</td>
+                        <td><strong>{{ row.categoryName }}</strong></td>
                         <td>{{ row.orders }}</td>
-                        <td>₹{{ row.totalNetAmount | number:'1.0-0' }}</td>
-                        <td>{{ row.percent | number:'1.0' }}%</td>
+                        <td>{{ row.itemsSold }}</td>
+                        <td class="fw-bold">₹{{ row.totalNetAmount | number:'1.0-0' }}</td>
+                        <td><span class="badge lux-badge-info">{{ row.percent | number:'1.0-1' }}%</span></td>
                       </tr>
+                    } @empty {
+                      <tr><td colspan="5" class="text-center py-3 text-secondary">No category data recorded for this period.</td></tr>
                     }
                   </tbody>
                 </table>
               </div>
             </div>
             <div class="col-lg-6">
-              <div class="section-kicker mb-2">Sales by Payment Mode</div>
+              <div class="section-kicker mb-2"><i class="bi bi-wallet2 me-1"></i> Collections by Payment Mode</div>
               <div class="table-responsive">
                 <table class="table">
                   <thead>
-                    <tr><th>Mode</th><th>Count</th><th>Amount</th><th>%</th></tr>
+                    <tr><th>Payment Mode</th><th>Transactions</th><th>Amount Received</th><th>Share</th></tr>
                   </thead>
                   <tbody>
                     @for (row of reportData.byPaymentMode; track row.paymentMode) {
                       <tr>
-                        <td>{{ row.paymentMode }}</td>
+                        <td><strong>{{ row.paymentMode }}</strong></td>
                         <td>{{ row.count }}</td>
-                        <td>₹{{ row.amount | number:'1.0-0' }}</td>
-                        <td>{{ row.percent | number:'1.0' }}%</td>
+                        <td class="fw-bold">₹{{ row.amount | number:'1.0-0' }}</td>
+                        <td><span class="badge lux-badge-success">{{ row.percent | number:'1.0-1' }}%</span></td>
                       </tr>
+                    } @empty {
+                      <tr><td colspan="4" class="text-center py-3 text-secondary">No payment data recorded for this period.</td></tr>
                     }
                   </tbody>
                 </table>
@@ -129,688 +202,1136 @@
           </div>
         }
 
-        <!-- Product Sales Report -->
-        @if (reportType === 'sales/product-sales' && reportData.rows !== undefined) {
-          <div class="mb-4">
-            <div class="small text-secondary">Total Revenue: <strong>₹{{ reportData.totalRevenue | number:'1.0-0' }}</strong></div>
-            <div class="small text-secondary">Total Weight Sold: <strong>{{ reportData.totalWeightSold | number:'1.0-0' }}g</strong></div>
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- 2. PRODUCT-WISE SALES REPORT -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        @if ((reportType === 'sales/products' || reportType === 'sales/product-sales') && reportData.rows !== undefined) {
+          <div class="row g-3 mb-4">
+            <div class="col-md-4">
+              <div class="stat-card">
+                <div class="stat-label">Total Product Revenue</div>
+                <div class="stat-val stat-gold">₹{{ reportData.totalRevenue | number:'1.0-0' }}</div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="stat-card">
+                <div class="stat-label">Total Weight Sold</div>
+                <div class="stat-val text-charcoal">{{ reportData.totalWeightSold | number:'1.2-2' }} g</div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="stat-card">
+                <div class="stat-label">Unique Products Sold</div>
+                <div class="stat-val text-charcoal">{{ reportData.rows.length }}</div>
+              </div>
+            </div>
           </div>
+
           <div class="table-responsive">
             <table class="table">
               <thead>
-                <tr><th>SKU</th><th>Product</th><th>Category</th><th>Qty</th><th>Weight (g)</th><th>Revenue</th><th>Margin %</th></tr>
+                <tr>
+                  <th>SKU Code</th>
+                  <th>Product Description</th>
+                  <th>Category</th>
+                  <th>Purity</th>
+                  <th>Qty Sold</th>
+                  <th>Weight (g)</th>
+                  <th>Revenue (₹)</th>
+                  <th>Est. Margin</th>
+                </tr>
               </thead>
               <tbody>
                 @for (row of reportData.rows; track row.productId) {
                   <tr>
                     <td><code>{{ row.skuCode }}</code></td>
-                    <td>{{ row.productName }}</td>
+                    <td class="fw-semibold text-charcoal">{{ row.productName }}</td>
                     <td>{{ row.categoryName }}</td>
+                    <td><span class="badge lux-badge-info">{{ row.purity }}</span></td>
                     <td>{{ row.quantitySold }}</td>
-                    <td>{{ row.weightSoldGrams | number:'1.0-0' }}</td>
-                    <td>₹{{ row.totalRevenue | number:'1.0-0' }}</td>
-                    <td>{{ row.marginPercent | number:'1.0' }}%</td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        }
-
-        <!-- Current Stock Report -->
-        @if (reportType === 'inventory/current-stock' && reportData.rows !== undefined) {
-          <div class="mb-4">
-            <div class="small text-secondary">Total Stock Value: <strong>₹{{ reportData.totalStockValue | number:'1.0-0' }}</strong></div>
-          </div>
-          <div class="table-responsive">
-            <table class="table">
-              <thead>
-                <tr><th>SKU</th><th>Product</th><th>Qty</th><th>Weight (g)</th><th>Rate/g</th><th>Value</th><th>Status</th></tr>
-              </thead>
-              <tbody>
-                @for (row of reportData.rows; track row.productId) {
-                  <tr [class.table-warning]="row.isLowStock">
-                    <td><code>{{ row.skuCode }}</code></td>
-                    <td>{{ row.productName }}</td>
-                    <td>{{ row.stckQty || row.stockQty }}</td>
-                    <td>{{ row.totalWeightGrams | number:'1.0-0' }}</td>
-                    <td>₹{{ row.ratePerGram | number:'1.0-0' }}</td>
-                    <td>₹{{ row.totalMarketValue | number:'1.0-0' }}</td>
+                    <td>{{ row.weightSoldGrams | number:'1.2-2' }} g</td>
+                    <td class="fw-bold text-charcoal">₹{{ row.totalRevenue | number:'1.0-0' }}</td>
                     <td>
-                      @if (row.isLowStock) {
-                        <span class="badge bg-warning">Low</span>
-                      }
+                      <span class="badge" [class.lux-badge-success]="row.marginPercent >= 10" [class.lux-badge-warning]="row.marginPercent < 10">
+                        {{ row.marginPercent | number:'1.1-1' }}%
+                      </span>
                     </td>
                   </tr>
+                } @empty {
+                  <tr><td colspan="8" class="text-center py-4 text-secondary">No product sales records found in this date range.</td></tr>
                 }
               </tbody>
             </table>
           </div>
         }
 
-        <!-- Stock Valuation Report -->
-        @if (reportType === 'inventory/valuation' && reportData.byCategory !== undefined) {
-          <div class="mb-4">
-            <div class="row g-4">
-              <div class="col-lg-3">
-                <div class="stat-card">
-                  <div class="small text-secondary">Total Valuation</div>
-                  <div class="fs-3 fw-bold">₹{{ reportData.totalValuation | number:'1.0-0' }}</div>
-                </div>
-              </div>
-              <div class="col-lg-3">
-                <div class="stat-card">
-                  <div class="small text-secondary">Gold Rate (22K)</div>
-                  <div class="fs-3 fw-bold">₹{{ reportData.goldRate22K | number:'1.0-0' }}/10g</div>
-                </div>
-              </div>
-              <div class="col-lg-3">
-                <div class="stat-card">
-                  <div class="small text-secondary">Silver Rate</div>
-                  <div class="fs-3 fw-bold">₹{{ reportData.silverRatePerKg | number:'1.0-0' }}/kg</div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="mb-4">
-            <div class="section-kicker mb-2">By Category</div>
-            <div class="table-responsive">
-              <table class="table">
-                <thead>
-                  <tr><th>Category</th><th>Items</th><th>Weight (g)</th><th>Value</th><th>% of Total</th></tr>
-                </thead>
-                <tbody>
-                  @for (row of reportData.byCategory; track row.categoryName) {
-                    <tr>
-                      <td>{{ row.categoryName }}</td>
-                      <td>{{ row.productCount }}</td>
-                      <td>{{ row.totalWeightGrams | number:'1.0-0' }}</td>
-                      <td>₹{{ row.totalValue | number:'1.0-0' }}</td>
-                      <td>{{ row.percentOfTotal | number:'1.0' }}%</td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          </div>
-        }
-
-        <!-- Active Loans Report -->
-        @if (reportType === 'loans/active' && reportData.rows !== undefined) {
-          <div class="mb-4">
-            <div class="row g-4">
-              <div class="col-lg-3">
-                <div class="stat-card">
-                  <div class="small text-secondary">Active Loans</div>
-                  <div class="fs-3 fw-bold">{{ reportData.rows.length }}</div>
-                </div>
-              </div>
-              <div class="col-lg-3">
-                <div class="stat-card">
-                  <div class="small text-secondary">Total Principal</div>
-                  <div class="fs-3 fw-bold">₹{{ reportData.totalPrincipal | number:'1.0-0' }}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="table-responsive">
-            <table class="table">
-              <thead>
-                <tr><th>Loan#</th><th>Customer</th><th>Principal</th><th>Outstanding</th><th>Due Date</th><th>Status</th></tr>
-              </thead>
-              <tbody>
-                @for (row of reportData.rows; track row.id) {
-                  <tr>
-                    <td><code>{{ row.loanNumber }}</code></td>
-                    <td>{{ row.customerName }}</td>
-                    <td>₹{{ row.principalAmount | number:'1.0-0' }}</td>
-                    <td>₹{{ row.outstandingBalance | number:'1.0-0' }}</td>
-                    <td>{{ row.maturityDate }}</td>
-                    <td><span class="badge" [class.bg-danger]="row.isOverdue" [class.bg-warning]="!row.isOverdue">{{ row.isOverdue ? 'Overdue' : 'Active' }}</span></td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        }
-
-        <!-- GST Report -->
-        @if (reportType === 'sales/gst' && reportData.lines !== undefined) {
-          <div class="row g-4 mb-4">
-            <div class="col-lg-3">
-              <div class="stat-card">
-                <div class="small text-secondary">Total GST</div>
-                <div class="fs-3 fw-bold">₹{{ reportData.totalGST | number:'1.0-0' }}</div>
-              </div>
-            </div>
-            <div class="col-lg-3">
-              <div class="stat-card">
-                <div class="small text-secondary">CGST</div>
-                <div class="fs-3 fw-bold">₹{{ reportData.totalCGST | number:'1.0-0' }}</div>
-              </div>
-            </div>
-            <div class="col-lg-3">
-              <div class="stat-card">
-                <div class="small text-secondary">SGST</div>
-                <div class="fs-3 fw-bold">₹{{ reportData.totalSGST | number:'1.0-0' }}</div>
-              </div>
-            </div>
-            <div class="col-lg-3">
-              <div class="stat-card">
-                <div class="small text-secondary">IGST</div>
-                <div class="fs-3 fw-bold">₹{{ reportData.totalIGST | number:'1.0-0' }}</div>
-              </div>
-            </div>
-          </div>
-          <div class="table-responsive">
-            <table class="table">
-              <thead>
-                <tr><th>Invoice</th><th>Date</th><th>Taxable</th><th>CGST</th><th>SGST</th><th>IGST</th></tr>
-              </thead>
-              <tbody>
-                @for (row of reportData.lines.slice(0, 50); let i = $index; track i) {
-                  <tr>
-                    <td><code>{{ row.invoiceNumber }}</code></td>
-                    <td>{{ row.invoiceDate }}</td>
-                    <td>₹{{ row.taxableAmount | number:'1.0-0' }}</td>
-                    <td>₹{{ row.cgstAmount | number:'1.0-0' }}</td>
-                    <td>₹{{ row.sgstAmount | number:'1.0-0' }}</td>
-                    <td>₹{{ row.igstAmount | number:'1.0-0' }}</td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        }
-
-        <!-- Customer Purchase History Report -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- 3. CUSTOMER PURCHASE HISTORY REPORT -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
         @if (reportType === 'sales/customer-history' && reportData.orders !== undefined) {
-          <div class="row g-4 mb-4">
-            <div class="col-lg-3">
+          <div class="row g-3 mb-4">
+            <div class="col-md-3">
               <div class="stat-card">
-                <div class="small text-secondary">Customer</div>
-                <div class="fs-4 fw-bold">{{ reportData.customerName }}</div>
+                <div class="stat-label">Customer Profile</div>
+                <div class="fs-5 fw-bold text-charcoal">{{ reportData.customerName }}</div>
+                <div class="small text-secondary">{{ reportData.customerCode }} · {{ reportData.phoneNumber }}</div>
               </div>
             </div>
-            <div class="col-lg-3">
+            <div class="col-md-3">
               <div class="stat-card">
-                <div class="small text-secondary">Total Orders</div>
-                <div class="fs-3 fw-bold">{{ reportData.totalOrders }}</div>
+                <div class="stat-label">Total Invoices</div>
+                <div class="stat-val text-charcoal">{{ reportData.totalOrders }}</div>
               </div>
             </div>
-            <div class="col-lg-3">
+            <div class="col-md-3">
               <div class="stat-card">
-                <div class="small text-secondary">Total Spent</div>
-                <div class="fs-3 fw-bold">₹{{ reportData.totalSpent | number:'1.0-0' }}</div>
+                <div class="stat-label">Lifetime Spend</div>
+                <div class="stat-val stat-gold">₹{{ reportData.totalSpent | number:'1.0-0' }}</div>
               </div>
             </div>
-            <div class="col-lg-3">
+            <div class="col-md-3">
               <div class="stat-card">
-                <div class="small text-secondary">Loyalty Points</div>
-                <div class="fs-3 fw-bold">{{ reportData.loyaltyPoints }}</div>
+                <div class="stat-label">Loyalty Points Balance</div>
+                <div class="stat-val stat-success">{{ reportData.loyaltyPoints }} pts</div>
               </div>
             </div>
           </div>
+
           <div class="table-responsive">
             <table class="table">
               <thead>
-                <tr><th>Order#</th><th>Date</th><th>Amount</th><th>Status</th><th>Payment</th></tr>
+                <tr>
+                  <th>Order Number</th>
+                  <th>Order Date</th>
+                  <th>Billed Amount</th>
+                  <th>Payment Status</th>
+                  <th>Fulfillment Status</th>
+                </tr>
               </thead>
               <tbody>
                 @for (order of reportData.orders; track order.orderId) {
                   <tr>
                     <td><code>{{ order.orderNumber }}</code></td>
-                    <td>{{ order.orderDate }}</td>
-                    <td>₹{{ order.netAmount | number:'1.0-0' }}</td>
-                    <td><span class="badge bg-info">{{ order.status }}</span></td>
-                    <td>{{ order.paymentStatus }}</td>
+                    <td class="text-charcoal">{{ order.orderDate }}</td>
+                    <td class="fw-bold text-charcoal">₹{{ order.netAmount | number:'1.0-0' }}</td>
+                    <td>
+                      <span class="badge" [class.lux-badge-success]="order.paymentStatus === 'Paid'" [class.lux-badge-warning]="order.paymentStatus === 'PartiallyPaid'" [class.lux-badge-danger]="order.paymentStatus === 'Unpaid'">
+                        {{ order.paymentStatus }}
+                      </span>
+                    </td>
+                    <td><span class="badge lux-badge-info">{{ order.status }}</span></td>
                   </tr>
+                } @empty {
+                  <tr><td colspan="5" class="text-center py-4 text-secondary">No purchase orders found for this customer.</td></tr>
                 }
               </tbody>
             </table>
           </div>
         }
 
-        <!-- Old Gold Exchange Report -->
-        @if (reportType === 'sales/old-gold-exchange' && reportData.rows !== undefined) {
-          <div class="row g-4 mb-4">
-            <div class="col-lg-3">
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- 4. GST TAX FILING REPORT -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        @if (reportType === 'sales/gst' && reportData.lines !== undefined) {
+          <div class="row g-3 mb-4">
+            <div class="col-xl-3 col-sm-6">
               <div class="stat-card">
-                <div class="small text-secondary">Total Transactions</div>
-                <div class="fs-3 fw-bold">{{ reportData.totalTransactions }}</div>
+                <div class="stat-label">Taxable Turnover</div>
+                <div class="stat-val text-charcoal">₹{{ reportData.totalTaxableAmount | number:'1.0-0' }}</div>
               </div>
             </div>
-            <div class="col-lg-3">
+            <div class="col-xl-3 col-sm-6">
               <div class="stat-card">
-                <div class="small text-secondary">Total Weight (g)</div>
-                <div class="fs-3 fw-bold">{{ reportData.totalOldGoldWeightGrams | number:'1.0-0' }}</div>
+                <div class="stat-label">CGST (Central)</div>
+                <div class="stat-val stat-gold">₹{{ reportData.totalCGST | number:'1.0-0' }}</div>
               </div>
             </div>
-            <div class="col-lg-3">
+            <div class="col-xl-3 col-sm-6">
               <div class="stat-card">
-                <div class="small text-secondary">Exchange Value</div>
-                <div class="fs-3 fw-bold">₹{{ reportData.totalExchangeValueGranted | number:'1.0-0' }}</div>
+                <div class="stat-label">SGST (State)</div>
+                <div class="stat-val stat-gold">₹{{ reportData.totalSGST | number:'1.0-0' }}</div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-sm-6">
+              <div class="stat-card">
+                <div class="stat-label">Total GST Output</div>
+                <div class="stat-val stat-gold">₹{{ reportData.totalGST | number:'1.0-0' }}</div>
               </div>
             </div>
           </div>
+
           <div class="table-responsive">
             <table class="table">
               <thead>
-                <tr><th>Invoice</th><th>Date</th><th>Customer</th><th>Weight (g)</th><th>Value</th><th>Order Amount</th></tr>
+                <tr>
+                  <th>Invoice #</th>
+                  <th>Date</th>
+                  <th>Customer Name</th>
+                  <th>Taxable Value (₹)</th>
+                  <th>Rate</th>
+                  <th>CGST (1.5%)</th>
+                  <th>SGST (1.5%)</th>
+                  <th>IGST (3.0%)</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of reportData.lines; track row.invoiceNumber) {
+                  <tr>
+                    <td><code>{{ row.invoiceNumber }}</code></td>
+                    <td class="text-charcoal">{{ row.invoiceDate }}</td>
+                    <td class="fw-semibold text-charcoal">{{ row.customerName || 'Walk-in Customer' }}</td>
+                    <td class="fw-bold">₹{{ row.taxableAmount | number:'1.2-2' }}</td>
+                    <td>{{ row.taxRatePercent }}%</td>
+                    <td>₹{{ row.cgstAmount | number:'1.2-2' }}</td>
+                    <td>₹{{ row.sgstAmount | number:'1.2-2' }}</td>
+                    <td>₹{{ (row.igstAmount || 0) | number:'1.2-2' }}</td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="8" class="text-center py-4 text-secondary">No GST invoice lines recorded for this period.</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- 5. OLD GOLD EXCHANGE REPORT -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        @if (reportType === 'sales/old-gold-exchange' && reportData.rows !== undefined) {
+          <div class="row g-3 mb-4">
+            <div class="col-md-4">
+              <div class="stat-card">
+                <div class="stat-label">Exchange Transactions</div>
+                <div class="stat-val text-charcoal">{{ reportData.totalTransactions }}</div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="stat-card">
+                <div class="stat-label">Total Gold Acquired</div>
+                <div class="stat-val text-charcoal">{{ reportData.totalOldGoldWeightGrams | number:'1.2-2' }} g</div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="stat-card">
+                <div class="stat-label">Total Value Credited</div>
+                <div class="stat-val stat-gold">₹{{ reportData.totalExchangeValueGranted | number:'1.0-0' }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Invoice Reference</th>
+                  <th>Order Date</th>
+                  <th>Customer</th>
+                  <th>Exchange Value Given</th>
+                  <th>Order Net Amount</th>
+                </tr>
               </thead>
               <tbody>
                 @for (row of reportData.rows; track row.invoiceNumber) {
                   <tr>
                     <td><code>{{ row.invoiceNumber }}</code></td>
-                    <td>{{ row.orderDate }}</td>
-                    <td>{{ row.customerName || '—' }}</td>
-                    <td>{{ row.weightGrams | number:'1.0-0' }}</td>
-                    <td>₹{{ row.exchangeValue | number:'1.0-0' }}</td>
-                    <td>₹{{ row.orderNetAmount | number:'1.0-0' }}</td>
+                    <td class="text-charcoal">{{ row.orderDate }}</td>
+                    <td class="fw-semibold text-charcoal">{{ row.customerName || 'Walk-in' }}</td>
+                    <td class="fw-bold text-gold">₹{{ row.exchangeValue | number:'1.0-0' }}</td>
+                    <td class="fw-bold text-charcoal">₹{{ row.orderNetAmount | number:'1.0-0' }}</td>
                   </tr>
+                } @empty {
+                  <tr><td colspan="5" class="text-center py-4 text-secondary">No old gold exchange transactions recorded.</td></tr>
                 }
               </tbody>
             </table>
           </div>
         }
 
-        <!-- Stock Movement Report -->
-        @if (reportType === 'inventory/stock-movement' && reportData.rows !== undefined) {
-          <div class="row g-4 mb-4">
-            <div class="col-lg-3">
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- 6. CURRENT STOCK REPORT -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        @if (reportType === 'inventory/current-stock' && reportData.rows !== undefined) {
+          <div class="row g-3 mb-4">
+            <div class="col-xl-3 col-sm-6">
               <div class="stat-card">
-                <div class="small text-secondary">Total In</div>
-                <div class="fs-3 fw-bold">{{ reportData.totalInWeight | number:'1.0-0' }}g</div>
+                <div class="stat-label">Live Inventory Valuation</div>
+                <div class="stat-val stat-gold">₹{{ reportData.totalStockValue | number:'1.0-0' }}</div>
               </div>
             </div>
-            <div class="col-lg-3">
+            <div class="col-xl-3 col-sm-6">
               <div class="stat-card">
-                <div class="small text-secondary">Total Out</div>
-                <div class="fs-3 fw-bold">{{ reportData.totalOutWeight | number:'1.0-0' }}g</div>
+                <div class="stat-label">Total Gold in Vault</div>
+                <div class="stat-val text-charcoal">{{ reportData.totalGoldWeightGrams | number:'1.2-2' }} g</div>
               </div>
             </div>
-            <div class="col-lg-3">
+            <div class="col-xl-3 col-sm-6">
               <div class="stat-card">
-                <div class="small text-secondary">Net Movement</div>
-                <div class="fs-3 fw-bold">{{ reportData.netMovementWeight | number:'1.0-0' }}g</div>
+                <div class="stat-label">Total Silver in Stock</div>
+                <div class="stat-val text-charcoal">{{ reportData.totalSilverWeightGrams | number:'1.2-2' }} g</div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-sm-6">
+              <div class="stat-card">
+                <div class="stat-label">Catalog Items Tracked</div>
+                <div class="stat-val text-charcoal">{{ reportData.rows.length }} SKUs</div>
               </div>
             </div>
           </div>
-          <div class="table-responsive">
-            <table class="table">
-              <thead>
-                <tr><th>Date</th><th>Product</th><th>Type</th><th>Qty</th><th>Weight (g)</th><th>Value</th><th>Ref</th></tr>
-              </thead>
-              <tbody>
-                @for (row of reportData.rows.slice(0, 100); let i = $index; track i) {
-                  <tr>
-                    <td>{{ row.transactionDate | date:'d/M/yy' }}</td>
-                    <td>{{ row.productName }}</td>
-                    <td><span class="badge" [class.bg-success]="row.transactionType === 'StockIn'" [class.bg-danger]="row.transactionType === 'Sold'">{{ row.transactionType }}</span></td>
-                    <td>{{ row.quantity }}</td>
-                    <td>{{ row.weightGrams | number:'1.0-0' }}</td>
-                    <td>₹{{ row.totalValue | number:'1.0-0' }}</td>
-                    <td><code>{{ row.referenceNo || '—' }}</code></td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        }
 
-        <!-- Slow-Moving Items Report -->
-        @if (reportType === 'inventory/slow-moving' && reportData.rows !== undefined) {
-          <div class="row g-4 mb-4">
-            <div class="col-lg-3">
-              <div class="stat-card">
-                <div class="small text-secondary">Slow Moving ({{ reportData.slowMovingDays }}+ days)</div>
-                <div class="fs-3 fw-bold">{{ reportData.totalSlowMovingItems }}</div>
-              </div>
-            </div>
-            <div class="col-lg-3">
-              <div class="stat-card">
-                <div class="small text-secondary">Stock Value at Risk</div>
-                <div class="fs-3 fw-bold">₹{{ reportData.totalSlowStockValue | number:'1.0-0' }}</div>
-              </div>
-            </div>
-          </div>
           <div class="table-responsive">
             <table class="table">
               <thead>
-                <tr><th>SKU</th><th>Product</th><th>Qty</th><th>Last Sold</th><th>Days Idle</th><th>Stock Value</th></tr>
+                <tr>
+                  <th>SKU Code</th>
+                  <th>Product Description</th>
+                  <th>Category</th>
+                  <th>Purity</th>
+                  <th>Stock Qty</th>
+                  <th>Gross Wt (g)</th>
+                  <th>Mkt Rate/g</th>
+                  <th>Live Valuation (₹)</th>
+                  <th>Stock Health</th>
+                </tr>
               </thead>
               <tbody>
                 @for (row of reportData.rows; track row.productId) {
-                  <tr [class.table-danger]="row.daysWithoutSale > 180">
+                  <tr>
                     <td><code>{{ row.skuCode }}</code></td>
-                    <td>{{ row.productName }}</td>
-                    <td>{{ row.currentStockQty }}</td>
-                    <td>{{ row.lastSoldDate }}</td>
-                    <td><strong>{{ row.daysWithoutSale }}</strong></td>
-                    <td>₹{{ row.currentStockValue | number:'1.0-0' }}</td>
+                    <td class="fw-semibold text-charcoal">{{ row.productName }}</td>
+                    <td>{{ row.categoryName }}</td>
+                    <td><span class="badge lux-badge-info">{{ row.purity }}</span></td>
+                    <td class="fw-bold">{{ row.stockQty }}</td>
+                    <td>{{ row.totalWeightGrams | number:'1.2-2' }} g</td>
+                    <td>₹{{ row.ratePerGram | number:'1.0-0' }}</td>
+                    <td class="fw-bold text-charcoal">₹{{ row.totalMarketValue | number:'1.0-0' }}</td>
+                    <td>
+                      @if (row.isLowStock) {
+                        <span class="badge lux-badge-danger">Low Stock (&le; {{ row.reorderLevel }})</span>
+                      } @else {
+                        <span class="badge lux-badge-success">Optimal</span>
+                      }
+                    </td>
                   </tr>
+                } @empty {
+                  <tr><td colspan="9" class="text-center py-4 text-secondary">No stock inventory records available.</td></tr>
                 }
               </tbody>
             </table>
           </div>
         }
 
-        <!-- Loan Repayment History Report -->
-        @if (reportType === 'loans/repayment-history' && reportData.rows !== undefined) {
-          <div class="mb-4">
-            <div class="small text-secondary">From: <strong>{{ reportData.fromDate }}</strong> To: <strong>{{ reportData.toDate }}</strong></div>
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- 7. STOCK MOVEMENT LEDGER REPORT -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        @if (reportType === 'inventory/stock-movement' && reportData.rows !== undefined) {
+          <div class="row g-3 mb-4">
+            <div class="col-md-4">
+              <div class="stat-card">
+                <div class="stat-label">Total Inflow Weight</div>
+                <div class="stat-val stat-success">+{{ reportData.totalInWeight | number:'1.2-2' }} g</div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="stat-card">
+                <div class="stat-label">Total Outflow Weight</div>
+                <div class="stat-val stat-danger">-{{ reportData.totalOutWeight | number:'1.2-2' }} g</div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="stat-card">
+                <div class="stat-label">Net Movement</div>
+                <div class="stat-val text-charcoal">{{ reportData.netMovementWeight | number:'1.2-2' }} g</div>
+              </div>
+            </div>
           </div>
+
           <div class="table-responsive">
             <table class="table">
               <thead>
-                <tr><th>Loan#</th><th>Customer</th><th>Date</th><th>Principal</th><th>Interest</th><th>Total Paid</th><th>Mode</th></tr>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Product</th>
+                  <th>Transaction Type</th>
+                  <th>Qty</th>
+                  <th>Weight (g)</th>
+                  <th>Rate/g</th>
+                  <th>Total Value</th>
+                  <th>Reference / Doc</th>
+                  <th>Staff</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of reportData.rows; track row.transactionId) {
+                  <tr>
+                    <td class="text-secondary small">{{ row.transactionDate | slice:0:19 }}</td>
+                    <td><strong>{{ row.productName }}</strong></td>
+                    <td>
+                      <span class="badge" [class.lux-badge-success]="row.quantity > 0" [class.lux-badge-danger]="row.quantity < 0">
+                        {{ row.transactionType }}
+                      </span>
+                    </td>
+                    <td class="fw-bold">{{ row.quantity }}</td>
+                    <td>{{ row.weightGrams | number:'1.2-2' }} g</td>
+                    <td>₹{{ row.ratePerGram | number:'1.0-0' }}</td>
+                    <td class="fw-bold text-charcoal">₹{{ row.totalValue | number:'1.0-0' }}</td>
+                    <td><code>{{ row.referenceNo || '—' }}</code></td>
+                    <td class="small text-secondary">{{ row.createdBy }}</td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="9" class="text-center py-4 text-secondary">No stock movement logs recorded.</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- 8. INVENTORY VALUATION REPORT -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        @if (reportType === 'inventory/valuation' && reportData.byCategory !== undefined) {
+          <div class="row g-3 mb-4">
+            <div class="col-xl-3 col-sm-6">
+              <div class="stat-card">
+                <div class="stat-label">Grand Total Valuation</div>
+                <div class="stat-val stat-gold">₹{{ reportData.totalValuation | number:'1.0-0' }}</div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-sm-6">
+              <div class="stat-card">
+                <div class="stat-label">22K Gold Rate</div>
+                <div class="stat-val text-charcoal">₹{{ reportData.goldRate22K | number:'1.0-0' }} / 10g</div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-sm-6">
+              <div class="stat-card">
+                <div class="stat-label">24K Gold Rate</div>
+                <div class="stat-val text-charcoal">₹{{ reportData.goldRate24K | number:'1.0-0' }} / 10g</div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-sm-6">
+              <div class="stat-card">
+                <div class="stat-label">Silver Rate</div>
+                <div class="stat-val text-charcoal">₹{{ reportData.silverRatePerKg | number:'1.0-0' }} / kg</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-kicker mb-2"><i class="bi bi-pie-chart me-1"></i> Category-wise Vault Valuation Breakdown</div>
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Category</th>
+                  <th>Unique SKUs</th>
+                  <th>Total Pieces</th>
+                  <th>Cumulative Weight (g)</th>
+                  <th>Market Value (₹)</th>
+                  <th>Portfolio Share</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (cat of reportData.byCategory; track cat.categoryName) {
+                  <tr>
+                    <td><strong>{{ cat.categoryName }}</strong></td>
+                    <td>{{ cat.productCount }}</td>
+                    <td>{{ cat.totalPieces }}</td>
+                    <td>{{ cat.totalWeightGrams | number:'1.2-2' }} g</td>
+                    <td class="fw-bold text-gold">₹{{ cat.totalValue | number:'1.0-0' }}</td>
+                    <td><span class="badge lux-badge-info">{{ cat.percentOfTotal | number:'1.1-1' }}%</span></td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="6" class="text-center py-4 text-secondary">No valuation categories found.</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- 9. SLOW-MOVING INVENTORY REPORT -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        @if (reportType === 'inventory/slow-moving' && reportData.rows !== undefined) {
+          <div class="row g-3 mb-4">
+            <div class="col-md-4">
+              <div class="stat-card">
+                <div class="stat-label">Slow-Moving Items (&ge; {{ reportData.slowMovingDays }} Days)</div>
+                <div class="stat-val stat-danger">{{ reportData.totalSlowMovingItems }} SKUs</div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="stat-card">
+                <div class="stat-label">Capital Locked at Risk</div>
+                <div class="stat-val stat-danger">₹{{ reportData.totalSlowStockValue | number:'1.0-0' }}</div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="stat-card">
+                <div class="stat-label">Holding Threshold</div>
+                <div class="stat-val text-charcoal">{{ reportData.slowMovingDays }} Days</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>SKU Code</th>
+                  <th>Product Description</th>
+                  <th>Category</th>
+                  <th>Stock Qty</th>
+                  <th>Weight (g)</th>
+                  <th>Locked Value</th>
+                  <th>Last Sold Date</th>
+                  <th>Days Idle</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of reportData.rows; track row.productId) {
+                  <tr [class.table-warning]="row.daysSinceLastSale >= 90">
+                    <td><code>{{ row.skuCode }}</code></td>
+                    <td class="fw-semibold text-charcoal">{{ row.productName }}</td>
+                    <td>{{ row.categoryName }}</td>
+                    <td class="fw-bold">{{ row.stockQty }}</td>
+                    <td>{{ row.totalWeightGrams | number:'1.2-2' }} g</td>
+                    <td class="fw-bold text-charcoal">₹{{ row.stockValue | number:'1.0-0' }}</td>
+                    <td class="text-secondary">{{ row.lastSaleDate || 'Never Sold' }}</td>
+                    <td><strong class="text-danger">{{ row.daysSinceLastSale }} days</strong></td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="8" class="text-center py-4 text-secondary">All inventory items are actively moving! No slow-moving stock found.</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- 10. ACTIVE LOANS SUMMARY REPORT -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        @if (reportType === 'loans/active' && reportData.rows !== undefined) {
+          <div class="row g-3 mb-4">
+            <div class="col-xl-3 col-sm-6">
+              <div class="stat-card">
+                <div class="stat-label">Active Pawn Loans</div>
+                <div class="stat-val text-charcoal">{{ reportData.totalActiveLoans }}</div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-sm-6">
+              <div class="stat-card">
+                <div class="stat-label">Principal Outstanding</div>
+                <div class="stat-val text-charcoal">₹{{ reportData.totalPrincipalOutstanding | number:'1.0-0' }}</div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-sm-6">
+              <div class="stat-card">
+                <div class="stat-label">Accrued Interest</div>
+                <div class="stat-val stat-gold">₹{{ reportData.totalAccruedInterest | number:'1.0-0' }}</div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-sm-6">
+              <div class="stat-card">
+                <div class="stat-label">Grand Total Due</div>
+                <div class="stat-val stat-gold">₹{{ reportData.totalOutstanding | number:'1.0-0' }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Loan #</th>
+                  <th>Customer Name</th>
+                  <th>Sanction Date</th>
+                  <th>Maturity</th>
+                  <th>Sanctioned</th>
+                  <th>Principal Due</th>
+                  <th>Accrued Int.</th>
+                  <th>Total Due (₹)</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of reportData.rows; track row.loanId) {
+                  <tr>
+                    <td><strong class="text-gold">{{ row.loanNumber }}</strong></td>
+                    <td class="fw-semibold text-charcoal">{{ row.customerName }}</td>
+                    <td class="text-secondary">{{ row.loanDate }}</td>
+                    <td class="text-secondary">{{ row.maturityDate }}</td>
+                    <td>₹{{ row.principalAmount | number:'1.0-0' }}</td>
+                    <td class="fw-bold">₹{{ row.principalRemaining | number:'1.0-0' }}</td>
+                    <td class="text-warning">₹{{ row.accruedInterest | number:'1.0-0' }}</td>
+                    <td class="fw-bold text-charcoal">₹{{ row.totalOutstanding | number:'1.0-0' }}</td>
+                    <td>
+                      <span class="badge" [class.lux-badge-success]="!row.isOverdue" [class.lux-badge-danger]="row.isOverdue">
+                        {{ row.isOverdue ? ('Overdue (' + row.daysOverdue + 'd)') : row.loanStatus }}
+                      </span>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="9" class="text-center py-4 text-secondary">No active gold loans found on record.</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- 11. LOAN REPAYMENT HISTORY REPORT -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        @if (reportType === 'loans/repayment-history' && reportData.rows !== undefined) {
+          <div class="row g-3 mb-4">
+            <div class="col-xl-3 col-sm-6">
+              <div class="stat-card">
+                <div class="stat-label">Total Collections</div>
+                <div class="stat-val stat-gold">₹{{ reportData.totalAmountReceived | number:'1.0-0' }}</div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-sm-6">
+              <div class="stat-card">
+                <div class="stat-label">Principal Recovered</div>
+                <div class="stat-val text-charcoal">₹{{ reportData.totalPrincipalReceived | number:'1.0-0' }}</div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-sm-6">
+              <div class="stat-card">
+                <div class="stat-label">Interest Earned</div>
+                <div class="stat-val stat-success">₹{{ reportData.totalInterestReceived | number:'1.0-0' }}</div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-sm-6">
+              <div class="stat-card">
+                <div class="stat-label">Penalty Collected</div>
+                <div class="stat-val stat-danger">₹{{ reportData.totalPenaltyReceived | number:'1.0-0' }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Receipt #</th>
+                  <th>Date</th>
+                  <th>Loan #</th>
+                  <th>Customer</th>
+                  <th>Amount Paid (₹)</th>
+                  <th>Principal</th>
+                  <th>Interest</th>
+                  <th>Penalty</th>
+                  <th>Mode</th>
+                  <th>Balance Left</th>
+                </tr>
               </thead>
               <tbody>
                 @for (row of reportData.rows; track row.repaymentId) {
                   <tr>
+                    <td><strong class="text-gold">{{ row.receiptNumber }}</strong></td>
+                    <td class="text-secondary">{{ row.repaymentDate }}</td>
                     <td><code>{{ row.loanNumber }}</code></td>
-                    <td>{{ row.customerName }}</td>
-                    <td>{{ row.repaymentDate }}</td>
-                    <td>₹{{ row.principalPaid | number:'1.0-0' }}</td>
-                    <td>₹{{ row.interestPaid | number:'1.0-0' }}</td>
-                    <td>₹{{ row.totalRepaid | number:'1.0-0' }}</td>
-                    <td>{{ row.paymentMode }}</td>
+                    <td class="fw-semibold text-charcoal">{{ row.customerName }}</td>
+                    <td class="fw-bold text-charcoal">₹{{ row.amountPaid | number:'1.0-0' }}</td>
+                    <td>₹{{ row.principalComponent | number:'1.0-0' }}</td>
+                    <td class="text-success">₹{{ row.interestComponent | number:'1.0-0' }}</td>
+                    <td class="text-danger">₹{{ (row.penaltyAmount || 0) | number:'1.0-0' }}</td>
+                    <td><span class="badge bg-light text-dark border">{{ row.paymentMode }}</span></td>
+                    <td class="fw-bold">₹{{ row.principalBalanceAfter | number:'1.0-0' }}</td>
                   </tr>
+                } @empty {
+                  <tr><td colspan="10" class="text-center py-4 text-secondary">No repayment receipts recorded in this period.</td></tr>
                 }
               </tbody>
             </table>
           </div>
         }
 
-        <!-- Outstanding Balance Report -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- 12. OUTSTANDING BALANCE REPORT -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
         @if (reportType === 'loans/outstanding' && reportData.rows !== undefined) {
-          <div class="row g-4 mb-4">
-            <div class="col-lg-4">
+          <div class="row g-3 mb-4">
+            <div class="col-xl-3 col-sm-6">
               <div class="stat-card">
-                <div class="small text-secondary">Total Outstanding Principal</div>
-                <div class="fs-3 fw-bold">₹{{ reportData.totalOutstandingPrincipal | number:'1.0-0' }}</div>
+                <div class="stat-label">Principal Balance</div>
+                <div class="stat-val text-charcoal">₹{{ reportData.totalPrincipalOutstanding | number:'1.0-0' }}</div>
               </div>
             </div>
-            <div class="col-lg-4">
+            <div class="col-xl-3 col-sm-6">
               <div class="stat-card">
-                <div class="small text-secondary">Total Interest Due</div>
-                <div class="fs-3 fw-bold">₹{{ reportData.totalOutstandingInterest | number:'1.0-0' }}</div>
+                <div class="stat-label">Accrued Interest</div>
+                <div class="stat-val text-warning">₹{{ reportData.totalInterestOutstanding | number:'1.0-0' }}</div>
               </div>
             </div>
-            <div class="col-lg-4">
+            <div class="col-xl-3 col-sm-6">
               <div class="stat-card">
-                <div class="small text-secondary">Grand Total Outstanding</div>
-                <div class="fs-3 fw-bold">₹{{ reportData.totalOutstandingBalance | number:'1.0-0' }}</div>
+                <div class="stat-label">Penal Charges</div>
+                <div class="stat-val stat-danger">₹{{ reportData.totalPenaltyOutstanding | number:'1.0-0' }}</div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-sm-6">
+              <div class="stat-card">
+                <div class="stat-label">Grand Total Receivable</div>
+                <div class="stat-val stat-gold">₹{{ reportData.grandTotalOutstanding | number:'1.0-0' }}</div>
               </div>
             </div>
           </div>
+
           <div class="table-responsive">
             <table class="table">
               <thead>
-                <tr><th>Loan#</th><th>Customer</th><th>Principal</th><th>Interest Due</th><th>Total Due</th><th>Days Overdue</th></tr>
+                <tr>
+                  <th>Loan #</th>
+                  <th>Customer</th>
+                  <th>Loan Date</th>
+                  <th>Maturity</th>
+                  <th>Principal Rem.</th>
+                  <th>Interest Due</th>
+                  <th>Total Owed (₹)</th>
+                  <th>Days Overdue</th>
+                  <th>Status</th>
+                </tr>
               </thead>
               <tbody>
-                @for (row of reportData.rows; track row.id) {
+                @for (row of reportData.rows; track row.loanId) {
                   <tr [class.table-danger]="row.daysOverdue > 0">
-                    <td><code>{{ row.loanNumber }}</code></td>
-                    <td>{{ row.customerName }}</td>
-                    <td>₹{{ row.outstandingPrincipal | number:'1.0-0' }}</td>
-                    <td>₹{{ row.outstandingInterest | number:'1.0-0' }}</td>
-                    <td>₹{{ row.outstandingBalance | number:'1.0-0' }}</td>
+                    <td><strong class="text-gold">{{ row.loanNumber }}</strong></td>
+                    <td class="fw-semibold text-charcoal">{{ row.customerName }}</td>
+                    <td class="text-secondary">{{ row.loanDate }}</td>
+                    <td class="text-secondary">{{ row.maturityDate }}</td>
+                    <td>₹{{ row.principalRemaining | number:'1.0-0' }}</td>
+                    <td class="text-warning">₹{{ row.accruedInterest | number:'1.0-0' }}</td>
+                    <td class="fw-bold text-charcoal">₹{{ row.totalOwed | number:'1.0-0' }}</td>
                     <td>
                       @if (row.daysOverdue > 0) {
-                        <strong class="text-danger">{{ row.daysOverdue }}</strong>
+                        <strong class="text-danger">{{ row.daysOverdue }} days</strong>
                       } @else {
-                        —
+                        <span class="text-success">On Schedule</span>
                       }
                     </td>
+                    <td><span class="badge lux-badge-info">{{ row.status }}</span></td>
                   </tr>
+                } @empty {
+                  <tr><td colspan="9" class="text-center py-4 text-secondary">No outstanding loan balances found.</td></tr>
                 }
               </tbody>
             </table>
           </div>
         }
 
-        <!-- Defaulted Loans Report -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- 13. DEFAULTED & AT-RISK LOANS REPORT -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
         @if (reportType === 'loans/defaulted' && reportData.rows !== undefined) {
-          <div class="row g-4 mb-4">
-            <div class="col-lg-4">
+          <div class="row g-3 mb-4">
+            <div class="col-md-3">
               <div class="stat-card">
-                <div class="small text-secondary">Defaulted Loans</div>
-                <div class="fs-3 fw-bold">{{ reportData.rows.length }}</div>
+                <div class="stat-label">Defaulted Loans</div>
+                <div class="stat-val stat-danger">{{ reportData.defaultedCount }}</div>
               </div>
             </div>
-            <div class="col-lg-4">
+            <div class="col-md-3">
               <div class="stat-card">
-                <div class="small text-secondary">Total Principal at Risk</div>
-                <div class="fs-3 fw-bold">₹{{ reportData.totalDefaultedPrincipal | number:'1.0-0' }}</div>
+                <div class="stat-label">Defaulted Principal</div>
+                <div class="stat-val stat-danger">₹{{ reportData.defaultedPrincipal | number:'1.0-0' }}</div>
               </div>
             </div>
-            <div class="col-lg-4">
+            <div class="col-md-3">
               <div class="stat-card">
-                <div class="small text-secondary">Loan-to-Value Ratio</div>
-                <div class="fs-3 fw-bold">{{ reportData.avgLoanToValueRatio | number:'1.0' }}%</div>
+                <div class="stat-label">At-Risk Overdue Loans</div>
+                <div class="stat-val text-warning">{{ reportData.atRiskCount }}</div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="stat-card">
+                <div class="stat-label">At-Risk Principal</div>
+                <div class="stat-val text-warning">₹{{ reportData.atRiskPrincipal | number:'1.0-0' }}</div>
               </div>
             </div>
           </div>
+
           <div class="table-responsive">
             <table class="table">
               <thead>
-                <tr><th>Loan#</th><th>Customer</th><th>Principal</th><th>Days Defaulted</th><th>Gold Value</th><th>Status</th></tr>
+                <tr>
+                  <th>Loan #</th>
+                  <th>Customer Name</th>
+                  <th>Phone Number</th>
+                  <th>Maturity Date</th>
+                  <th>Days Overdue</th>
+                  <th>Sanctioned Principal</th>
+                  <th>Total Due (₹)</th>
+                  <th>Risk Classification</th>
+                </tr>
               </thead>
               <tbody>
-                @for (row of reportData.rows; track row.id) {
-                  <tr class="table-danger">
-                    <td><code>{{ row.loanNumber }}</code></td>
-                    <td>{{ row.customerName }}</td>
+                @for (row of reportData.rows; track row.loanId) {
+                  <tr>
+                    <td><strong class="text-danger">{{ row.loanNumber }}</strong></td>
+                    <td class="fw-semibold text-charcoal">{{ row.customerName }}</td>
+                    <td class="text-secondary">{{ row.customerPhone }}</td>
+                    <td class="text-secondary">{{ row.maturityDate }}</td>
+                    <td><strong class="text-danger">{{ row.daysOverdue }} days</strong></td>
                     <td>₹{{ row.principalAmount | number:'1.0-0' }}</td>
-                    <td><strong>{{ row.daysDefaulted }}</strong></td>
-                    <td>₹{{ row.pledgedGoldValue | number:'1.0-0' }}</td>
-                    <td><span class="badge bg-danger">Defaulted</span></td>
+                    <td class="fw-bold text-danger">₹{{ row.totalOutstanding | number:'1.0-0' }}</td>
+                    <td>
+                      <span class="badge" [class.lux-badge-danger]="row.riskLevel === 'Defaulted' || row.riskLevel === 'Critical'" [class.lux-badge-warning]="row.riskLevel === 'AtRisk'">
+                        {{ row.riskLevel }}
+                      </span>
+                    </td>
                   </tr>
+                } @empty {
+                  <tr><td colspan="8" class="text-center py-4 text-secondary">Excellent! No defaulted or at-risk loans currently recorded.</td></tr>
                 }
               </tbody>
             </table>
           </div>
         }
 
-        <!-- Interest Income Report -->
-        @if (reportType === 'loans/interest-income' && reportData.monthlyBreakdown !== undefined) {
-          <div class="row g-4 mb-4">
-            <div class="col-lg-3">
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- 14. INTEREST & PENALTY INCOME REPORT -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        @if (reportType === 'loans/interest-income' && reportData.byMonth !== undefined) {
+          <div class="row g-3 mb-4">
+            <div class="col-md-4">
               <div class="stat-card">
-                <div class="small text-secondary">Total Interest Income</div>
-                <div class="fs-3 fw-bold">₹{{ reportData.totalInterestIncome | number:'1.0-0' }}</div>
+                <div class="stat-label">Total Interest Income</div>
+                <div class="stat-val stat-success">₹{{ reportData.totalInterestEarned | number:'1.0-0' }}</div>
               </div>
             </div>
-            <div class="col-lg-3">
+            <div class="col-md-4">
               <div class="stat-card">
-                <div class="small text-secondary">Average Monthly</div>
-                <div class="fs-3 fw-bold">₹{{ reportData.avgMonthlyIncome | number:'1.0-0' }}</div>
+                <div class="stat-label">Total Penalty Recoveries</div>
+                <div class="stat-val stat-danger">₹{{ reportData.totalPenaltyEarned | number:'1.0-0' }}</div>
               </div>
             </div>
-            <div class="col-lg-3">
+            <div class="col-md-4">
               <div class="stat-card">
-                <div class="small text-secondary">Active Earning Loans</div>
-                <div class="fs-3 fw-bold">{{ reportData.activeEarningLoans }}</div>
+                <div class="stat-label">Net Finance Income</div>
+                <div class="stat-val stat-gold">₹{{ reportData.totalIncomeEarned | number:'1.0-0' }}</div>
               </div>
             </div>
           </div>
-          <div class="section-kicker mb-2">Monthly Breakdown</div>
+
+          <div class="section-kicker mb-2"><i class="bi bi-calendar3 me-1"></i> Monthly Collections Breakdown</div>
           <div class="table-responsive">
             <table class="table">
               <thead>
-                <tr><th>Month</th><th>Interest Collected</th><th>Active Loans</th><th>Avg/Loan</th></tr>
+                <tr>
+                  <th>Accounting Month</th>
+                  <th>Interest Collected (₹)</th>
+                  <th>Penalty Collected (₹)</th>
+                  <th>Total Finance Revenue (₹)</th>
+                </tr>
               </thead>
               <tbody>
-                @for (month of reportData.monthlyBreakdown; track month.month) {
+                @for (m of reportData.byMonth; track m.month) {
                   <tr>
-                    <td>{{ month.month }}</td>
-                    <td>₹{{ month.interestCollected | number:'1.0-0' }}</td>
-                    <td>{{ month.activeLoans }}</td>
-                    <td>₹{{ (month.interestCollected / month.activeLoans) | number:'1.0-0' }}</td>
+                    <td><strong>{{ m.month }}</strong></td>
+                    <td class="text-success fw-semibold">₹{{ m.interestCollected | number:'1.0-0' }}</td>
+                    <td class="text-danger">₹{{ m.penaltyCollected | number:'1.0-0' }}</td>
+                    <td class="fw-bold text-gold">₹{{ m.totalCollected | number:'1.0-0' }}</td>
                   </tr>
+                } @empty {
+                  <tr><td colspan="4" class="text-center py-4 text-secondary">No finance income receipts recorded in this period.</td></tr>
                 }
               </tbody>
             </table>
           </div>
         }
 
-        <!-- Customer Loan History Report -->
-        @if (reportType === 'loans/customer-history' && reportData.rows !== undefined) {
-          <div class="row g-4 mb-4">
-            <div class="col-lg-3">
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- 15. CUSTOMER GOLD LOAN HISTORY REPORT -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        @if (reportType === 'loans/customer-history' && reportData.loans !== undefined) {
+          <div class="row g-3 mb-4">
+            <div class="col-xl-3 col-sm-6">
               <div class="stat-card">
-                <div class="small text-secondary">Total Loans</div>
-                <div class="fs-3 fw-bold">{{ reportData.rows.length }}</div>
+                <div class="stat-label">Borrower Profile</div>
+                <div class="fs-5 fw-bold text-charcoal">{{ reportData.customerName }}</div>
+                <div class="small text-secondary">{{ reportData.customerCode }}</div>
               </div>
             </div>
-            <div class="col-lg-3">
+            <div class="col-xl-3 col-sm-6">
               <div class="stat-card">
-                <div class="small text-secondary">Total Borrowed</div>
-                <div class="fs-3 fw-bold">₹{{ reportData.totalBorrowed | number:'1.0-0' }}</div>
+                <div class="stat-label">Total Borrowed</div>
+                <div class="stat-val text-charcoal">₹{{ reportData.totalPrincipalBorrowed | number:'1.0-0' }}</div>
               </div>
             </div>
-            <div class="col-lg-3">
+            <div class="col-xl-3 col-sm-6">
               <div class="stat-card">
-                <div class="small text-secondary">Total Repaid</div>
-                <div class="fs-3 fw-bold">₹{{ reportData.totalRepaid | number:'1.0-0' }}</div>
+                <div class="stat-label">Interest Paid</div>
+                <div class="stat-val stat-gold">₹{{ reportData.totalInterestPaid | number:'1.0-0' }}</div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-sm-6">
+              <div class="stat-card">
+                <div class="stat-label">Active / Closed Loans</div>
+                <div class="stat-val text-charcoal">{{ reportData.activeLoans }} / {{ reportData.closedLoans }}</div>
               </div>
             </div>
           </div>
+
           <div class="table-responsive">
             <table class="table">
               <thead>
-                <tr><th>Customer</th><th>Loans</th><th>Borrowed</th><th>Repaid</th><th>Outstanding</th><th>Avg Loan</th></tr>
+                <tr>
+                  <th>Loan #</th>
+                  <th>Sanction Date</th>
+                  <th>Maturity</th>
+                  <th>Closed Date</th>
+                  <th>Sanctioned (₹)</th>
+                  <th>Total Repaid</th>
+                  <th>Pledged Collateral</th>
+                  <th>Receipts</th>
+                  <th>Status</th>
+                </tr>
               </thead>
               <tbody>
-                @for (row of reportData.rows; track row.customerId) {
+                @for (l of reportData.loans; track l.loanId) {
                   <tr>
-                    <td>{{ row.customerName }}</td>
-                    <td>{{ row.loanCount }}</td>
-                    <td>₹{{ row.totalBorrowed | number:'1.0-0' }}</td>
-                    <td>₹{{ row.totalRepaid | number:'1.0-0' }}</td>
-                    <td>₹{{ row.outstandingBalance | number:'1.0-0' }}</td>
-                    <td>₹{{ (row.totalBorrowed / row.loanCount) | number:'1.0-0' }}</td>
+                    <td><strong class="text-gold">{{ l.loanNumber }}</strong></td>
+                    <td class="text-secondary">{{ l.loanDate }}</td>
+                    <td class="text-secondary">{{ l.maturityDate }}</td>
+                    <td class="text-secondary">{{ l.closedDate || '—' }}</td>
+                    <td class="fw-bold">₹{{ l.principalAmount | number:'1.0-0' }}</td>
+                    <td class="text-success fw-semibold">₹{{ l.totalRepaid | number:'1.0-0' }}</td>
+                    <td>{{ l.goldWeightGrams }} g ({{ l.goldPurity }})</td>
+                    <td><span class="badge bg-light text-dark border">{{ l.repaymentCount }} receipts</span></td>
+                    <td>
+                      <span class="badge" [class.lux-badge-success]="l.status === 'Active' || l.status === 'Closed'" [class.lux-badge-warning]="l.status === 'PartiallyRepaid'" [class.lux-badge-danger]="l.status === 'Defaulted'">
+                        {{ l.status }}
+                      </span>
+                    </td>
                   </tr>
+                } @empty {
+                  <tr><td colspan="9" class="text-center py-4 text-secondary">No gold loan records found for this borrower.</td></tr>
                 }
               </tbody>
             </table>
           </div>
         }
 
-        <!-- Pledged Gold Report -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- 16. PLEDGED GOLD COLLATERAL VAULT REPORT -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
         @if (reportType === 'loans/pledged-gold' && reportData.rows !== undefined) {
-          <div class="row g-4 mb-4">
-            <div class="col-lg-3">
+          <div class="row g-3 mb-4">
+            <div class="col-xl-3 col-sm-6">
               <div class="stat-card">
-                <div class="small text-secondary">Total Pledged Items</div>
-                <div class="fs-3 fw-bold">{{ reportData.rows.length }}</div>
+                <div class="stat-label">Total Vault Pledged Items</div>
+                <div class="stat-val text-charcoal">{{ reportData.totalPledgedItems }} Pieces</div>
               </div>
             </div>
-            <div class="col-lg-3">
+            <div class="col-xl-3 col-sm-6">
               <div class="stat-card">
-                <div class="small text-secondary">Total Weight (g)</div>
-                <div class="fs-3 fw-bold">{{ reportData.totalPledgedWeight | number:'1.0-0' }}</div>
+                <div class="stat-label">Total Pledged Gold Weight</div>
+                <div class="stat-val text-charcoal">{{ reportData.totalPledgedWeightGrams | number:'1.2-2' }} g</div>
               </div>
             </div>
-            <div class="col-lg-3">
+            <div class="col-xl-3 col-sm-6">
               <div class="stat-card">
-                <div class="small text-secondary">Total Market Value</div>
-                <div class="fs-3 fw-bold">₹{{ reportData.totalPledgedValue | number:'1.0-0' }}</div>
+                <div class="stat-label">Live Collateral Market Value</div>
+                <div class="stat-val stat-gold">₹{{ reportData.totalCurrentMarketValue | number:'1.0-0' }}</div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-sm-6">
+              <div class="stat-card">
+                <div class="stat-label">Loan Principal Secured</div>
+                <div class="stat-val text-charcoal">₹{{ reportData.totalLoanPrincipalAgainst | number:'1.0-0' }}</div>
               </div>
             </div>
           </div>
+
           <div class="table-responsive">
             <table class="table">
               <thead>
-                <tr><th>Loan#</th><th>Customer</th><th>Item</th><th>Weight (g)</th><th>Purity</th><th>Value</th><th>Status</th></tr>
+                <tr>
+                  <th>Loan #</th>
+                  <th>Customer Name</th>
+                  <th>Sanction Date</th>
+                  <th>Pledged Wt</th>
+                  <th>Purity</th>
+                  <th>Deposit Value</th>
+                  <th>Current Value (₹)</th>
+                  <th>Live LTV</th>
+                  <th>Status</th>
+                </tr>
               </thead>
               <tbody>
-                @for (row of reportData.rows; track row.id) {
+                @for (row of reportData.rows; track row.loanId) {
                   <tr>
-                    <td><code>{{ row.loanNumber }}</code></td>
-                    <td>{{ row.customerName }}</td>
-                    <td>{{ row.pledgedItems[0]?.itemDescription || '—' }}</td>
-                    <td>{{ row.pledgedItems[0]?.weightGrams ? (row.pledgedItems[0]?.weightGrams | number:'1.0-0') : '—' }}</td>
-                    <td>{{ row.pledgedItems[0]?.purity || '—' }}</td>
-                    <td>₹{{ row.pledgedItems[0]?.estimatedValue ? (row.pledgedItems[0]?.estimatedValue | number:'1.0-0') : '—' }}</td>
-                    <td><span class="badge bg-primary">Pledged</span></td>
+                    <td><strong class="text-gold">{{ row.loanNumber }}</strong></td>
+                    <td class="fw-semibold text-charcoal">{{ row.customerName }}</td>
+                    <td class="text-secondary">{{ row.loanDate }}</td>
+                    <td>{{ row.totalPledgedWeight }} g</td>
+                    <td><span class="badge lux-badge-info">{{ row.goldPurity }}</span></td>
+                    <td>₹{{ row.goldValueAtDeposit | number:'1.0-0' }}</td>
+                    <td class="fw-bold text-gold">₹{{ row.currentMarketValue | number:'1.0-0' }}</td>
+                    <td>
+                      <span class="badge" [class.lux-badge-success]="row.currentLTV <= 75" [class.lux-badge-danger]="row.currentLTV > 75">
+                        {{ row.currentLTV | number:'1.1-1' }}%
+                      </span>
+                    </td>
+                    <td><span class="badge lux-badge-info">{{ row.loanStatus }}</span></td>
                   </tr>
+                } @empty {
+                  <tr><td colspan="9" class="text-center py-4 text-secondary">No gold collateral currently held in vault.</td></tr>
                 }
               </tbody>
             </table>
           </div>
         }
 
-        <!-- Profit & Loss Report -->
-        @if (reportType === 'financial/profit-loss' && reportData.periods !== undefined) {
-          <div class="row g-4 mb-4">
-            <div class="col-lg-3">
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- 17. PROFIT & LOSS STATEMENT REPORT -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        @if (reportType === 'financial/profit-loss' && reportData.byPeriod !== undefined) {
+          <div class="row g-3 mb-4">
+            <div class="col-xl-3 col-sm-6">
               <div class="stat-card">
-                <div class="small text-secondary">Total Revenue</div>
-                <div class="fs-3 fw-bold">₹{{ reportData.totalRevenue | number:'1.0-0' }}</div>
+                <div class="stat-label">Net Sales Revenue</div>
+                <div class="stat-val text-charcoal">₹{{ reportData.netSalesRevenue | number:'1.0-0' }}</div>
               </div>
             </div>
-            <div class="col-lg-3">
+            <div class="col-xl-3 col-sm-6">
               <div class="stat-card">
-                <div class="small text-secondary">Total Cost</div>
-                <div class="fs-3 fw-bold">₹{{ reportData.totalCost | number:'1.0-0' }}</div>
+                <div class="stat-label">Gold Loan Finance Income</div>
+                <div class="stat-val stat-success">₹{{ (reportData.interestIncome + reportData.penaltyIncome) | number:'1.0-0' }}</div>
               </div>
             </div>
-            <div class="col-lg-3">
+            <div class="col-xl-3 col-sm-6">
               <div class="stat-card">
-                <div class="small text-secondary">Net Profit</div>
-                <div class="fs-3 fw-bold" [class.text-success]="reportData.totalProfit >= 0" [class.text-danger]="reportData.totalProfit < 0">₹{{ reportData.totalProfit | number:'1.0-0' }}</div>
+                <div class="stat-label">Cost of Goods Sold (COGS)</div>
+                <div class="stat-val stat-danger">₹{{ reportData.costOfGoldSold | number:'1.0-0' }}</div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-sm-6">
+              <div class="stat-card">
+                <div class="stat-label">Gross Operating Profit</div>
+                <div class="stat-val" [class.stat-success]="reportData.grossProfit >= 0" [class.stat-danger]="reportData.grossProfit < 0">
+                  ₹{{ reportData.grossProfit | number:'1.0-0' }}
+                  <span class="small fw-normal">({{ reportData.grossProfitMarginPercent }}%)</span>
+                </div>
               </div>
             </div>
           </div>
+
+          <div class="section-kicker mb-2"><i class="bi bi-graph-up me-1"></i> Period-wise Revenue & COGS Breakdown</div>
           <div class="table-responsive">
             <table class="table">
               <thead>
-                <tr><th>Period</th><th>Revenue</th><th>Cost</th><th>Gross Profit</th><th>Margin %</th></tr>
+                <tr>
+                  <th>Period</th>
+                  <th>Sales Revenue (₹)</th>
+                  <th>Cost of Goods Sold (₹)</th>
+                  <th>Gross Profit (₹)</th>
+                  <th>Operating Margin</th>
+                </tr>
               </thead>
               <tbody>
-                @for (period of reportData.periods; track period.period) {
+                @for (p of reportData.byPeriod; track p.period) {
                   <tr>
-                    <td>{{ period.period }}</td>
-                    <td>₹{{ period.revenue | number:'1.0-0' }}</td>
-                    <td>₹{{ period.costOfGoodsSold | number:'1.0-0' }}</td>
-                    <td>₹{{ period.grossProfit | number:'1.0-0' }}</td>
-                    <td>{{ (period.grossProfit / period.revenue * 100) | number:'1.0' }}%</td>
+                    <td><strong>{{ p.period }}</strong></td>
+                    <td class="fw-semibold text-charcoal">₹{{ p.revenue | number:'1.0-0' }}</td>
+                    <td class="text-danger">₹{{ p.cogs | number:'1.0-0' }}</td>
+                    <td class="fw-bold text-success">₹{{ p.grossProfit | number:'1.0-0' }}</td>
+                    <td>
+                      <span class="badge lux-badge-success">
+                        {{ p.revenue > 0 ? ((p.grossProfit / p.revenue * 100) | number:'1.1-1') : 0 }}%
+                      </span>
+                    </td>
                   </tr>
+                } @empty {
+                  <tr><td colspan="5" class="text-center py-4 text-secondary">No financial transactions recorded for this period.</td></tr>
                 }
               </tbody>
             </table>
           </div>
         }
 
-        <!-- Cash Flow Report -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- 18. CASH FLOW STATEMENT REPORT -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
         @if (reportType === 'financial/cash-flow' && reportData.rows !== undefined) {
+          <div class="row g-3 mb-4">
+            <div class="col-md-4">
+              <div class="stat-card">
+                <div class="stat-label">Total Cash Inflows</div>
+                <div class="stat-val stat-success">+₹{{ reportData.totalCashIn | number:'1.0-0' }}</div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="stat-card">
+                <div class="stat-label">Total Cash Outflows</div>
+                <div class="stat-val stat-danger">-₹{{ reportData.totalCashOut | number:'1.0-0' }}</div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="stat-card">
+                <div class="stat-label">Net Cash Position</div>
+                <div class="stat-val" [class.stat-success]="reportData.netCashFlow >= 0" [class.stat-danger]="reportData.netCashFlow < 0">
+                  ₹{{ reportData.netCashFlow | number:'1.0-0' }}
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="table-responsive">
             <table class="table">
               <thead>
-                <tr><th>Period</th><th>Opening Cash</th><th>Inflows</th><th>Outflows</th><th>Closing Cash</th></tr>
+                <tr>
+                  <th>Transaction Date</th>
+                  <th>Description</th>
+                  <th>Transaction Type</th>
+                  <th>Cash In (₹)</th>
+                  <th>Cash Out (₹)</th>
+                  <th>Running Balance (₹)</th>
+                </tr>
               </thead>
               <tbody>
-                @for (row of reportData.rows; track row.period) {
+                @for (row of reportData.rows; track row.date + row.description) {
                   <tr>
-                    <td>{{ row.period }}</td>
-                    <td>₹{{ row.openingBalance | number:'1.0-0' }}</td>
-                    <td class="text-success">₹{{ row.totalInflows | number:'1.0-0' }}</td>
-                    <td class="text-danger">₹{{ row.totalOutflows | number:'1.0-0' }}</td>
-                    <td><strong>₹{{ row.closingBalance | number:'1.0-0' }}</strong></td>
+                    <td class="text-charcoal">{{ row.date }}</td>
+                    <td class="fw-semibold text-charcoal">{{ row.description }}</td>
+                    <td>
+                      <span class="badge" [class.lux-badge-success]="row.cashIn > 0" [class.lux-badge-danger]="row.cashOut > 0">
+                        {{ row.type }}
+                      </span>
+                    </td>
+                    <td class="text-success fw-bold">{{ row.cashIn > 0 ? ('+₹' + (row.cashIn | number:'1.0-0')) : '—' }}</td>
+                    <td class="text-danger fw-bold">{{ row.cashOut > 0 ? ('-₹' + (row.cashOut | number:'1.0-0')) : '—' }}</td>
+                    <td class="fw-bold text-charcoal">₹{{ row.runningBalance | number:'1.0-0' }}</td>
                   </tr>
+                } @empty {
+                  <tr><td colspan="6" class="text-center py-4 text-secondary">No cash flow movements recorded in this period.</td></tr>
                 }
               </tbody>
             </table>
           </div>
         }
 
-        <!-- Generic Table Fallback -->
-        @if (!((reportType === 'sales/summary' && reportData.totalOrders !== undefined) || (reportType === 'sales/product-sales' && reportData.rows !== undefined) || (reportType === 'inventory/current-stock' && reportData.rows !== undefined) || (reportType === 'inventory/valuation' && reportData.byCategory !== undefined) || (reportType === 'loans/active' && reportData.rows !== undefined) || (reportType === 'sales/gst' && reportData.lines !== undefined) || (reportType === 'sales/customer-history' && reportData.orders !== undefined) || (reportType === 'sales/old-gold-exchange' && reportData.rows !== undefined) || (reportType === 'inventory/stock-movement' && reportData.rows !== undefined) || (reportType === 'inventory/slow-moving' && reportData.rows !== undefined) || (reportType === 'loans/repayment-history' && reportData.rows !== undefined) || (reportType === 'loans/outstanding' && reportData.rows !== undefined) || (reportType === 'loans/defaulted' && reportData.rows !== undefined) || (reportType === 'loans/interest-income' && reportData.monthlyBreakdown !== undefined) || (reportType === 'loans/customer-history' && reportData.rows !== undefined) || (reportType === 'loans/pledged-gold' && reportData.rows !== undefined) || (reportType === 'financial/profit-loss' && reportData.periods !== undefined) || (reportType === 'financial/cash-flow' && reportData.rows !== undefined))) {
-          <div class="alert alert-info">Report data structure not yet optimized in UI. Raw data:</div>
-          <pre style="max-height: 400px; overflow-y: auto;">{{ reportData | json }}</pre>
+        <!-- Fallback if any custom or raw data format -->
+        @if (!((reportType === 'sales/summary' && reportData.totalOrders !== undefined) || 
+               ((reportType === 'sales/products' || reportType === 'sales/product-sales') && reportData.rows !== undefined) || 
+               (reportType === 'sales/customer-history' && reportData.orders !== undefined) || 
+               (reportType === 'sales/gst' && reportData.lines !== undefined) || 
+               (reportType === 'sales/old-gold-exchange' && reportData.rows !== undefined) || 
+               (reportType === 'inventory/current-stock' && reportData.rows !== undefined) || 
+               (reportType === 'inventory/stock-movement' && reportData.rows !== undefined) || 
+               (reportType === 'inventory/valuation' && reportData.byCategory !== undefined) || 
+               (reportType === 'inventory/slow-moving' && reportData.rows !== undefined) || 
+               (reportType === 'loans/active' && reportData.rows !== undefined) || 
+               (reportType === 'loans/repayment-history' && reportData.rows !== undefined) || 
+               (reportType === 'loans/outstanding' && reportData.rows !== undefined) || 
+               (reportType === 'loans/defaulted' && reportData.rows !== undefined) || 
+               (reportType === 'loans/interest-income' && reportData.byMonth !== undefined) || 
+               (reportType === 'loans/customer-history' && reportData.loans !== undefined) || 
+               (reportType === 'loans/pledged-gold' && reportData.rows !== undefined) || 
+               (reportType === 'financial/profit-loss' && reportData.byPeriod !== undefined) || 
+               (reportType === 'financial/cash-flow' && reportData.rows !== undefined))) {
+          <div class="alert alert-info">Statement generated. Detailed tabular mapping:</div>
+          <pre style="max-height: 400px; overflow-y: auto; background: #fdfcf7; border: 1px solid #e2dac8; padding: 1rem; border-radius: 8px;">{{ reportData | json }}</pre>
         }
       </div>
     }

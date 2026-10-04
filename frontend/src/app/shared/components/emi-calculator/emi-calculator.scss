@@ -1,17 +1,171 @@
-.emi-calculator {
-  .result-card {
-    min-height: 150px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+.emi-calculator-container {
+  background: #ffffff;
+  border: 1px solid rgba(201, 168, 76, 0.3);
+  border-radius: 1.5rem;
+  box-shadow: 0 10px 40px rgba(26, 26, 46, 0.06);
+
+  .calculator-nav {
+    background: #f4efe1;
+    padding: 0.35rem;
+    border-radius: 999px;
+    gap: 0.35rem;
+
+    .nav-link {
+      border-radius: 999px;
+      color: #555568;
+      font-weight: 600;
+      font-size: 0.9rem;
+      padding: 0.5rem 1.25rem;
+      border: none;
+      transition: all 0.2s ease;
+
+      &.active {
+        background: #1a1a2e;
+        color: #ecdba3;
+        box-shadow: 0 4px 12px rgba(26, 26, 46, 0.2);
+      }
+    }
   }
 
-  .form-text {
-    color: rgba(0, 0, 0, 0.65);
+  /* Purity & Scheme Button Groups */
+  .purity-selector,
+  .scheme-button-group {
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid rgba(26, 26, 46, 0.15);
+
+    .btn {
+      background: #f8f6ef;
+      color: #333344;
+      font-weight: 600;
+      font-size: 0.9rem;
+      padding: 0.6rem 1rem;
+      border: 1px solid transparent;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: #eee8d5;
+      }
+
+      &.btn-gold-active {
+        background: #1a1a2e !important;
+        color: #ecdba3 !important;
+        font-weight: 700;
+      }
+    }
   }
 
-  .input-group-text {
-    min-width: 42px;
-    justify-content: center;
+  .scheme-toggle-wrapper {
+    background: #faf8f2;
+    border: 1px solid rgba(201, 168, 76, 0.25);
+  }
+
+  /* Custom Range Slider */
+  .custom-gold-range {
+    height: 6px;
+    border-radius: 3px;
+    background: #e5ded0;
+    outline: none;
+
+    &::-webkit-slider-thumb {
+      background: #c9a84c;
+      border: 2px solid #1a1a2e;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+    }
+
+    &::-moz-range-thumb {
+      background: #c9a84c;
+      border: 2px solid #1a1a2e;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+    }
+  }
+
+  .quick-chip {
+    font-size: 0.78rem;
+    font-weight: 600;
+    border-radius: 999px;
+    background: #ffffff;
+    border-color: #d0c8b6;
+    color: #444455;
+
+    &:hover {
+      background: #1a1a2e;
+      color: #ffffff;
+      border-color: #1a1a2e;
+    }
+  }
+
+  /* Result Cards */
+  .eligibility-result-card {
+    background: linear-gradient(145deg, #ffffff 0%, #faf8f2 100%);
+    border: 1px solid rgba(201, 168, 76, 0.35);
+    border-radius: 16px;
+    box-shadow: 0 6px 20px rgba(201, 168, 76, 0.08);
+
+    .gold-icon-badge {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto;
+      background: rgba(201, 168, 76, 0.12);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .max-loan-box {
+      background: rgba(201, 168, 76, 0.1);
+      border: 1px dashed rgba(201, 168, 76, 0.4);
+    }
+  }
+
+  .summary-metric-card {
+    background: #faf8f2;
+    border: 1px solid rgba(201, 168, 76, 0.22);
+    border-radius: 12px;
+    text-align: center;
+    transition: all 0.2s ease;
+
+    &:hover {
+      border-color: #c9a84c;
+      transform: translateY(-2px);
+    }
+
+    .metric-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #555568;
+      font-weight: 700;
+      margin-bottom: 0.35rem;
+    }
+
+    .metric-amount {
+      font-size: 1.45rem;
+      font-weight: 800;
+      margin-bottom: 0.25rem;
+    }
+
+    .metric-sub {
+      font-size: 0.76rem;
+      color: #777788;
+    }
+
+    &.highlight-card {
+      background: #ffffff;
+      border: 2px solid #c9a84c;
+    }
+  }
+
+  .bg-gold {
+    background: linear-gradient(90deg, #c9a84c 0%, #e2c674 100%) !important;
   }
 }

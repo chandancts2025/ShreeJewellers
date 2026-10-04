@@ -63,7 +63,7 @@ public class PriceService : IPriceService
             return manual;
 
         var todayOverride = await _db.GoldPriceHistory
-            .Where(p => p.IsManualOverride && p.RecordedAt.Date == DateTime.UtcNow.Date)
+            .Where(p => p.IsManualOverride && p.RecordedAt.Date == DateTime.UtcNow.Date && p.GoldRatePer10Gram_24K > 0)
             .OrderByDescending(p => p.RecordedAt).FirstOrDefaultAsync();
 
         if (todayOverride is not null)
@@ -74,7 +74,7 @@ public class PriceService : IPriceService
         }
 
         // 2. Regular cache (15 min)
-        if (_cache.TryGetValue(CacheKey, out GoldPriceDto? cached) && cached is not null)
+        if (_cache.TryGetValue(CacheKey, out GoldPriceDto? cached) && cached is not null && cached.Rate24KPer10g > 0)
             return cached;
 
         // 3. Live API
@@ -89,7 +89,7 @@ public class PriceService : IPriceService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "GoldAPI.io unavailable — using fallback.");
+            _logger.LogWarning(ex, "GoldAPI.io unavailable or unconfigured — using fallback.");
             return await GetFallbackPriceAsync();
         }
     }
@@ -98,22 +98,46 @@ public class PriceService : IPriceService
 
     private async Task<GoldPriceDto> FetchFromApiAsync()
     {
+        var apiKey = _config["GoldPriceApi:ApiKey"];
+        if (string.IsNullOrWhiteSpace(apiKey) || apiKey.StartsWith("SET_IN_ENV"))
+            throw new InvalidOperationException("GoldAPI key not configured.");
+
         var client   = _httpClientFactory.CreateClient("GoldAPI");
         var currency = _config["GoldPriceApi:Currency"] ?? "INR";
         var opts     = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 
-        var goldJson   = await (await client.GetAsync($"XAU/{currency}")).Content.ReadAsStringAsync();
-        var goldData   = JsonSerializer.Deserialize<GoldApiResponse>(goldJson, opts)
-            ?? throw new InvalidOperationException("Gold API returned null.");
+        var goldResp = await client.GetAsync($"XAU/{currency}");
+        if (!goldResp.IsSuccessStatusCode)
+            throw new HttpRequestException($"Gold API returned {goldResp.StatusCode}");
 
-        var silverJson = await (await client.GetAsync($"XAG/{currency}")).Content.ReadAsStringAsync();
-        var silverData = JsonSerializer.Deserialize<GoldApiResponse>(silverJson, opts);
+        var goldJson = await goldResp.Content.ReadAsStringAsync();
+        var goldData = JsonSerializer.Deserialize<GoldApiResponse>(goldJson, opts);
+        if (goldData == null || goldData.Price <= 0)
+            throw new InvalidOperationException("Gold API returned invalid or zero gold price.");
+
+        decimal silverKg = 0m;
+        try
+        {
+            var silverResp = await client.GetAsync($"XAG/{currency}");
+            if (silverResp.IsSuccessStatusCode)
+            {
+                var silverJson = await silverResp.Content.ReadAsStringAsync();
+                var silverData = JsonSerializer.Deserialize<GoldApiResponse>(silverJson, opts);
+                if (silverData != null && silverData.Price > 0)
+                {
+                    silverKg = Math.Round((silverData.Price / GramsPerOunce) * 1000, 2);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to fetch silver price from GoldAPI.");
+        }
 
         // troy ounce → per 10g
         var rate24K   = Math.Round((goldData.Price / GramsPerOunce) * 10, 2);
         var rate22K   = Math.Round(rate24K * (22m / 24m), 2);
-        var silverKg  = silverData is not null
-            ? Math.Round((silverData.Price / GramsPerOunce) * 1000, 2) : 0m;
+        if (silverKg <= 0) silverKg = 88000m;
 
         return new GoldPriceDto(rate22K, rate24K, silverKg, DateTime.UtcNow, false);
     }
@@ -122,13 +146,23 @@ public class PriceService : IPriceService
 
     private async Task<GoldPriceDto> GetFallbackPriceAsync()
     {
-        if (_cache.TryGetValue(FallbackCacheKey, out GoldPriceDto? fb) && fb is not null) return fb;
+        if (_cache.TryGetValue(FallbackCacheKey, out GoldPriceDto? fb) && fb is not null && fb.Rate24KPer10g > 0)
+            return fb;
 
-        var last = await _db.GoldPriceHistory.OrderByDescending(p => p.RecordedAt).FirstOrDefaultAsync();
-        if (last is not null) return MapToDto(last, false);
+        var last = await _db.GoldPriceHistory
+            .Where(p => p.GoldRatePer10Gram_24K > 0 && p.GoldRatePer10Gram_22K > 0)
+            .OrderByDescending(p => p.RecordedAt)
+            .FirstOrDefaultAsync();
 
-        _logger.LogError("No gold price available anywhere — using emergency hardcoded values.");
-        return new GoldPriceDto(6_800m, 7_400m, 95_000m, DateTime.UtcNow, false);
+        if (last is not null)
+        {
+            var dto = MapToDto(last, last.IsManualOverride);
+            _cache.Set(FallbackCacheKey, dto, TimeSpan.FromHours(24));
+            return dto;
+        }
+
+        _logger.LogWarning("No positive gold price available in history — using market baseline rates.");
+        return new GoldPriceDto(66_460m, 72_500m, 88_000m, DateTime.UtcNow, false);
     }
 
     // ── Manual Override ───────────────────────────────────────────────────
@@ -184,6 +218,8 @@ public class PriceService : IPriceService
 
     private async Task SavePriceHistoryAsync(GoldPriceDto dto)
     {
+        if (dto.Rate24KPer10g <= 0 || dto.Rate22KPer10g <= 0) return;
+
         _db.GoldPriceHistory.Add(new GoldPriceHistory
         {
             RecordedAt            = dto.RecordedAt,

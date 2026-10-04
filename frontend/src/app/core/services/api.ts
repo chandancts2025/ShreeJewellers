@@ -13,6 +13,13 @@ export class ApiService {
     return this.http.get<T>(`${this.baseUrl}${path}`, { params: this.buildParams(params) });
   }
 
+  getBlob(path: string, params?: Record<string, string | number | boolean | null | undefined>): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}${path}`, {
+      params: this.buildParams(params),
+      responseType: 'blob'
+    });
+  }
+
   post<T>(path: string, body: unknown, params?: Record<string, string | number | boolean | null | undefined>): Observable<T> {
     return this.http.post<T>(`${this.baseUrl}${path}`, body, { params: this.buildParams(params) });
   }
