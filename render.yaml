@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: shreejewellers-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: oregon
+    healthCheckPath: /health/live
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ConnectionStrings__DefaultConnection
+        value: Server=tcp:billeasepro.database.windows.net,1433;Initial Catalog=ShreeJewellers;Persist Security Info=False;User ID=billpro;Password=chan@2026;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=True;Connection Timeout=60;
+      - key: EnableSwagger
+        value: "true"
+      - key: JwtSettings__SecretKey
+        value: d15T/E/SD+2Xl3CLIzxjmODIHPdLSmyceivqq8WnCm8=
+      - key: EncryptionSettings__AESKey
+        value: p3GmVZBHSS7dbBjP2eSz0nxg61qpThJsRiV5EagFB0c=

@@ -51,6 +51,12 @@ Log.Logger = new LoggerConfiguration()
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog();
 
+var port = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrEmpty(port))
+{
+    builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+}
+
 // ────────────────────────────────────────────────────────────────────────────
 // DATABASE
 // ────────────────────────────────────────────────────────────────────────────
@@ -186,7 +192,22 @@ var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get
 
 builder.Services.AddCors(options =>
     options.AddPolicy("JewellersPolicy", policy =>
-        policy.WithOrigins(allowedOrigins)
+        policy.SetIsOriginAllowed(origin =>
+              {
+                  if (string.IsNullOrWhiteSpace(origin)) return false;
+                  try
+                  {
+                      var host = new Uri(origin).Host;
+                      return host == "localhost"
+                          || host == "127.0.0.1"
+                          || host.EndsWith("vercel.app", StringComparison.OrdinalIgnoreCase)
+                          || allowedOrigins.Any(o => !string.IsNullOrWhiteSpace(o) && new Uri(o).Host.Equals(host, StringComparison.OrdinalIgnoreCase));
+                  }
+                  catch
+                  {
+                      return false;
+                  }
+              })
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials()));   // Required for cookie-based refresh token
@@ -332,13 +353,29 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 var uploadBasePath = builder.Configuration["FileStorage:BasePath"];
-if (!string.IsNullOrWhiteSpace(uploadBasePath) && Directory.Exists(uploadBasePath))
+if (string.IsNullOrWhiteSpace(uploadBasePath) || (!OperatingSystem.IsWindows() && uploadBasePath.Contains(':')))
 {
+    uploadBasePath = Path.Combine(Directory.GetCurrentDirectory(), "secure-uploads");
+}
+if (!Path.IsPathRooted(uploadBasePath))
+{
+    uploadBasePath = Path.Combine(Directory.GetCurrentDirectory(), uploadBasePath);
+}
+try
+{
+    if (!Directory.Exists(uploadBasePath))
+    {
+        Directory.CreateDirectory(uploadBasePath);
+    }
     app.UseStaticFiles(new StaticFileOptions
     {
         FileProvider = new PhysicalFileProvider(uploadBasePath),
         RequestPath = "/secure-files"
     });
+}
+catch (Exception ex)
+{
+    Log.Warning(ex, "Could not initialize file storage static provider at {Path}", uploadBasePath);
 }
 
 // 4. Rate limiting
@@ -357,8 +394,9 @@ app.UseSerilogRequestLogging(options =>
                 : LogEventLevel.Information;
 });
 
-// 6. Swagger — development only
-if (app.Environment.IsDevelopment())
+// 6. Swagger — enabled in development and in production when configured (default true)
+var enableSwagger = app.Environment.IsDevelopment() || builder.Configuration.GetValue<bool>("EnableSwagger", true);
+if (enableSwagger)
 {
     app.UseSwagger();
     app.UseSwaggerUI(c =>
@@ -378,10 +416,8 @@ app.UseAuthorization();
 // 9. Audit logging — AFTER auth so we have user context
 app.UseMiddleware<AuditLoggingMiddleware>();
 
-// 10. Root endpoint — convenience for browser requests
-//     If someone navigates to https://localhost:{port}/ the API had no route at "/"
-//     which caused the 404. Add a small root mapping to redirect to Swagger in dev.
-if (app.Environment.IsDevelopment())
+// 10. Root endpoint — redirect to Swagger when enabled
+if (enableSwagger)
 {
     app.MapGet("/", () => Results.Redirect("/swagger"));
 }
@@ -488,7 +524,7 @@ static async Task SeedAsync(
             LoanToValuePercent   = 75.00m,
             EffectiveFrom        = DateOnly.FromDateTime(DateTime.Today),
             EffectiveTo          = null,
-            CreatedByUserId      = "ffd75c58-b8e5-4181-a0d1-068929fbebcc",//"SEED",
+            CreatedByUserId      = admin?.Id ?? "SEED",
             CreatedAt            = DateTime.UtcNow
         });
     }
@@ -871,14 +907,16 @@ static async Task SeedSampleBusinessDataAsync(
     }
 
     // 4. Seed Sales Orders for Today if not yet present
-    if (!db.SalesOrders.Any(o => o.OrderDate.Date == DateTime.UtcNow.Date))
+    var order1Num = $"INV-{DateTime.UtcNow:yyyy-MM}-9001";
+    var order2Num = $"INV-{DateTime.UtcNow:yyyy-MM}-9002";
+    if (!db.SalesOrders.Any(o => o.OrderNumber == order1Num || o.OrderNumber.StartsWith("INV-2026-")))
     {
         var priya = await userManager.FindByEmailAsync("priya.patel@gmail.com") ?? await userManager.Users.FirstAsync();
         var amit = await userManager.FindByEmailAsync("amit.verma@gmail.com") ?? await userManager.Users.Skip(1).FirstAsync();
         var p1 = db.Products.FirstOrDefault(p => p.SKUCode == "GLD-22K-NCK-001") ?? db.Products.First();
         var p7 = db.Products.FirstOrDefault(p => p.SKUCode == "GLD-24K-BAR-007") ?? db.Products.Skip(1).First();
 
-        if (p1 != null)
+        if (p1 != null && !db.SalesOrders.Any(o => o.OrderNumber == order1Num))
         {
             var gross1 = (35.500m * 6646m) + (35.500m * 450m) + 45m;
             var tax1 = Math.Round(gross1 * 0.03m, 2);
@@ -886,7 +924,7 @@ static async Task SeedSampleBusinessDataAsync(
 
             var order1 = new ShreeJewellers.Domain.Entities.SalesOrder
             {
-                OrderNumber = $"INV-{DateTime.UtcNow:yyyy-MM}-9001",
+                OrderNumber = order1Num,
                 OrderDate = DateTime.UtcNow,
                 CustomerUserId = priya.Id,
                 CreatedByUserId = "SEED",
@@ -919,7 +957,7 @@ static async Task SeedSampleBusinessDataAsync(
             db.SalesOrders.Add(order1);
         }
 
-        if (p7 != null)
+        if (p7 != null && !db.SalesOrders.Any(o => o.OrderNumber == order2Num))
         {
             var gross2 = (10.000m * 7250m) + (10.000m * 150m);
             var tax2 = Math.Round(gross2 * 0.03m, 2);
@@ -927,7 +965,7 @@ static async Task SeedSampleBusinessDataAsync(
 
             var order2 = new ShreeJewellers.Domain.Entities.SalesOrder
             {
-                OrderNumber = $"INV-{DateTime.UtcNow:yyyy-MM}-9002",
+                OrderNumber = order2Num,
                 OrderDate = DateTime.UtcNow,
                 CustomerUserId = amit.Id,
                 CreatedByUserId = "SEED",

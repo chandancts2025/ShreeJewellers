@@ -47,14 +47,30 @@ public class FileUploadService : IFileUploadService
     public FileUploadService(IConfiguration config, ILogger<FileUploadService> logger)
     {
         _logger = logger;
-        _basePath = config["FileStorage:BasePath"]
-            ?? Path.Combine(Directory.GetCurrentDirectory(), "secure-uploads");
+        var configuredPath = config["FileStorage:BasePath"];
+        if (string.IsNullOrWhiteSpace(configuredPath) || (!OperatingSystem.IsWindows() && configuredPath.Contains(':')))
+        {
+            _basePath = Path.Combine(Directory.GetCurrentDirectory(), "secure-uploads");
+        }
+        else
+        {
+            _basePath = configuredPath;
+        }
 
         var maxMb = double.Parse(config["FileStorage:MaxFileSizeMB"] ?? "5");
         _maxFileSizeBytes = (long)(maxMb * 1024 * 1024);
 
-        if (!Directory.Exists(_basePath))
+        try
+        {
+            if (!Directory.Exists(_basePath))
+                Directory.CreateDirectory(_basePath);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Could not create file storage directory at {Path}. Falling back to temp directory.", _basePath);
+            _basePath = Path.Combine(Path.GetTempPath(), "secure-uploads");
             Directory.CreateDirectory(_basePath);
+        }
     }
 
     // ── Upload IFormFile ──────────────────────────────────────────────────

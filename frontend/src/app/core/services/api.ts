@@ -5,9 +5,26 @@ import { Observable } from 'rxjs';
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl =
-    (globalThis as { __appApiUrl?: string }).__appApiUrl ??
-    (window.location.hostname === 'localhost' ? 'https://localhost:56655' : '');
+  private getBaseUrl(): string {
+    const globalUrl = (globalThis as { __appApiUrl?: string }).__appApiUrl;
+    if (globalUrl) return globalUrl;
+
+    if (typeof window !== 'undefined') {
+      const stored = window.localStorage?.getItem('API_URL');
+      if (stored) return stored;
+
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        return 'https://localhost:56655';
+      }
+
+      const metaUrl = document.querySelector('meta[name="api-url"]')?.getAttribute('content');
+      if (metaUrl) return metaUrl.replace(/\/+$/, '');
+    }
+
+    return 'https://shreejewellers-api.onrender.com';
+  }
+
+  private readonly baseUrl = this.getBaseUrl();
 
   get<T>(path: string, params?: Record<string, string | number | boolean | null | undefined>): Observable<T> {
     return this.http.get<T>(`${this.baseUrl}${path}`, { params: this.buildParams(params) });

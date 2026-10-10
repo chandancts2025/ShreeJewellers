@@ -27,7 +27,7 @@ coverage/
 *.cobertura.xml
 
 ## Docker
-.dockerignore
+# .dockerignore should be committed to keep docker builds lean
 
 ## OS
 .DS_Store
