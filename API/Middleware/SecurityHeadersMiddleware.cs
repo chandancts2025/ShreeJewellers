@@ -46,9 +46,21 @@ public class SecurityHeadersMiddleware
             "camera=(), microphone=(), geolocation=(), payment=()";
 
         // Content Security Policy
-        // - Production: strict (no inline scripts, connect only to self and configured CDNs)
-        // - Development: relaxed to allow inline scripts and localhost connect for BrowserLink/dotnet-watch/Swagger UI
-        if (_env.IsDevelopment())
+        // Swagger UI requires inline scripts and eval to initialize the swagger bundle
+        var isSwagger = context.Request.Path.StartsWithSegments("/swagger");
+
+        if (isSwagger)
+        {
+            headers["Content-Security-Policy"] =
+                "default-src 'self'; " +
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; " +
+                "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; " +
+                "font-src 'self' https://fonts.gstatic.com data:; " +
+                "img-src 'self' data: blob: https:; " +
+                "connect-src 'self' *; " +
+                "frame-ancestors 'none';";
+        }
+        else if (_env.IsDevelopment())
         {
             headers["Content-Security-Policy"] =
                 "default-src 'self' http: https: data: blob:; " +
