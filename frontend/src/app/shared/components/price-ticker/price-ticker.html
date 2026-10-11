@@ -3,7 +3,7 @@
     <span><strong>22K Gold</strong> ₹{{ price?.rate22KPer10g ?? 0 | number:'1.0-0' }}/10g</span>
     <span><strong>24K Gold</strong> ₹{{ price?.rate24KPer10g ?? 0 | number:'1.0-0' }}/10g</span>
     <span><strong>Silver</strong> ₹{{ price?.silverRatePerKg ?? 0 | number:'1.0-0' }}/kg</span>
-    <span class="text-warning-emphasis">
+    <span style="color: #ffd700;" class="fw-semibold">
       Updated {{ price?.recordedAt ? (price?.recordedAt | date:'shortTime') : '...' }}
     </span>
   </div>

@@ -35,6 +35,7 @@ h6,
   background: var(--sj-surface);
   box-shadow: var(--sj-shadow);
   backdrop-filter: blur(14px);
+  color: var(--sj-charcoal);
 }
 
 .lux-btn {
@@ -113,16 +114,42 @@ h6,
   border-color: rgba(26, 26, 46, 0.15);
 }
 
-.lux-btn-outline,
-.lux-btn-outline-danger {
+.lux-btn-outline {
   background: transparent;
   color: var(--sj-charcoal);
   border-color: rgba(26, 26, 46, 0.18);
+
+  &:hover,
+  &:focus {
+    background: rgba(201, 168, 76, 0.12);
+    color: var(--sj-charcoal);
+    border-color: var(--sj-gold);
+  }
+}
+
+.hero-panel .lux-btn-outline {
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+
+  &:hover,
+  &:focus {
+    background: rgba(255, 255, 255, 0.22) !important;
+    color: #ffffff !important;
+    border-color: #ffffff !important;
+  }
 }
 
 .lux-btn-outline-danger {
+  background: transparent;
   color: var(--sj-danger);
   border-color: var(--sj-danger);
+
+  &:hover,
+  &:focus {
+    background: rgba(185, 74, 72, 0.12);
+    color: var(--sj-danger);
+  }
 }
 
 .lux-btn-warning {

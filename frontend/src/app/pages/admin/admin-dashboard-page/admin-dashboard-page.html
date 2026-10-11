@@ -6,10 +6,10 @@
         <div>
           <div class="d-flex align-items-center gap-2 mb-1">
             <span class="badge lux-badge-secondary px-2 py-1"><i class="bi bi-shield-lock-fill me-1"></i> Admin Portal</span>
-            <span class="text-secondary small">Shree Jewellers Newtown, Kolkata</span>
+            <span class="text-gold-soft small">Shree Jewellers Newtown, Kolkata</span>
           </div>
           <h1 class="font-display fs-2 text-gold-glow mb-1">Business Dashboard</h1>
-          <p class="text-light-emphasis small mb-0">Overview of jewelry sales, physical inventory, gold loans, and customer operations.</p>
+          <p class="small mb-0" style="color: #cbd5e1;">Overview of jewelry sales, physical inventory, gold loans, and customer operations.</p>
         </div>
 
         <div class="d-flex flex-wrap align-items-center gap-2">
@@ -39,7 +39,7 @@
           <div class="rounded-circle p-2 mb-2" style="background: rgba(255,215,0,0.12);">
             <i class="bi bi-house-door text-gold fs-4"></i>
           </div>
-          <span class="fw-bold text-light small">Public Storefront</span>
+          <span class="fw-bold text-charcoal small">Public Storefront</span>
           <span class="text-secondary" style="font-size: 0.72rem;">Home & Catalog</span>
         </a>
       </div>
@@ -49,7 +49,7 @@
           <div class="rounded-circle p-2 mb-2" style="background: rgba(255,215,0,0.12);">
             <i class="bi bi-printer text-gold fs-4"></i>
           </div>
-          <span class="fw-bold text-light small">Point of Sale</span>
+          <span class="fw-bold text-charcoal small">Point of Sale</span>
           <span class="text-secondary" style="font-size: 0.72rem;">GST Bill & 80mm Slip</span>
         </a>
       </div>
@@ -59,7 +59,7 @@
           <div class="rounded-circle p-2 mb-2" style="background: rgba(255,215,0,0.12);">
             <i class="bi bi-upc-scan text-gold fs-4"></i>
           </div>
-          <span class="fw-bold text-light small">Inventory</span>
+          <span class="fw-bold text-charcoal small">Inventory</span>
           <span class="text-secondary" style="font-size: 0.72rem;">Jewelry Tags & Audit</span>
         </a>
       </div>
@@ -69,7 +69,7 @@
           <div class="rounded-circle p-2 mb-2" style="background: rgba(255,215,0,0.12);">
             <i class="bi bi-coin text-gold fs-4"></i>
           </div>
-          <span class="fw-bold text-light small">Gold Loans</span>
+          <span class="fw-bold text-charcoal small">Gold Loans</span>
           <span class="text-secondary" style="font-size: 0.72rem;">Pawn Slips & Form B</span>
         </a>
       </div>
@@ -79,7 +79,7 @@
           <div class="rounded-circle p-2 mb-2" style="background: rgba(255,215,0,0.12);">
             <i class="bi bi-person-check text-gold fs-4"></i>
           </div>
-          <span class="fw-bold text-light small">Customers</span>
+          <span class="fw-bold text-charcoal small">Customers</span>
           <span class="text-secondary" style="font-size: 0.72rem;">KYC & Accounts</span>
         </a>
       </div>
@@ -89,7 +89,7 @@
           <div class="rounded-circle p-2 mb-2" style="background: rgba(255,215,0,0.12);">
             <i class="bi bi-graph-up-arrow text-gold fs-4"></i>
           </div>
-          <span class="fw-bold text-light small">Reports</span>
+          <span class="fw-bold text-charcoal small">Reports</span>
           <span class="text-secondary" style="font-size: 0.72rem;">Turnover & Audit</span>
         </a>
       </div>
@@ -117,7 +117,7 @@
               <span class="small text-secondary text-uppercase fw-semibold">Active Gold Loans</span>
               <i class="bi bi-safe text-gold fs-5"></i>
             </div>
-            <div class="font-display fs-2 text-light">{{ data?.activeLoanCount }}</div>
+            <div class="font-display fs-2 text-charcoal">{{ data?.activeLoanCount }}</div>
             <div class="small text-secondary mt-1"><i class="bi bi-arrow-right-circle me-1"></i> Manage active loans</div>
           </div>
         </a>
@@ -143,7 +143,7 @@
               <span class="small text-secondary text-uppercase fw-semibold">Pending KYC</span>
               <i class="bi bi-person-exclamation text-gold fs-5"></i>
             </div>
-            <div class="font-display fs-2 text-light">{{ data?.pendingKYCCount }}</div>
+            <div class="font-display fs-2 text-charcoal">{{ data?.pendingKYCCount }}</div>
             <div class="small text-secondary mt-1"><i class="bi bi-arrow-right-circle me-1"></i> Review KYC documents</div>
           </div>
         </a>
@@ -162,7 +162,7 @@
             <div class="mb-3">
               <div class="d-flex justify-content-between small mb-1">
                 <span class="text-secondary fw-semibold">{{ point.month }}</span>
-                <span class="text-light fw-bold">₹{{ point.amount | number:'1.0-0' }}</span>
+                <span class="text-charcoal fw-bold">₹{{ point.amount | number:'1.0-0' }}</span>
               </div>
               <div class="chart-bar" [style.width.%]="(point.amount / (data?.todaySalesAmount || 1)) * 100"></div>
             </div>
@@ -178,7 +178,7 @@
           </div>
           @for (row of data?.salesByCategory ?? []; track row.category) {
             <div class="d-flex justify-content-between border-bottom py-2">
-              <span class="text-light">{{ row.category }}</span>
+              <span class="text-charcoal fw-medium">{{ row.category }}</span>
               <span class="text-gold fw-bold">{{ row.percent }}%</span>
             </div>
           }
