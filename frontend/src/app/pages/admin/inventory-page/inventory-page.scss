@@ -268,3 +268,138 @@
     flex-wrap: wrap;
   }
 }
+
+/* ── Jewellery Tag & Valuation Report Styles ───────────────────────────────── */
+.jewel-tag-box {
+  border: 1.5px solid #d4af37 !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+
+  .barcode-wrapper svg {
+    height: 32px;
+    width: 100%;
+    max-width: 150px;
+  }
+
+  .qr-wrapper svg {
+    height: 48px;
+    width: 48px;
+  }
+}
+
+.jewel-tag-a4-sheet-view {
+  .tag-cell {
+    border: 1px dashed #dcd4c3 !important;
+    background: #ffffff !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+
+    svg {
+      max-height: 24px;
+      max-width: 130px;
+    }
+  }
+}
+
+.stock-audit-sheet-a4 {
+  border: 1.5px solid #d4af37;
+  color: #1a1a2e;
+
+  .table-bordered {
+    border-color: #dcd4c3;
+    th, td {
+      border-color: #e5dfd1;
+    }
+  }
+}
+
+/* ── Print Scoped Rules ─────────────────────────────────────────────────── */
+@media print {
+  header,
+  nav,
+  .app-header,
+  .app-sidebar,
+  .navbar,
+  .modal-header,
+  .modal-footer,
+  .btn,
+  .toast-container,
+  .app-page {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .modal {
+    position: static !important;
+    display: block !important;
+    background: transparent !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  .modal-dialog {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+  }
+
+  .modal-content {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  .modal-body {
+    padding: 0 !important;
+    background: transparent !important;
+    overflow: visible !important;
+  }
+
+  /* 50x25mm Label Printer */
+  body.print-active-tag {
+    @page {
+      size: 50mm 25mm;
+      margin: 0;
+    }
+
+    .jewel-tag-box {
+      border: none !important;
+      box-shadow: none !important;
+      padding: 1mm !important;
+      width: 48mm !important;
+      max-width: 48mm !important;
+      margin: 0 !important;
+    }
+
+    .jewel-tag-a4-sheet-view,
+    .stock-audit-sheet-a4 {
+      display: none !important;
+    }
+  }
+
+  /* A4 Sheet Print (Tag Sheet or Stock Valuation) */
+  body.print-active-a4 {
+    @page {
+      size: A4 portrait;
+      margin: 8mm 10mm;
+    }
+
+    .stock-audit-sheet-a4,
+    .jewel-tag-a4-sheet-view {
+      border: 1px solid #c9a84c !important;
+      box-shadow: none !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      padding: 5mm !important;
+      margin: 0 !important;
+    }
+
+    .jewel-tag-single-view {
+      display: none !important;
+    }
+  }
+}

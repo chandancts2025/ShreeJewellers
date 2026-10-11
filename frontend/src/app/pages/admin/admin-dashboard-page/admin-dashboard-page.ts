@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AdminService } from '../../../core/services/admin';
 
 @Component({
   selector: 'app-admin-dashboard-page',
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './admin-dashboard-page.html',
   styleUrl: './admin-dashboard-page.scss'
 })

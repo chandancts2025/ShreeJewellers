@@ -476,13 +476,16 @@ static async Task SeedAsync(
             await roleManager.CreateAsync(new IdentityRole(role));
 
     // SuperAdmin user
-    const string superAdminEmail = "chandankr.mandal87@gmail.com";//"superadmin@shreejewellers.com";
-    var admin = await userManager.FindByEmailAsync(superAdminEmail);
+    const string superAdminEmail = "chandankr.mandal87@gmail.com";
+    var admin = await userManager.FindByEmailAsync(superAdminEmail)
+             ?? await userManager.FindByIdAsync("SEED")
+             ?? await userManager.FindByEmailAsync("admin@shreejewellers.com");
+
     if (admin is null)
     {
         admin = new ApplicationUser
         {
-            FirstName    = "Chandan",
+            FirstName    = "Chandan Kr",
             LastName     = "Mandal",
             Email        = superAdminEmail,
             UserName     = superAdminEmail,
@@ -490,10 +493,10 @@ static async Task SeedAsync(
             CustomerCode = "ADMIN-0002",
             DateOfBirth  = new DateOnly(1985, 1, 1),
             Gender       = "Male",
-            AddressLine1 = "123 Jewellers Lane",
-            City         = "Mumbai",
-            State        = "Maharashtra",
-            PinCode      = "400001",
+            AddressLine1 = "3B8-2D, Sanhita Township",
+            City         = "Newtown",
+            State        = "WB",
+            PinCode      = "700135",
             KYCStatus    = ShreeJewellers.Domain.Enums.KYCStatus.Verified,
             IsActive     = true,
             EmailConfirmed = true,
@@ -501,6 +504,19 @@ static async Task SeedAsync(
         };
         admin.Id = "SEED";
         await userManager.CreateAsync(admin, "Admin@123!");
+    }
+    else
+    {
+        admin.FirstName = "Chandan Kr";
+        admin.LastName = "Mandal";
+        admin.Email = superAdminEmail;
+        admin.UserName = superAdminEmail;
+        admin.PhoneNumber = "9851632391";
+        admin.AddressLine1 = "3B8-2D, Sanhita Township";
+        admin.City = "Newtown";
+        admin.State = "WB";
+        admin.PinCode = "700135";
+        await userManager.UpdateAsync(admin);
     }
 
     if (admin != null)
@@ -533,21 +549,31 @@ static async Task SeedAsync(
     var defaults = new Dictionary<string, (string value, string desc)>
     {
         ["ShopName"]        = ("Shree Jewellers", "Shop display name"),
-        ["ShopAddress"]     = ("123 Gold Market, Mumbai, Maharashtra - 400001", "Full shop address"),
-        ["GSTNumber"]       = ("27XXXXX1234X1ZX", "GSTIN for invoices"),
-        ["ShopPhone"]       = ("+91-22-12345678", "Customer-facing phone number"),
-        ["ShopEmail"]       = ("info@shreejewellers.com", "Contact email"),
+        ["ShopAddress"]     = ("3B8-2D, Sanhita Township, Newtown, 700135, WB", "Full showroom/headquarters address"),
+        ["GSTNumber"]       = ("19AAACS1234F1Z5", "GSTIN for invoices"),
+        ["ShopPhone"]       = ("+91 98516 32391", "Customer-facing phone number"),
+        ["ShopEmail"]       = ("chandankr.mandal87@gmail.com", "Contact email"),
         ["LogoUrl"]         = ("/images/logo.png", "Logo image URL"),
         ["DefaultCurrency"] = ("INR", "Default currency code"),
         ["SMSEnabled"]      = ("true", "Enable/disable SMS notifications"),
         ["EmailEnabled"]    = ("true", "Enable/disable email notifications"),
-        ["WhatsAppEnabled"] = ("false", "Enable/disable WhatsApp Business API"),
+        ["WhatsAppEnabled"] = ("true", "Enable/disable WhatsApp Business API"),
+        ["WhatsAppNumber"]  = ("9851632391", "WhatsApp customer concierge number"),
         ["LoyaltyPointsPerRupee"] = ("0.01", "Points earned per rupee spent"),
+        ["MapEmbedUrl"]     = ("https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3683.473539876251!2d88.46876127595568!3d22.580126882226842!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a02753066345e69%3A0x6b5d9852dc362545!2sNewtown%2C%20Kolkata%2C%20West%20Bengal%20700135!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin", "Google Maps embed location"),
+        ["TrustedSinceYear"] = ("1998", "Year of showroom establishment"),
+        ["BusinessHours"]   = ("Mon - Sat: 10:30 AM - 8:30 PM | Sun: 11:00 AM - 6:00 PM", "Showroom visiting hours"),
+        ["AboutSummary"]    = ("Led by Chandan Kr Mandal, Shree Jewellers delivers certified 22K/24K hallmarked jewellery, bridal heirlooms, fine diamond solitaires, and instant transparent gold loans with unmatched family trust.", "Short about summary for homepage"),
+        ["AboutStory"]      = ("Founded in 1998 by Chandan Kr Mandal, Shree Jewellers was established on an unshakeable promise: absolute purity, honest weight, and generational customer relationships.\n\nFrom our headquarters at 3B8-2D, Sanhita Township, Newtown, 700135, WB, we have served families across generations with handcrafted bridal necklaces, temple jewellery, and contemporary fine diamond solitaires. Every piece of gold is 100% BIS Hallmarked with a 6-digit HUID code, certified for purity, and backed by a lifetime exchange guarantee.\n\nBeyond fine jewellery, our registered Gold Loan service provides secure, compassionate liquidity with bank-grade vault custody and fast disbursement.", "Full showroom story"),
+        ["OwnerName"]       = ("Chandan Kr Mandal", "Proprietor / Managing Director"),
+        ["OwnerTitle"]      = ("Founder & Managing Director", "Owner designation"),
+        ["OwnerPhotoUrl"]   = ("https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&auto=format&fit=crop&q=80", "Photo of showroom founder")
     };
 
     foreach (var (key, (value, desc)) in defaults)
     {
-        if (!db.AppSettings.Any(s => s.SettingKey == key))
+        var existing = db.AppSettings.FirstOrDefault(s => s.SettingKey == key);
+        if (existing == null)
         {
             db.AppSettings.Add(new ShreeJewellers.Domain.Entities.AppSetting
             {
@@ -556,6 +582,15 @@ static async Task SeedAsync(
                 Description  = desc,
                 UpdatedAt    = DateTime.UtcNow
             });
+        }
+        else
+        {
+            if (key is "OwnerName" or "ShopAddress" or "ShopPhone" or "ShopEmail" or "WhatsAppNumber" or "AboutSummary" or "AboutStory" or "MapEmbedUrl" or "OwnerTitle")
+            {
+                existing.SettingValue = value;
+                existing.Description  = desc;
+                existing.UpdatedAt    = DateTime.UtcNow;
+            }
         }
     }
 
@@ -737,6 +772,7 @@ static async Task SeedSampleBusinessDataAsync(
                 GSTRatePercent = 3.00m,
                 StockQuantity = 5,
                 ReorderLevel = 2,
+                ImageUrl = "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&auto=format&fit=crop&q=80",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             },
@@ -757,6 +793,7 @@ static async Task SeedSampleBusinessDataAsync(
                 GSTRatePercent = 3.00m,
                 StockQuantity = 3,
                 ReorderLevel = 1,
+                ImageUrl = "https://images.unsplash.com/photo-1611591475152-4c09ac33c497?w=800&auto=format&fit=crop&q=80",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             },
@@ -779,6 +816,7 @@ static async Task SeedSampleBusinessDataAsync(
                 GSTRatePercent = 3.00m,
                 StockQuantity = 8,
                 ReorderLevel = 3,
+                ImageUrl = "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&auto=format&fit=crop&q=80",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             },
@@ -801,6 +839,7 @@ static async Task SeedSampleBusinessDataAsync(
                 GSTRatePercent = 3.00m,
                 StockQuantity = 10,
                 ReorderLevel = 2,
+                ImageUrl = "https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=800&auto=format&fit=crop&q=80",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             },
@@ -820,6 +859,7 @@ static async Task SeedSampleBusinessDataAsync(
                 GSTRatePercent = 3.00m,
                 StockQuantity = 25,
                 ReorderLevel = 5,
+                ImageUrl = "https://images.unsplash.com/photo-1610375461246-83df859d849d?w=800&auto=format&fit=crop&q=80",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             },
@@ -840,6 +880,7 @@ static async Task SeedSampleBusinessDataAsync(
                 GSTRatePercent = 3.00m,
                 StockQuantity = 6,
                 ReorderLevel = 2,
+                ImageUrl = "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&auto=format&fit=crop&q=80",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             },
@@ -859,6 +900,7 @@ static async Task SeedSampleBusinessDataAsync(
                 GSTRatePercent = 3.00m,
                 StockQuantity = 15,
                 ReorderLevel = 5,
+                ImageUrl = "https://images.unsplash.com/photo-1610375461369-d613b564f4c4?w=800&auto=format&fit=crop&q=80",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             },
@@ -879,6 +921,7 @@ static async Task SeedSampleBusinessDataAsync(
                 GSTRatePercent = 3.00m,
                 StockQuantity = 7,
                 ReorderLevel = 2,
+                ImageUrl = "https://images.unsplash.com/photo-1630019852942-f89202989a59?w=800&auto=format&fit=crop&q=80",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             }
@@ -899,6 +942,155 @@ static async Task SeedSampleBusinessDataAsync(
                 TransactionType = ShreeJewellers.Domain.Enums.TransactionType.Purchase,
                 ReferenceNo = "INITIAL-STOCK-001",
                 Notes = "Opening inventory balance",
+                CreatedByUserId = "SEED",
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+        await db.SaveChangesAsync();
+    }
+
+    // Ensure all existing products have rich Unsplash imagery
+    var productImagesMap = new Dictionary<string, string>
+    {
+        ["GLD-22K-NCK-001"] = "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&auto=format&fit=crop&q=80",
+        ["GLD-22K-BNG-002"] = "https://images.unsplash.com/photo-1611591475152-4c09ac33c497?w=800&auto=format&fit=crop&q=80",
+        ["DMD-18K-RNG-003"] = "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&auto=format&fit=crop&q=80",
+        ["GLD-22K-MNG-004"] = "https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=800&auto=format&fit=crop&q=80",
+        ["SLV-999-CON-005"] = "https://images.unsplash.com/photo-1610375461246-83df859d849d?w=800&auto=format&fit=crop&q=80",
+        ["GLD-22K-CHN-006"] = "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&auto=format&fit=crop&q=80",
+        ["GLD-24K-BAR-007"] = "https://images.unsplash.com/photo-1610375461369-d613b564f4c4?w=800&auto=format&fit=crop&q=80",
+        ["GLD-22K-JHM-008"] = "https://images.unsplash.com/photo-1630019852942-f89202989a59?w=800&auto=format&fit=crop&q=80"
+    };
+
+    var imageUpdated = false;
+    foreach (var (sku, imgUrl) in productImagesMap)
+    {
+        var existingProd = await db.Products.FirstOrDefaultAsync(p => p.SKUCode == sku);
+        if (existingProd != null && string.IsNullOrEmpty(existingProd.ImageUrl))
+        {
+            existingProd.ImageUrl = imgUrl;
+            imageUpdated = true;
+        }
+    }
+    if (imageUpdated)
+    {
+        await db.SaveChangesAsync();
+    }
+
+    // Seed additional luxury items if not present
+    if (!db.Products.Any(p => p.SKUCode == "DMD-18K-BRC-009"))
+    {
+        var diamondCat = db.Categories.FirstOrDefault(c => c.Name == "Diamond") ?? db.Categories.First();
+        var platinumCat = db.Categories.FirstOrDefault(c => c.Name == "Platinum") ?? db.Categories.First();
+        var silverCat = db.Categories.FirstOrDefault(c => c.Name == "Silver Items") ?? db.Categories.First();
+        var goldCat = db.Categories.FirstOrDefault(c => c.Name == "Gold Jewellery") ?? db.Categories.First();
+
+        var extraProducts = new[]
+        {
+            new ShreeJewellers.Domain.Entities.Product
+            {
+                CategoryId = diamondCat.Id,
+                Name = "18K White Gold Diamond Tennis Bracelet (3.50 ct)",
+                Description = "Sparkling prong-set brilliant cut round diamonds in hallmarked 18K white gold.",
+                SKUCode = "DMD-18K-BRC-009",
+                HSNCode = "7113",
+                Purity = "18K",
+                GrossWeightGrams = 12.400m,
+                NetWeightGrams = 11.700m,
+                StoneWeightGrams = 0.700m,
+                StoneValue = 185000.00m,
+                MakingChargesType = ShreeJewellers.Domain.Enums.MakingChargesType.Percentage,
+                MakingChargesValue = 10.00m,
+                HallmarkNumber = "HM-18K-D990",
+                HallmarkCharges = 45.00m,
+                GSTRatePercent = 3.00m,
+                StockQuantity = 4,
+                ReorderLevel = 1,
+                ImageUrl = "https://images.unsplash.com/photo-1599643477877-530eb83abc8e?w=800&auto=format&fit=crop&q=80",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            },
+            new ShreeJewellers.Domain.Entities.Product
+            {
+                CategoryId = platinumCat.Id,
+                Name = "Platinum 950 Couple Love Bands (Pair)",
+                Description = "Pure 950 platinum matching couple bands with discreet star-set brilliant diamond accents.",
+                SKUCode = "PLT-950-RNG-010",
+                HSNCode = "7113",
+                Purity = "950",
+                GrossWeightGrams = 11.800m,
+                NetWeightGrams = 11.600m,
+                StoneWeightGrams = 0.200m,
+                StoneValue = 28000.00m,
+                MakingChargesType = ShreeJewellers.Domain.Enums.MakingChargesType.PerGram,
+                MakingChargesValue = 650.00m,
+                HallmarkNumber = "HM-PLT-8821",
+                HallmarkCharges = 45.00m,
+                GSTRatePercent = 3.00m,
+                StockQuantity = 5,
+                ReorderLevel = 2,
+                ImageUrl = "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800&auto=format&fit=crop&q=80",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            },
+            new ShreeJewellers.Domain.Entities.Product
+            {
+                CategoryId = silverCat.Id,
+                Name = "925 Sterling Silver Royal Pooja Thali Set (6 Pcs)",
+                Description = "Handcrafted pure 925 sterling silver auspicious prayer thali with diya, bell, and kalash.",
+                SKUCode = "SLV-925-THA-011",
+                HSNCode = "7114",
+                Purity = "925",
+                GrossWeightGrams = 320.000m,
+                NetWeightGrams = 320.000m,
+                MakingChargesType = ShreeJewellers.Domain.Enums.MakingChargesType.PerGram,
+                MakingChargesValue = 18.00m,
+                HallmarkCharges = 0m,
+                GSTRatePercent = 3.00m,
+                StockQuantity = 6,
+                ReorderLevel = 2,
+                ImageUrl = "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800&auto=format&fit=crop&q=80",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            },
+            new ShreeJewellers.Domain.Entities.Product
+            {
+                CategoryId = goldCat.Id,
+                Name = "22K Rajputana Royal Bridal Haar Set",
+                Description = "Opulent heritage layered bridal necklace with matching jhumkas and maang tikka.",
+                SKUCode = "GLD-22K-BRD-012",
+                HSNCode = "7113",
+                Purity = "22K",
+                GrossWeightGrams = 84.500m,
+                NetWeightGrams = 84.500m,
+                MakingChargesType = ShreeJewellers.Domain.Enums.MakingChargesType.PerGram,
+                MakingChargesValue = 550.00m,
+                HallmarkNumber = "HM-22K-9901",
+                HallmarkCharges = 45.00m,
+                GSTRatePercent = 3.00m,
+                StockQuantity = 2,
+                ReorderLevel = 1,
+                ImageUrl = "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=800&auto=format&fit=crop&q=80",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            }
+        };
+
+        db.Products.AddRange(extraProducts);
+        await db.SaveChangesAsync();
+
+        foreach (var p in extraProducts)
+        {
+            db.InventoryTransactions.Add(new ShreeJewellers.Domain.Entities.InventoryTransaction
+            {
+                ProductId = p.Id,
+                Quantity = p.StockQuantity,
+                WeightGrams = p.GrossWeightGrams * p.StockQuantity,
+                RatePerGram = 6650m,
+                TotalValue = p.GrossWeightGrams * p.StockQuantity * 6650m,
+                TransactionType = ShreeJewellers.Domain.Enums.TransactionType.Purchase,
+                ReferenceNo = "INITIAL-STOCK-002",
+                Notes = "Opening inventory balance for luxury collection",
                 CreatedByUserId = "SEED",
                 CreatedAt = DateTime.UtcNow
             });

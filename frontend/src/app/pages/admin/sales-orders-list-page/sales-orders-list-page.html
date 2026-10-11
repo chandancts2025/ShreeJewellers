@@ -1,9 +1,9 @@
 <section class="app-page">
   <div class="container-fluid">
     <div class="d-flex align-items-center justify-content-between mb-4">
-      <div class="section-title">Sales Orders</div>
+      <div class="section-title">Sales Orders & Tax Invoices</div>
       <a routerLink="/admin/sales/create" class="btn lux-btn lux-btn-primary">
-        <i class="bi bi-plus-lg me-2"></i> New Order
+        <i class="bi bi-plus-lg me-2"></i> New Order / POS
       </a>
     </div>
 
@@ -56,7 +56,7 @@
       <div class="col-md-4">
         <div class="stat-card p-3">
           <div class="stat-value">{{ totalCount }}</div>
-          <div class="stat-label">Total Orders</div>
+          <div class="stat-label">Total Invoices</div>
         </div>
       </div>
       <div class="col-md-4">
@@ -133,6 +133,14 @@
                   </td>
                   <td class="text-end">
                     <div class="btn-group btn-group-sm" role="group">
+                      <button
+                        type="button"
+                        class="btn btn-outline-warning text-dark"
+                        (click)="quickPrint(order.id, 'a4')"
+                        title="Print A4 / 80mm Receipt"
+                        [disabled]="isLoadingReceipt">
+                        <i class="bi bi-printer"></i>
+                      </button>
                       <a [routerLink]="['/admin/sales/view', order.id]" class="btn btn-outline-secondary" title="View Invoice">
                         <i class="bi bi-eye"></i>
                       </a>
@@ -180,4 +188,11 @@
       </div>
     }
   </div>
+
+  @if (selectedOrderForPrint) {
+    <app-receipt-preview-modal
+      [order]="selectedOrderForPrint"
+      [isOpen]="showReceiptModal"
+      (close)="closeReceiptModal()" />
+  }
 </section>

@@ -1,0 +1,32 @@
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(255, 215, 0, 0.15);
+  }
+}
+
+.border-hover-gold {
+  border: 1px solid rgba(255, 215, 0, 0.15);
+
+  &:hover {
+    border-color: rgba(255, 215, 0, 0.6) !important;
+  }
+}
+
+.admin-kpi {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  }
+}
+
+.chart-bar {
+  height: 8px;
+  background: linear-gradient(90deg, #c9a84c 0%, #ffd700 100%);
+  border-radius: 4px;
+  transition: width 0.6s ease;
+}

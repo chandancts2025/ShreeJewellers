@@ -1,16 +1,19 @@
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, inject } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators, FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { LoanService } from '../../../core/services/loan';
 import { AdminService } from '../../../core/services/admin';
 import { ToastService } from '../../../core/services/toast';
 import { CustomerListItem, GoldLoanResponse, OutstandingBalance } from '../../../core/models';
+import { PrintFormat, PrintService } from '../../../core/services/print';
 
 type LoanTab = 'active' | 'due' | 'defaulted';
 
 @Component({
   selector: 'app-gold-loan-management-page',
+  standalone: true,
   imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './gold-loan-management-page.html',
   styleUrl: './gold-loan-management-page.scss'
@@ -21,6 +24,8 @@ export class GoldLoanManagementPage {
   private readonly toast = inject(ToastService);
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
+  protected readonly printService = inject(PrintService);
+  private readonly sanitizer = inject(DomSanitizer);
 
   activeTab: LoanTab = 'active';
   activeLoans: any[] = [];
@@ -41,6 +46,19 @@ export class GoldLoanManagementPage {
   // Modals for Pawn Ticket and Repayment Receipt Printing
   showPawnTicketModal = false;
   selectedReceiptForPrint: any = null;
+  pawnTicketFormat: PrintFormat = 'a4';
+  receiptFormat: PrintFormat = '80mm';
+
+  readonly shopInfo = {
+    name: 'SHREE JEWELLERS',
+    owner: 'Chandan Kr Mandal',
+    address: '3B8-2D, Sanhita Township, Newtown, 700135, WB',
+    phone: '+91 98516 32391',
+    email: 'chandankr.mandal87@gmail.com',
+    gstin: '19AAACS1234F1Z5',
+    dept: 'Authorized Gold Loan & Pawn Broking Department',
+    pawnLicense: 'WB-PB-700135-2026'
+  };
 
   readonly createLoanForm = this.fb.nonNullable.group({
     customerUserId: ['', Validators.required],
@@ -93,6 +111,34 @@ export class GoldLoanManagementPage {
   constructor() {
     this.load();
     this.loadCustomers();
+  }
+
+  get pawnBarcodeSvg(): SafeHtml {
+    const code = this.selectedLoan?.loanNumber || 'SHREE-PAWN';
+    return this.sanitizer.bypassSecurityTrustHtml(this.printService.generateBarcodeSvg(code, 200, 36));
+  }
+
+  get pawnQrSvg(): SafeHtml {
+    const data = `SHREE-JEWELLERS|PAWN:${this.selectedLoan?.loanNumber}|AMT:${this.selectedLoan?.principalAmount}|DATE:${this.selectedLoan?.loanDate}`;
+    return this.sanitizer.bypassSecurityTrustHtml(this.printService.generateQrSvg(data, 90));
+  }
+
+  get receiptBarcodeSvg(): SafeHtml {
+    const code = this.selectedReceiptForPrint?.receiptNumber || 'SHREE-RCPT';
+    return this.sanitizer.bypassSecurityTrustHtml(this.printService.generateBarcodeSvg(code, 180, 32));
+  }
+
+  get receiptQrSvg(): SafeHtml {
+    const data = `SHREE-JEWELLERS|RCPT:${this.selectedReceiptForPrint?.receiptNumber}|PAID:${this.selectedReceiptForPrint?.amountPaid}|LOAN:${this.selectedLoan?.loanNumber}`;
+    return this.sanitizer.bypassSecurityTrustHtml(this.printService.generateQrSvg(data, 85));
+  }
+
+  get loanAmountWords(): string {
+    return this.selectedLoan ? this.printService.numberToWords(this.selectedLoan.principalAmount) : '';
+  }
+
+  get receiptAmountWords(): string {
+    return this.selectedReceiptForPrint ? this.printService.numberToWords(this.selectedReceiptForPrint.amountPaid) : '';
   }
 
   load(): void {
@@ -203,25 +249,40 @@ export class GoldLoanManagementPage {
   checkEligibility(): void {
     if (this.eligibilityForm.invalid) {
       this.eligibilityForm.markAllAsTouched();
+      this.toast.warning('Incomplete Form', 'Please select a customer and enter the ornament weight.');
       return;
     }
 
     const val = this.eligibilityForm.getRawValue();
+    const goldItem = {
+      itemDescription: val.itemDescription || 'Pledged Gold Ornament',
+      weightGrams: Number(val.weightGrams) || 0,
+      purity: val.purity || '22K',
+      estimatedValue: Number(val.estimatedValue) || 0,
+      hallmarkNumber: null,
+      imageBase64: null,
+      imageExtension: null
+    };
+
     const payload = {
       customerUserId: val.customerUserId,
-      items: [
-        {
-          itemDescription: val.itemDescription,
-          weightGrams: Number(val.weightGrams),
-          purity: val.purity,
-          estimatedValue: Number(val.estimatedValue)
-        }
-      ]
+      goldItems: [goldItem],
+      items: [goldItem]
     };
 
     this.loanService.checkEligibility(payload).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (res) => this.eligibilityResult = res,
-      error: (err) => this.toast.error('Eligibility Error', err.error?.message || 'Failed to calculate eligibility.')
+      next: (res) => {
+        this.eligibilityResult = res;
+        if (!res.isEligible && res.ineligibilityReason) {
+          this.toast.warning('Not Eligible', res.ineligibilityReason);
+        } else if (res.isEligible) {
+          this.toast.success('Eligible for Loan', `Max Sanctionable Amount: ₹${Math.round(res.maxEligibleLoanAmount).toLocaleString('en-IN')}`);
+        }
+      },
+      error: (err) => {
+        const msg = err.error?.message || err.error?.detail || (err.error?.errors ? Object.values(err.error.errors).flat().join(' ') : 'Failed to calculate eligibility.');
+        this.toast.error('Eligibility Error', msg);
+      }
     });
   }
 
@@ -247,6 +308,8 @@ export class GoldLoanManagementPage {
         this.actionMessage = `Receipt #${receipt.receiptNumber} processed. New balance: ₹${receipt.principalBalanceAfter.toLocaleString('en-IN')}`;
         this.load();
         this.selectLoan(this.selectedLoan);
+        // Automatically open the receipt for immediate printing
+        this.printReceipt(receipt);
       },
       error: (err) => {
         this.isProcessingPayment = false;
@@ -332,25 +395,39 @@ export class GoldLoanManagementPage {
   }
 
   // ── Print Actions ──────────────────────────────────────────────────────────
-  printPawnTicket(): void {
+  printPawnTicket(format: PrintFormat = 'a4'): void {
     if (!this.selectedLoan) return;
+    this.pawnTicketFormat = format;
     this.showPawnTicketModal = true;
+  }
+
+  setPawnTicketFormat(format: PrintFormat): void {
+    this.pawnTicketFormat = format;
   }
 
   closePawnTicket(): void {
     this.showPawnTicketModal = false;
   }
 
-  printReceipt(receipt: any): void {
+  printReceipt(receipt: any, format: PrintFormat = '80mm'): void {
     this.selectedReceiptForPrint = receipt;
+    this.receiptFormat = format;
+  }
+
+  setReceiptFormat(format: PrintFormat): void {
+    this.receiptFormat = format;
   }
 
   closeReceipt(): void {
     this.selectedReceiptForPrint = null;
   }
 
-  executePrint(): void {
-    window.print();
+  executePawnTicketPrint(): void {
+    this.printService.triggerPrint(this.pawnTicketFormat);
+  }
+
+  executeReceiptPrint(): void {
+    this.printService.triggerPrint(this.receiptFormat);
   }
 
   private resetCreateForm(): void {

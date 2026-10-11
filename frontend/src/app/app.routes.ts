@@ -76,6 +76,11 @@ export const routes: Routes = [
     data: { roles: ['Staff', 'Admin', 'SuperAdmin'] },
     children: [
       {
+        path: '',
+        pathMatch: 'full',
+        redirectTo: 'dashboard'
+      },
+      {
         path: 'dashboard',
         component: AdminDashboardPage
       },
@@ -118,6 +123,11 @@ export const routes: Routes = [
       {
         path: 'loans',
         component: GoldLoanManagementPage
+      },
+      {
+        path: 'gold-loans',
+        pathMatch: 'full',
+        redirectTo: 'loans'
       },
       {
         path: 'reports',

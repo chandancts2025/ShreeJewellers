@@ -1,8 +1,156 @@
-.navbar-brand {
-  color: #1a1a2e;
+.navbar-blur {
+  background: rgba(255, 253, 247, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 1040;
 }
 
-.nav-link.active {
-  color: #c9a84c;
+.gold-brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #c9a84c 0%, #ecdba3 100%);
+  color: #1a1a2e;
+  font-size: 1.15rem;
+  box-shadow: 0 4px 12px rgba(201, 168, 76, 0.28);
+}
+
+.brand-text {
+  color: #1a1a2e;
   font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.custom-toggler {
+  background: transparent;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+
+  &:hover,
+  &:focus {
+    background-color: rgba(201, 168, 76, 0.12);
+    outline: none;
+  }
+}
+
+.hamburger-icon {
+  width: 24px;
+  height: 18px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  span {
+    display: block;
+    height: 2px;
+    width: 100%;
+    background-color: #1a1a2e;
+    border-radius: 2px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  &.is-active {
+    span:nth-child(1) {
+      transform: translateY(8px) rotate(45deg);
+      background-color: #c9a84c;
+    }
+    span:nth-child(2) {
+      opacity: 0;
+      transform: scaleX(0);
+    }
+    span:nth-child(3) {
+      transform: translateY(-8px) rotate(-45deg);
+      background-color: #c9a84c;
+    }
+  }
+}
+
+.nav-link {
+  color: #2a2a3e;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: #c9a84c;
+    background-color: rgba(201, 168, 76, 0.08);
+  }
+
+  &.active {
+    color: #c9a84c;
+    font-weight: 700;
+    background-color: rgba(201, 168, 76, 0.12);
+  }
+}
+
+.user-name-trim {
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Mobile Drawer Overlay and Styling */
+@media (max-width: 991.98px) {
+  .nav-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(26, 26, 46, 0.45);
+    backdrop-filter: blur(2px);
+    z-index: 1030;
+  }
+
+  .navbar-collapse {
+    background: #fffdf9;
+    border-radius: 1.25rem;
+    padding: 1.25rem;
+    margin-top: 0.75rem;
+    border: 1px solid rgba(201, 168, 76, 0.25);
+    box-shadow: 0 16px 40px rgba(26, 26, 46, 0.16);
+    position: relative;
+    z-index: 1045;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+
+  .custom-dropdown .dropdown-menu {
+    border: 1px solid rgba(201, 168, 76, 0.2);
+    border-radius: 0.85rem;
+    background: #faf8f2;
+    padding: 0.5rem;
+    margin-top: 0.5rem;
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.04);
+  }
+
+  .user-name-trim {
+    max-width: 100%;
+  }
+}
+
+.dropdown-menu {
+  border-radius: 1rem;
+  border: 1px solid rgba(201, 168, 76, 0.25);
+  box-shadow: 0 14px 35px rgba(26, 26, 46, 0.12);
+
+  .dropdown-item {
+    font-size: 0.92rem;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
+    transition: all 0.15s ease;
+
+    &:hover,
+    &:focus {
+      background-color: rgba(201, 168, 76, 0.12);
+      color: #1a1a2e;
+    }
+  }
 }

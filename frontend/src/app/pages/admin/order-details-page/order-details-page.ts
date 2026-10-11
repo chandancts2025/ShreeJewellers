@@ -6,10 +6,13 @@ import { SalesService } from '../../../core/services/sales';
 import { ToastService } from '../../../core/services/toast';
 import { SalesOrderResponse } from '../../../core/models';
 
+import { ReceiptPreviewModal } from '../../../shared/components/receipt-preview-modal/receipt-preview-modal';
+import { PrintFormat } from '../../../core/services/print';
+
 @Component({
   selector: 'app-order-details-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, RouterLink, FormsModule, ReceiptPreviewModal],
   templateUrl: './order-details-page.html',
   styleUrls: ['./order-details-page.scss']
 })
@@ -28,6 +31,9 @@ export class OrderDetailsPage implements OnInit {
   showSendInvoiceForm = false;
   invoiceEmail = '';
   invoicePhone = '';
+
+  showReceiptModal = false;
+  selectedPrintFormat: PrintFormat = 'a4';
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -89,8 +95,17 @@ export class OrderDetailsPage implements OnInit {
     });
   }
 
-  printInvoice(): void {
-    window.print();
+  printInvoice(format: PrintFormat = 'a4'): void {
+    this.openReceiptModal(format);
+  }
+
+  openReceiptModal(format: PrintFormat = 'a4'): void {
+    this.selectedPrintFormat = format;
+    this.showReceiptModal = true;
+  }
+
+  closeReceiptModal(): void {
+    this.showReceiptModal = false;
   }
 
   downloadInvoice(): void {

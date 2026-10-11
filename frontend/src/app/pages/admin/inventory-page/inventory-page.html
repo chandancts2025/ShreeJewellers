@@ -6,10 +6,14 @@
         <h1 class="section-title mb-1">Inventory Management</h1>
         <p class="text-secondary mb-0">Products, stock movement, valuation, and reorder alerts.</p>
       </div>
-      <button class="btn lux-btn lux-btn-primary" type="button" (click)="load()">
-        <i class="bi bi-arrow-clockwise me-2"></i>
-        Refresh
-      </button>
+      <div class="d-flex align-items-center gap-2">
+        <button class="btn lux-btn lux-btn-secondary" type="button" (click)="openValuationModal()" title="Print Stock Valuation & Audit Report">
+          <i class="bi bi-file-earmark-spreadsheet me-1"></i> Stock Audit Report (A4)
+        </button>
+        <button class="btn lux-btn lux-btn-primary" type="button" (click)="load()">
+          <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+        </button>
+      </div>
     </div>
 
     <div class="metric-grid">
@@ -252,6 +256,9 @@
                       <td class="text-end">Rs. {{ (product.currentTotalValue || 0) | number:'1.0-0' }}</td>
                       <td class="text-end">
                         <div class="btn-group btn-group-sm">
+                          <button class="btn btn-outline-warning text-dark" type="button" (click)="openTagModal(product)" title="Print Jewellery Tag / Barcode">
+                            <i class="bi bi-tag-fill"></i>
+                          </button>
                           <button class="btn btn-outline-primary" type="button" (click)="editProduct(product)" title="Edit product">
                             <i class="bi bi-pencil"></i>
                           </button>
@@ -556,3 +563,305 @@
     }
   </div>
 </section>
+
+<!-- JEWELLERY TAG PRINT MODAL (50x25mm Label & A4 Sheet) -->
+@if (showTagModal && selectedProductForTag) {
+  <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.65);" role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" [class.modal-xl]="tagFormat === 'sheet'" [style.max-width]="tagFormat === 'tag' ? '520px' : ''">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header border-bottom py-2 px-3 align-items-center justify-content-between" style="background: #fbf9f4;">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-tag-fill text-gold fs-5"></i>
+            <h5 class="modal-title font-display text-gold mb-0 fs-6">Jewellery Barcode & Price Tag</h5>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <div class="btn-group btn-group-sm" role="group">
+              <button type="button" class="btn btn-sm" [class.btn-dark]="tagFormat === 'tag'" [class.btn-outline-secondary]="tagFormat !== 'tag'" (click)="setTagFormat('tag')">
+                <i class="bi bi-tag me-1"></i> 🏷️ 50x25mm Single Tag
+              </button>
+              <button type="button" class="btn btn-sm" [class.btn-dark]="tagFormat === 'sheet'" [class.btn-outline-secondary]="tagFormat !== 'sheet'" (click)="setTagFormat('sheet')">
+                <i class="bi bi-grid-3x3 me-1"></i> 📄 A4 Sheet (24 Tags)
+              </button>
+            </div>
+            <button type="button" class="btn lux-btn lux-btn-primary btn-sm px-3" (click)="executeTagPrint()">
+              <i class="bi bi-printer me-1"></i> Print ({{ tagFormat === 'tag' ? 'Label Printer' : 'A4 Sheet' }})
+            </button>
+            <button type="button" class="btn-close ms-2" (click)="closeTagModal()"></button>
+          </div>
+        </div>
+
+        <div class="modal-body p-3 p-md-4" id="printableJewelTag" style="background: #f8f6f0; overflow-y: auto;">
+          <!-- FORMAT 1: SINGLE THERMAL JEWELLERY TAG (50x25mm Standard Barbell/Folded Format) -->
+          @if (tagFormat === 'tag') {
+            <div class="jewel-tag-single-view text-center">
+              <div class="text-secondary small mb-2">Thermal Barcode Jewel Tag (50mm x 25mm label roll):</div>
+              <div class="jewel-tag-box bg-white p-3 rounded shadow-sm border mx-auto text-dark" style="max-width: 420px; font-family: 'Inter', system-ui, sans-serif;">
+                <div class="d-flex justify-content-between align-items-stretch border p-2 rounded" style="background: #ffffff; border-color: #dcd4c3 !important;">
+                  <!-- Left Wing (Item Details) -->
+                  <div class="text-start pe-2 border-end" style="width: 52%; font-size: 10px; line-height: 1.35;">
+                    <div class="fw-bold text-gold" style="font-size: 11px; letter-spacing: 0.04em;">SHREE JEWELLERS</div>
+                    <div class="text-muted" style="font-size: 8px;">Newtown, 700135, WB</div>
+                    <div class="mt-1"><strong>SKU:</strong> <span class="font-monospace fw-bold">{{ selectedProductForTag.skuCode }}</span></div>
+                    <div class="text-truncate"><strong>Item:</strong> {{ selectedProductForTag.name }}</div>
+                    <div><strong>Purity:</strong> <span class="badge bg-warning-subtle text-dark border p-0 px-1" style="font-size: 9px;">{{ selectedProductForTag.purity }} 916</span></div>
+                    <div><strong>Net Wt:</strong> <span class="fw-bold text-gold">{{ selectedProductForTag.netWeightGrams | number:'1.3-3' }} g</span></div>
+                    <div class="mt-1 fw-bold fs-6 text-charcoal">₹{{ (selectedProductForTag.currentTotalValue || 0) | number:'1.0-0' }}</div>
+                  </div>
+
+                  <!-- Right Wing (Barcode & QR) -->
+                  <div class="text-center ps-2 d-flex flex-column justify-content-between align-items-center" style="width: 48%;">
+                    <div class="barcode-wrapper w-100" [innerHTML]="tagBarcodeSvg"></div>
+                    <div class="font-monospace text-muted mt-1" style="font-size: 9px;">{{ selectedProductForTag.skuCode }}</div>
+                    <div class="qr-wrapper my-1" [innerHTML]="tagQrSvg"></div>
+                    <div class="text-muted" style="font-size: 8px;">BIS HM-916-WB-2026</div>
+                  </div>
+                </div>
+
+                <div class="small text-secondary mt-2 text-center" style="font-size: 11px;">
+                  <i class="bi bi-info-circle me-1"></i> Optimized for Zebra/TSC 50x25mm jewellery dumbbell & rat-tail sticker rolls.
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- FORMAT 2: A4 SHEET OF 24 JEWELLERY TAGS (3 columns x 8 rows) -->
+          @if (tagFormat === 'sheet') {
+            <div class="jewel-tag-a4-sheet-view bg-white p-3 p-md-4 rounded shadow-sm border mx-auto" style="max-width: 900px;">
+              <div class="text-center pb-2 border-bottom mb-3">
+                <h5 class="font-display fw-bold text-gold mb-0">SHREE JEWELLERS · PRINTABLE TAG SHEET</h5>
+                <div class="small text-secondary">A4 24-Up Self-Adhesive Jewellery Barcode Labels · SKU: {{ selectedProductForTag.skuCode }}</div>
+              </div>
+
+              <div class="row row-cols-3 g-2">
+                @for (t of tagSheetList; track $index) {
+                  <div class="col">
+                    <div class="tag-cell border rounded p-2 bg-light h-100" style="font-size: 9px; line-height: 1.25;">
+                      <div class="d-flex justify-content-between align-items-start mb-1">
+                        <div>
+                          <strong class="text-gold" style="font-size: 9.5px;">SHREE JEWELS</strong>
+                          <div class="fw-bold font-monospace text-charcoal">{{ t.skuCode }}</div>
+                        </div>
+                        <span class="badge bg-warning-subtle text-dark border p-0 px-1">{{ t.purity }}</span>
+                      </div>
+                      <div class="text-truncate">{{ t.name }}</div>
+                      <div class="d-flex justify-content-between mt-1">
+                        <span>Net Wt: <strong>{{ t.netWeightGrams | number:'1.3-3' }}g</strong></span>
+                        <strong class="text-charcoal">₹{{ (t.currentTotalValue || 0) | number:'1.0-0' }}</strong>
+                      </div>
+                      <div class="text-center mt-1" [innerHTML]="getItemBarcodeSvg(t.skuCode)"></div>
+                      <div class="text-center text-muted font-monospace" style="font-size: 8px;">{{ t.skuCode }}</div>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="modal-footer border-top py-2 px-3 justify-content-between bg-white">
+          <div class="small text-secondary">
+            Product: <strong class="text-charcoal">{{ selectedProductForTag.name }}</strong> ({{ selectedProductForTag.skuCode }})
+          </div>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-secondary btn-sm" (click)="closeTagModal()">Close</button>
+            <button type="button" class="btn lux-btn lux-btn-primary btn-sm" (click)="executeTagPrint()">
+              <i class="bi bi-printer me-1"></i> Print Tags
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- PHYSICAL STOCK VALUATION & AUDIT REPORT MODAL (A4 PRINTABLE STATEMENT) -->
+@if (showValuationModal) {
+  <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.65);" role="dialog">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header border-bottom py-2 px-3 align-items-center justify-content-between" style="background: #fbf9f4;">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-file-earmark-spreadsheet text-gold fs-5"></i>
+            <h5 class="modal-title font-display text-gold mb-0 fs-6">Stock Valuation & Physical Audit Statement (A4)</h5>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn lux-btn lux-btn-primary btn-sm px-3" (click)="executeValuationPrint()">
+              <i class="bi bi-printer me-1"></i> Print A4 Audit Report
+            </button>
+            <button type="button" class="btn-close ms-2" (click)="closeValuationModal()"></button>
+          </div>
+        </div>
+
+        <div class="modal-body p-3 p-md-5" id="printableValuationReport" style="background: #f8f6f0; overflow-y: auto;">
+          <div class="stock-audit-sheet-a4 bg-white p-4 p-md-5 rounded shadow-sm border mx-auto" style="max-width: 920px; font-family: 'Inter', system-ui, sans-serif; color: #1a1a2e;">
+            <!-- Header -->
+            <div class="text-center pb-3 border-bottom mb-4">
+              <div class="d-flex justify-content-between align-items-start">
+                <div class="text-start small text-secondary">
+                  <div>GSTIN: <strong class="text-charcoal">{{ shopInfo.gstin }}</strong></div>
+                  <div>HSN Code: <strong class="text-charcoal">{{ shopInfo.hsnCode }}</strong></div>
+                  <div>BIS Hallmark: <strong class="text-charcoal">{{ shopInfo.hallmarkLic }}</strong></div>
+                </div>
+                <div class="text-center">
+                  <h2 class="font-display fw-bold mb-0 text-gold" style="letter-spacing: 0.1em; font-size: 1.85rem;">SHREE JEWELLERS</h2>
+                  <div class="small text-secondary fw-semibold">BULLION, PRECIOUS ORNAMENTS & DIAMONDS</div>
+                  <div class="small text-secondary">Proprietor: <strong class="text-charcoal">{{ shopInfo.owner }}</strong></div>
+                  <div class="small text-secondary">{{ shopInfo.address }}</div>
+                  <div class="small text-secondary">Phone: {{ shopInfo.phone }} · Email: {{ shopInfo.email }}</div>
+                </div>
+                <div class="text-end small text-secondary">
+                  <div class="border rounded px-2 py-1 bg-light">
+                    <div>AUDIT STATEMENT</div>
+                    <strong class="text-charcoal">{{ valuation?.asOf | date:'mediumDate' }}</strong>
+                  </div>
+                </div>
+              </div>
+              <div class="pawn-title-banner mt-3 py-1 px-4 bg-dark text-white d-inline-block rounded-pill text-uppercase fw-bold letter-spacing-1 small">
+                Physical Inventory Valuation & Stock Audit Statement
+              </div>
+            </div>
+
+            <!-- Executive Holding Metrics Summary -->
+            <div class="row g-3 mb-4 small">
+              <div class="col-sm-3">
+                <div class="border rounded p-3 text-center bg-light">
+                  <div class="text-secondary">Total Inventory Value</div>
+                  <div class="fs-5 fw-bold text-gold mt-1">₹{{ (valuation?.totalInventoryValue || 0) | number:'1.0-0' }}</div>
+                </div>
+              </div>
+              <div class="col-sm-3">
+                <div class="border rounded p-3 text-center bg-light">
+                  <div class="text-secondary">Gold Holding (Net Wt)</div>
+                  <div class="fs-5 fw-bold text-charcoal mt-1">{{ (valuation?.totalGoldWeightGrams || 0) | number:'1.3-3' }} g</div>
+                  <div class="text-muted" style="font-size: 0.75rem;">Val: ₹{{ (valuation?.totalGoldValueINR || 0) | number:'1.0-0' }}</div>
+                </div>
+              </div>
+              <div class="col-sm-3">
+                <div class="border rounded p-3 text-center bg-light">
+                  <div class="text-secondary">Silver Holding</div>
+                  <div class="fs-5 fw-bold text-charcoal mt-1">{{ (valuation?.totalSilverWeightGrams || 0) | number:'1.3-3' }} g</div>
+                  <div class="text-muted" style="font-size: 0.75rem;">Val: ₹{{ (valuation?.totalSilverValueINR || 0) | number:'1.0-0' }}</div>
+                </div>
+              </div>
+              <div class="col-sm-3">
+                <div class="border rounded p-3 text-center bg-light">
+                  <div class="text-secondary">Catalog Stock Items</div>
+                  <div class="fs-5 fw-bold text-charcoal mt-1">{{ totalProducts }} Products</div>
+                  <div class="text-muted" style="font-size: 0.75rem;">Low Stock: {{ lowStock.length }} items</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Category-wise Summary Breakdown -->
+            <div class="mb-4">
+              <div class="fw-bold small text-charcoal mb-2"><i class="bi bi-pie-chart-fill me-1 text-gold"></i> Category-wise Metal & Valuation Breakdown</div>
+              <table class="table table-bordered table-sm align-middle small mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>Category</th>
+                    <th class="text-center">Products</th>
+                    <th class="text-center">Total Pieces</th>
+                    <th class="text-end">Total Weight (g)</th>
+                    <th class="text-end">Assessed Valuation (₹)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (cat of valuation?.byCategory || []; track cat.categoryName) {
+                    <tr>
+                      <td class="fw-semibold text-charcoal">{{ cat.categoryName }}</td>
+                      <td class="text-center">{{ cat.productCount }}</td>
+                      <td class="text-center">{{ cat.totalPieces }}</td>
+                      <td class="text-end">{{ cat.totalWeightGrams | number:'1.3-3' }} g</td>
+                      <td class="text-end fw-bold">₹{{ cat.totalValue | number:'1.0-0' }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Itemized Inventory Stock Table with Physical Count Tally Boxes -->
+            <div class="mb-4">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="fw-bold small text-charcoal"><i class="bi bi-card-checklist me-1 text-gold"></i> Itemized Catalog Physical Tally & Valuation Register</div>
+                <span class="text-muted small" style="font-size: 0.75rem;">Physical Count column designed for pen tally during stock audit</span>
+              </div>
+              <div class="table-responsive">
+                <table class="table table-bordered table-sm align-middle small mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th>#</th>
+                      <th>SKU</th>
+                      <th>Product Name</th>
+                      <th>Category</th>
+                      <th class="text-center">Purity</th>
+                      <th class="text-end">Net Wt (g)</th>
+                      <th class="text-center">Book Qty</th>
+                      <th class="text-end">Valuation (₹)</th>
+                      <th class="text-center" style="width: 100px;">Physical Tally</th>
+                      <th class="text-center" style="width: 80px;">Discrepancy</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (p of products; track p.id; let idx = $index) {
+                      <tr>
+                        <td>{{ idx + 1 }}</td>
+                        <td class="font-monospace fw-semibold">{{ p.skuCode }}</td>
+                        <td class="fw-semibold text-charcoal">{{ p.name }}</td>
+                        <td>{{ p.categoryName }}</td>
+                        <td class="text-center"><span class="badge bg-warning-subtle text-dark border p-0 px-1">{{ p.purity }}</span></td>
+                        <td class="text-end">{{ p.netWeightGrams | number:'1.3-3' }}</td>
+                        <td class="text-center fw-bold">{{ p.stockQuantity }}</td>
+                        <td class="text-end fw-semibold">₹{{ (p.currentTotalValue || 0) | number:'1.0-0' }}</td>
+                        <td class="text-center" style="background: #fafafa;">
+                          <div style="border: 1px dashed #999; height: 18px; width: 40px; margin: 0 auto;"></div>
+                        </td>
+                        <td class="text-center" style="background: #fafafa;">
+                          <div style="border: 1px dashed #999; height: 18px; width: 35px; margin: 0 auto;"></div>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Audit Undertaking & Signatures -->
+            <div class="p-3 border rounded mb-4 bg-light small text-secondary" style="font-size: 0.78rem;">
+              <strong>Stock Auditor's Certificate:</strong> Verified that the physical stock of jewellery items, gold ornaments, and bullion has been physically weighed, inspected for hallmarking, and reconciled against the inventory control ledger of Shree Jewellers without unexplained discrepancies.
+            </div>
+
+            <div class="row align-items-end pt-3 small text-center g-3">
+              <div class="col-4">
+                <div style="height: 40px;"></div>
+                <div class="border-top mx-2 pt-1 text-charcoal fw-semibold">Internal Auditor / Assayer</div>
+              </div>
+              <div class="col-4">
+                <div style="height: 40px;"></div>
+                <div class="border-top mx-2 pt-1 text-charcoal fw-semibold">Stock In-Charge / Custodian</div>
+              </div>
+              <div class="col-4">
+                <div style="height: 40px;"></div>
+                <div class="border-top mx-2 pt-1 text-charcoal fw-semibold">
+                  For SHREE JEWELLERS<br>
+                  <span class="text-muted" style="font-size: 0.72rem;">(Chandan Kr Mandal, Proprietor)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer border-top py-2 px-3 justify-content-between bg-white">
+          <div class="small text-secondary">
+            Total Inventory Value: <strong class="text-gold">₹{{ (valuation?.totalInventoryValue || 0) | number:'1.0-0' }}</strong>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-secondary btn-sm" (click)="closeValuationModal()">Close</button>
+            <button type="button" class="btn lux-btn lux-btn-primary btn-sm" (click)="executeValuationPrint()">
+              <i class="bi bi-printer me-1"></i> Print A4 Audit Report
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+}

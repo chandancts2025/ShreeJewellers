@@ -1,0 +1,65 @@
+.contact-page-container {
+  padding-bottom: 3rem;
+}
+
+.contact-header {
+  border-bottom: 1px solid rgba(201, 168, 76, 0.2);
+}
+
+.contact-icon-circle {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #fdf6e2;
+  border: 1px solid rgba(201, 168, 76, 0.4);
+  color: #b8912d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
+
+.whatsapp-circle {
+  background: #e7f8ee;
+  border-color: #25d366;
+  color: #25d366;
+}
+
+.landmark-tag {
+  font-size: 0.78rem;
+  color: #8b6e22;
+  font-style: italic;
+}
+
+.visiting-perks {
+  background: rgba(201, 168, 76, 0.08);
+  border-left: 3px solid #c9a84c;
+}
+
+.lux-input {
+  border: 1px solid rgba(201, 168, 76, 0.3);
+  border-radius: 0.65rem;
+  padding: 0.65rem 0.9rem;
+  background-color: #ffffff;
+  color: #1a1a2e;
+  transition: all 0.2s ease;
+
+  &:focus {
+    border-color: #c9a84c;
+    box-shadow: 0 0 0 0.2rem rgba(201, 168, 76, 0.2);
+    background-color: #fffdf9;
+  }
+}
+
+.map-card {
+  border: 1px solid rgba(201, 168, 76, 0.3);
+}
+
+@media (max-width: 767.98px) {
+  .contact-icon-circle {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+  }
+}

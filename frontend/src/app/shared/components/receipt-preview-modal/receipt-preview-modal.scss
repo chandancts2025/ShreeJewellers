@@ -1,0 +1,341 @@
+.receipt-modal-backdrop {
+  background: rgba(10, 10, 15, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 1060;
+}
+
+.preview-canvas-bg {
+  background: #23232c;
+  min-height: 70vh;
+  overflow-y: auto;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   1. 80MM THERMAL RECEIPT STYLES
+   ───────────────────────────────────────────────────────────────────────────── */
+.thermal-receipt-80mm {
+  width: 310px;
+  background: #ffffff;
+  color: #000000;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Courier New", monospace;
+  padding: 18px 14px;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.4);
+  border-radius: 2px;
+  position: relative;
+  font-size: 12px;
+  line-height: 1.35;
+
+  .thermal-logo-text {
+    font-size: 17px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    color: #000;
+  }
+
+  .thermal-owner {
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .thermal-address, .thermal-contact, .thermal-meta {
+    font-size: 10px;
+    color: #222;
+  }
+
+  .thermal-title {
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    padding: 3px 0;
+  }
+
+  .thermal-divider-double {
+    border-top: 2px double #000;
+    margin: 5px 0;
+  }
+
+  .thermal-divider-dashed {
+    border-top: 1px dashed #444;
+    margin: 6px 0;
+  }
+
+  .border-bottom-dotted {
+    border-bottom: 1px dotted #888;
+  }
+
+  .thermal-items-table {
+    font-size: 11px;
+    th {
+      font-size: 10px;
+      text-transform: uppercase;
+      font-weight: 800;
+      border-bottom: 1px solid #000;
+      padding-bottom: 3px;
+    }
+    .thermal-item-name {
+      font-size: 11px;
+      font-weight: 700;
+    }
+  }
+
+  .font-mono {
+    font-family: "Courier New", Courier, monospace;
+  }
+
+  .thermal-net-row {
+    font-size: 14px;
+    font-weight: 900;
+  }
+
+  .thermal-hallmark-badge {
+    display: inline-block;
+    border: 1px solid #000;
+    padding: 2px 6px;
+    font-size: 10px;
+    font-weight: 800;
+    border-radius: 3px;
+  }
+
+  .thermal-terms {
+    font-size: 9px;
+    line-height: 1.25;
+    color: #444;
+  }
+
+  .thermal-tagline {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    margin-top: 4px;
+  }
+
+  .thermal-qr-box svg, .thermal-barcode-box svg {
+    margin: 0 auto;
+    display: block;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   2. A4 / A5 LUXURY TAX INVOICE STYLES
+   ───────────────────────────────────────────────────────────────────────────── */
+.a4-invoice-sheet {
+  width: 840px;
+  max-width: 100%;
+  background: #ffffff;
+  color: #1a1a24;
+  padding: 36px 40px;
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.45);
+  border-radius: 4px;
+  font-size: 13px;
+
+  &.a5-mode {
+    width: 660px;
+    padding: 22px 26px;
+    font-size: 11.5px;
+
+    .a4-shop-title {
+      font-size: 20px !important;
+    }
+    .a4-tax-badge {
+      font-size: 13px !important;
+    }
+  }
+
+  .a4-crest-icon {
+    width: 48px;
+    height: 48px;
+    background: #fbf7ec;
+    border: 1.5px solid #d4af37;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #996515;
+    flex-shrink: 0;
+  }
+
+  .a4-shop-title {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: #724c08;
+  }
+
+  .a4-proprietor {
+    font-size: 13px;
+    color: #2b2b36;
+  }
+
+  .a4-address-line, .a4-contact-line {
+    font-size: 11.5px;
+    color: #555;
+  }
+
+  .a4-tax-badge {
+    display: inline-block;
+    background: #111;
+    color: #ffd700;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 15px;
+  }
+
+  .a4-meta-box {
+    background: #fafaf8;
+    border-color: #e5e3dc !important;
+  }
+
+  .a4-items-table {
+    font-size: 12px;
+    th {
+      font-size: 11px;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      padding: 8px 6px;
+      vertical-align: middle;
+    }
+    td {
+      padding: 7px 6px;
+      vertical-align: middle;
+      border-color: #ebe7de;
+    }
+  }
+
+  .font-mono {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  }
+
+  .a4-words-box, .a4-summary-box {
+    background: #fafaf8;
+    border-color: #e5e3dc !important;
+  }
+
+  .a4-grand-total-row {
+    color: #724c08 !important;
+    background: #fefcf6;
+    padding: 6px 8px !important;
+    border-radius: 3px;
+  }
+
+  .a4-footer-row {
+    border-color: #e5e3dc !important;
+  }
+
+  .a4-sig-line {
+    border-color: #333 !important;
+    min-height: 48px;
+  }
+
+  .a4-bottom-terms {
+    font-size: 10px;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   3. MEDIA PRINT RULES
+   ───────────────────────────────────────────────────────────────────────────── */
+@media print {
+  /* Hide all external application UI */
+  body {
+    background: #fff !important;
+    color: #000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .app-sidebar,
+  .app-header,
+  app-top-nav,
+  app-footer,
+  .navbar,
+  .no-print,
+  .modal-header,
+  .modal-footer,
+  .btn,
+  .btn-group {
+    display: none !important;
+  }
+
+  .receipt-modal-backdrop {
+    position: static !important;
+    background: none !important;
+    backdrop-filter: none !important;
+    padding: 0 !important;
+  }
+
+  .modal-dialog {
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+
+  .modal-content {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  .modal-body {
+    padding: 0 !important;
+    background: transparent !important;
+  }
+
+  /* 80mm Page Sizing */
+  body.print-active-80mm {
+    @page {
+      size: 80mm auto;
+      margin: 2mm 3mm;
+    }
+
+    .thermal-receipt-80mm {
+      box-shadow: none !important;
+      width: 100% !important;
+      max-width: 78mm !important;
+      padding: 0 !important;
+      margin: 0 auto !important;
+    }
+
+    .a4-invoice-sheet {
+      display: none !important;
+    }
+  }
+
+  /* A4 Page Sizing */
+  body.print-active-a4 {
+    @page {
+      size: A4 portrait;
+      margin: 8mm 10mm;
+    }
+
+    .a4-invoice-sheet {
+      box-shadow: none !important;
+      width: 100% !important;
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+
+    .thermal-receipt-80mm {
+      display: none !important;
+    }
+  }
+
+  /* A5 Page Sizing */
+  body.print-active-a5 {
+    @page {
+      size: A5 landscape;
+      margin: 6mm 8mm;
+    }
+
+    .a4-invoice-sheet {
+      box-shadow: none !important;
+      width: 100% !important;
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+
+    .thermal-receipt-80mm {
+      display: none !important;
+    }
+  }
+}

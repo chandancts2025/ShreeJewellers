@@ -1,0 +1,418 @@
+@if (isOpen && order) {
+  <div class="modal fade show d-block receipt-modal-backdrop" tabindex="-1" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow-2xl">
+        <!-- Modal Toolbar -->
+        <div class="modal-header bg-dark text-white py-3 px-4 no-print d-flex justify-content-between align-items-center">
+          <div class="d-flex align-items-center gap-3">
+            <h5 class="modal-title font-display mb-0 text-warning d-flex align-items-center gap-2">
+              <i class="bi bi-printer-fill fs-5"></i>
+              <span>Invoice & Receipt Generator</span>
+            </h5>
+            <span class="badge bg-secondary text-uppercase">{{ order.orderNumber }}</span>
+          </div>
+
+          <!-- Format Switcher Buttons -->
+          <div class="btn-group btn-group-sm bg-black p-1 rounded-pill border border-secondary" role="group">
+            <button
+              type="button"
+              class="btn rounded-pill px-3 py-1"
+              [class.btn-warning]="activeFormat === 'a4'"
+              [class.btn-dark]="activeFormat !== 'a4'"
+              (click)="setFormat('a4')">
+              <i class="bi bi-file-earmark-text me-1"></i>A4 Tax Invoice
+            </button>
+            <button
+              type="button"
+              class="btn rounded-pill px-3 py-1"
+              [class.btn-warning]="activeFormat === '80mm'"
+              [class.btn-dark]="activeFormat !== '80mm'"
+              (click)="setFormat('80mm')">
+              <i class="bi bi-receipt me-1"></i>80mm Thermal POS
+            </button>
+            <button
+              type="button"
+              class="btn rounded-pill px-3 py-1"
+              [class.btn-warning]="activeFormat === 'a5'"
+              [class.btn-dark]="activeFormat !== 'a5'"
+              (click)="setFormat('a5')">
+              <i class="bi bi-file-text me-1"></i>A5 Compact
+            </button>
+          </div>
+
+          <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-warning fw-bold px-3 py-1" (click)="printCurrent()">
+              <i class="bi bi-printer me-1"></i>Print {{ activeFormat === '80mm' ? 'Thermal (80mm)' : (activeFormat | uppercase) }}
+            </button>
+            <button type="button" class="btn-close btn-close-white" (click)="onClose()" aria-label="Close"></button>
+          </div>
+        </div>
+
+        <!-- Modal Body / Live Preview Canvas -->
+        <div class="modal-body p-4 preview-canvas-bg">
+          <div class="d-flex justify-content-center">
+            
+            <!-- PRINTABLE CONTAINER (Captured during window.print) -->
+            <div id="printable-receipt-container" [ngClass]="'format-' + activeFormat">
+
+              <!-- =================================================================== -->
+              <!-- 1. 80MM THERMAL POS RECEIPT FORMAT                                  -->
+              <!-- =================================================================== -->
+              @if (activeFormat === '80mm') {
+                <div class="thermal-receipt-80mm">
+                  <!-- Header -->
+                  <div class="thermal-header text-center pb-2">
+                    <div class="thermal-logo-text">{{ shopInfo.name }}</div>
+                    <div class="thermal-owner">Prop: {{ shopInfo.owner }}</div>
+                    <div class="thermal-address">{{ shopInfo.address }}</div>
+                    <div class="thermal-contact">Tel: {{ shopInfo.phone }}</div>
+                    <div class="thermal-meta">GSTIN: {{ shopInfo.gstin }} · HSN: {{ shopInfo.hsn }}</div>
+                    <div class="thermal-meta">BIS Lic: {{ shopInfo.hallmarkLicense }}</div>
+                    <div class="thermal-divider-double"></div>
+                    <div class="thermal-title">*** TAX INVOICE ***</div>
+                  </div>
+
+                  <!-- Order Info -->
+                  <div class="thermal-meta-block small py-1">
+                    <div class="d-flex justify-content-between">
+                      <span>Inv #: <strong>{{ order.orderNumber }}</strong></span>
+                      <span>{{ order.orderDate | date:'dd/MM/yyyy' }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                      <span>Cust: <strong>{{ order.customerName || order.walkInCustomerName || 'Walk-in Guest' }}</strong></span>
+                      <span>{{ order.walkInCustomerPhone || 'Cash Sale' }}</span>
+                    </div>
+                  </div>
+                  <div class="thermal-divider-dashed"></div>
+
+                  <!-- Itemized Table -->
+                  <table class="thermal-items-table w-100">
+                    <thead>
+                      <tr>
+                        <th class="text-start">Item & Purity</th>
+                        <th class="text-end">Wt(g)</th>
+                        <th class="text-end">Rate</th>
+                        <th class="text-end">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (item of order.items; track item.id; let idx = $index) {
+                        <tr>
+                          <td colspan="4" class="thermal-item-name pt-1">
+                            {{ idx + 1 }}. {{ item.productName }} ({{ item.purity }})
+                          </td>
+                        </tr>
+                        <tr class="thermal-item-row pb-1 border-bottom-dotted">
+                          <td class="text-secondary small ps-2">Qty: {{ item.quantity }} | MC: ₹{{ item.makingCharges | number:'1.0-0' }}</td>
+                          <td class="text-end font-mono">{{ item.weightGrams | number:'1.3-3' }}g</td>
+                          <td class="text-end font-mono">₹{{ item.ratePerGram | number:'1.0-0' }}</td>
+                          <td class="text-end font-mono fw-bold">₹{{ item.lineTotal | number:'1.0-0' }}</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                  <div class="thermal-divider-dashed"></div>
+
+                  <!-- Calculations -->
+                  <div class="thermal-totals-block small font-mono">
+                    <div class="d-flex justify-content-between">
+                      <span>Gross Amount:</span>
+                      <span>₹{{ order.grossAmount | number:'1.2-2' }}</span>
+                    </div>
+                    @if (order.discountAmount > 0) {
+                      <div class="d-flex justify-content-between text-danger">
+                        <span>Discount:</span>
+                        <span>-₹{{ order.discountAmount | number:'1.2-2' }}</span>
+                      </div>
+                    }
+                    @if (order.oldGoldExchangeValue > 0) {
+                      <div class="d-flex justify-content-between text-success">
+                        <span>Old Gold Exchange:</span>
+                        <span>-₹{{ order.oldGoldExchangeValue | number:'1.2-2' }}</span>
+                      </div>
+                    }
+                    <div class="d-flex justify-content-between">
+                      <span>CGST (1.5%):</span>
+                      <span>₹{{ order.cgstAmount | number:'1.2-2' }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                      <span>SGST (1.5%):</span>
+                      <span>₹{{ order.sgstAmount | number:'1.2-2' }}</span>
+                    </div>
+                    <div class="thermal-divider-double my-1"></div>
+                    <div class="d-flex justify-content-between fs-6 fw-bold thermal-net-row">
+                      <span>NET PAYABLE:</span>
+                      <span>₹{{ order.netAmount | number:'1.2-2' }}</span>
+                    </div>
+                    <div class="thermal-divider-double my-1"></div>
+                    <div class="d-flex justify-content-between">
+                      <span>Payment ({{ order.paymentMode }}):</span>
+                      <span>₹{{ order.amountPaid | number:'1.2-2' }}</span>
+                    </div>
+                    @if (order.balanceDue > 0) {
+                      <div class="d-flex justify-content-between fw-bold text-danger">
+                        <span>Balance Due:</span>
+                        <span>₹{{ order.balanceDue | number:'1.2-2' }}</span>
+                      </div>
+                    } @else {
+                      <div class="d-flex justify-content-between text-success">
+                        <span>Status:</span>
+                        <span>FULLY PAID</span>
+                      </div>
+                    }
+                  </div>
+                  <div class="thermal-divider-dashed"></div>
+
+                  <!-- Footer / Terms -->
+                  <div class="thermal-footer text-center pt-2">
+                    <div class="thermal-hallmark-badge">
+                      <i class="bi bi-patch-check-fill me-1"></i>100% BIS Hallmarked (HUID)
+                    </div>
+                    <div class="thermal-qr-box my-2" [innerHTML]="qrSvg"></div>
+                    <div class="thermal-barcode-box my-1" [innerHTML]="barcodeSvg"></div>
+                    <div class="small text-muted">{{ order.orderNumber }}</div>
+                    <p class="thermal-terms mb-1">
+                      Exchange within 7 days with invoice.<br>
+                      Subject to Kolkata Jurisdiction.
+                    </p>
+                    <div class="thermal-tagline font-display">Thank You! Visit Again</div>
+                  </div>
+                </div>
+              }
+
+              <!-- =================================================================== -->
+              <!-- 2. A4 LUXURY TAX INVOICE FORMAT                                     -->
+              <!-- =================================================================== -->
+              @if (activeFormat === 'a4' || activeFormat === 'a5') {
+                <div class="a4-invoice-sheet" [class.a5-mode]="activeFormat === 'a5'">
+                  <!-- Top Banner / Store Header -->
+                  <div class="a4-header pb-3 border-bottom border-dark border-2">
+                    <div class="row align-items-center">
+                      <div class="col-8">
+                        <div class="d-flex align-items-center gap-3">
+                          <div class="a4-crest-icon">
+                            <i class="bi bi-gem fs-2"></i>
+                          </div>
+                          <div>
+                            <h1 class="font-display a4-shop-title mb-0">{{ shopInfo.name }}</h1>
+                            <div class="a4-proprietor">Proprietor: <strong>{{ shopInfo.owner }}</strong></div>
+                            <div class="a4-address-line">{{ shopInfo.address }}</div>
+                            <div class="a4-contact-line">
+                              <span><i class="bi bi-telephone-fill me-1"></i>{{ shopInfo.phone }}</span> ·
+                              <span><i class="bi bi-envelope-fill me-1"></i>{{ shopInfo.email }}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-4 text-end">
+                        <div class="a4-tax-badge mb-1">TAX INVOICE</div>
+                        <div class="small fw-bold text-dark">GSTIN: {{ shopInfo.gstin }}</div>
+                        <div class="small text-secondary">State: {{ shopInfo.state }} (Code: {{ shopInfo.stateCode }})</div>
+                        <div class="small text-secondary">HSN Code: {{ shopInfo.hsn }}</div>
+                        <div class="small text-secondary">BIS Licence: {{ shopInfo.hallmarkLicense }}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Invoice Meta / Bill To Grid -->
+                  <div class="row g-3 my-2 a4-meta-grid">
+                    <div class="col-6">
+                      <div class="a4-meta-box p-3 border rounded">
+                        <div class="text-uppercase small fw-bold text-secondary mb-1">Billed To (Customer Details):</div>
+                        <div class="fs-6 fw-bold text-dark">
+                          {{ order.customerName || order.walkInCustomerName || 'Walk-in Retail Customer' }}
+                        </div>
+                        @if (order.customerCode) {
+                          <div class="small text-secondary">Customer Code: {{ order.customerCode }}</div>
+                        }
+                        @if (order.walkInCustomerPhone) {
+                          <div class="small text-secondary">Phone: {{ order.walkInCustomerPhone }}</div>
+                        }
+                        <div class="small text-secondary">Place of Supply: {{ shopInfo.state }} ({{ shopInfo.stateCode }})</div>
+                        <div class="small text-secondary">Reverse Charge: No</div>
+                      </div>
+                    </div>
+
+                    <div class="col-6">
+                      <div class="a4-meta-box p-3 border rounded">
+                        <div class="text-uppercase small fw-bold text-secondary mb-1">Invoice Particulars:</div>
+                        <div class="row g-1 small">
+                          <div class="col-6 text-secondary">Invoice No:</div>
+                          <div class="col-6 fw-bold text-dark font-mono">{{ order.orderNumber }}</div>
+                          <div class="col-6 text-secondary">Date & Time:</div>
+                          <div class="col-6 fw-bold text-dark">{{ order.orderDate | date:'dd-MMM-yyyy' }}</div>
+                          <div class="col-6 text-secondary">Payment Method:</div>
+                          <div class="col-6 fw-bold text-dark">{{ order.paymentMode }}</div>
+                          <div class="col-6 text-secondary">Payment Status:</div>
+                          <div class="col-6 fw-bold" [class.text-success]="order.paymentStatus === 'Paid'">
+                            {{ order.paymentStatus }}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Itemized Jewellery Table -->
+                  <div class="a4-table-wrapper my-3">
+                    <table class="table a4-items-table table-bordered mb-0">
+                      <thead class="table-dark">
+                        <tr>
+                          <th style="width: 4%;">#</th>
+                          <th style="width: 28%;">Ornament Description & SKU</th>
+                          <th style="width: 8%;">HSN</th>
+                          <th style="width: 8%;">Purity</th>
+                          <th style="width: 7%;" class="text-end">Qty</th>
+                          <th style="width: 9%;" class="text-end">Gross Wt</th>
+                          <th style="width: 9%;" class="text-end">Rate / g</th>
+                          <th style="width: 9%;" class="text-end">Making Chgs</th>
+                          <th style="width: 8%;" class="text-end">Hallmark</th>
+                          <th style="width: 10%;" class="text-end">Taxable Val</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (item of order.items; track item.id; let idx = $index) {
+                          <tr>
+                            <td class="text-center">{{ idx + 1 }}</td>
+                            <td>
+                              <div class="fw-bold text-dark">{{ item.productName }}</div>
+                              <div class="small text-secondary font-mono">SKU: {{ item.skuCode }}</div>
+                            </td>
+                            <td class="text-center">{{ shopInfo.hsn }}</td>
+                            <td class="text-center">
+                              <span class="badge bg-light text-dark border">{{ item.purity }}</span>
+                            </td>
+                            <td class="text-end">{{ item.quantity }}</td>
+                            <td class="text-end font-mono">{{ item.weightGrams | number:'1.3-3' }}g</td>
+                            <td class="text-end font-mono">₹{{ item.ratePerGram | number:'1.2-2' }}</td>
+                            <td class="text-end font-mono">₹{{ item.makingCharges | number:'1.2-2' }}</td>
+                            <td class="text-end font-mono">₹{{ item.hallmarkCharges | number:'1.2-2' }}</td>
+                            <td class="text-end font-mono fw-bold">₹{{ (item.weightGrams * item.ratePerGram + item.makingCharges + item.hallmarkCharges + item.stoneValue - (item.discountAmount || 0)) | number:'1.2-2' }}</td>
+                          </tr>
+                        }
+                      </tbody>
+                      <tfoot>
+                        <tr class="table-light fw-bold">
+                          <td colspan="4" class="text-end">TOTAL WEIGHT:</td>
+                          <td class="text-end">{{ order.items.length }} Items</td>
+                          <td class="text-end font-mono">{{ totalGrossWeight | number:'1.3-3' }}g</td>
+                          <td colspan="3" class="text-end">TAXABLE AMOUNT:</td>
+                          <td class="text-end font-mono">₹{{ (order.grossAmount - order.discountAmount) | number:'1.2-2' }}</td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+
+                  <!-- Calculations & Tax Summary -->
+                  <div class="row g-3 my-2">
+                    <div class="col-7">
+                      <div class="a4-words-box p-3 border rounded h-100 d-flex flex-column justify-content-between">
+                        <div>
+                          <div class="small fw-bold text-secondary text-uppercase mb-1">Total Amount in Words:</div>
+                          <div class="fw-bold text-dark fst-italic">{{ amountInWords }}</div>
+                        </div>
+
+                        <!-- Old Gold & Payment Status -->
+                        @if (order.oldGoldExchangeValue > 0) {
+                          <div class="alert alert-success py-1 px-2 my-2 small mb-0">
+                            <i class="bi bi-arrow-left-right me-1"></i>
+                            Old Gold Exchange Deduction: <strong>₹{{ order.oldGoldExchangeValue | number:'1.2-2' }}</strong>
+                          </div>
+                        }
+
+                        <div class="a4-compliance-notes small text-secondary mt-2">
+                          <div class="fw-bold text-dark"><i class="bi bi-shield-check text-warning me-1"></i>BIS Hallmarked Purity Guarantee:</div>
+                          <div>Gold ornaments carry 6-digit laser-inscribed HUID verifiable on the Government of India BIS Care mobile app. Lifetime free cleaning and transparent buyback exchange.</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="col-5">
+                      <div class="a4-summary-box p-3 border rounded font-mono small">
+                        <div class="d-flex justify-content-between py-1">
+                          <span class="text-secondary">Gross Taxable Value:</span>
+                          <span>₹{{ order.grossAmount | number:'1.2-2' }}</span>
+                        </div>
+                        @if (order.discountAmount > 0) {
+                          <div class="d-flex justify-content-between py-1 text-danger">
+                            <span>Promotional Discount:</span>
+                            <span>-₹{{ order.discountAmount | number:'1.2-2' }}</span>
+                          </div>
+                        }
+                        @if (order.oldGoldExchangeValue > 0) {
+                          <div class="d-flex justify-content-between py-1 text-success">
+                            <span>Old Gold Exchange:</span>
+                            <span>-₹{{ order.oldGoldExchangeValue | number:'1.2-2' }}</span>
+                          </div>
+                        }
+                        <div class="d-flex justify-content-between py-1 border-top">
+                          <span class="text-secondary">CGST (1.5%):</span>
+                          <span>₹{{ order.cgstAmount | number:'1.2-2' }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between py-1">
+                          <span class="text-secondary">SGST (1.5%):</span>
+                          <span>₹{{ order.sgstAmount | number:'1.2-2' }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between py-2 border-top border-dark border-2 fs-5 fw-bold text-dark a4-grand-total-row">
+                          <span>TOTAL (INR):</span>
+                          <span>₹{{ order.netAmount | number:'1.2-2' }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between py-1 border-top">
+                          <span class="text-secondary">Amount Tendered ({{ order.paymentMode }}):</span>
+                          <span>₹{{ order.amountPaid | number:'1.2-2' }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between py-1" [class.text-danger]="order.balanceDue > 0" [class.text-success]="order.balanceDue <= 0">
+                          <span class="fw-bold">{{ order.balanceDue > 0 ? 'Balance Due:' : 'Status:' }}</span>
+                          <span class="fw-bold">{{ order.balanceDue > 0 ? ('₹' + (order.balanceDue | number:'1.2-2')) : 'CLEARED' }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Signatures & Footer Bar -->
+                  <div class="row align-items-end mt-4 pt-4 border-top a4-footer-row">
+                    <div class="col-4 text-center">
+                      <div class="a4-qr-holder mx-auto mb-1" [innerHTML]="qrSvg"></div>
+                      <div class="small text-secondary font-mono">Scan for e-Verification</div>
+                    </div>
+
+                    <div class="col-4 text-center">
+                      <div class="a4-sig-line border-bottom pb-4 mb-1"></div>
+                      <div class="small fw-bold text-dark">Customer's Signature</div>
+                      <div class="small text-secondary">(Acknowledged with purity verified)</div>
+                    </div>
+
+                    <div class="col-4 text-center">
+                      <div class="a4-sig-line border-bottom pb-4 mb-1">
+                        <span class="small text-muted fst-italic">For SHREE JEWELLERS</span>
+                      </div>
+                      <div class="small fw-bold text-dark">Authorized Signatory</div>
+                      <div class="small text-secondary">Prop: Chandan Kr Mandal</div>
+                    </div>
+                  </div>
+
+                  <div class="text-center mt-3 small text-secondary fst-italic a4-bottom-terms">
+                    This is a computerized GST Tax Invoice. Disputes, if any, shall be subject to Kolkata Jurisdiction only.
+                  </div>
+                </div>
+              }
+
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Footer Actions -->
+        <div class="modal-footer bg-light py-2 px-4 no-print d-flex justify-content-between">
+          <div class="small text-secondary">
+            Format: <strong>{{ activeFormat === '80mm' ? '80mm Thermal Receipt (POS)' : (activeFormat === 'a4' ? 'A4 Full Sheet Luxury Invoice' : 'A5 Compact Voucher') }}</strong>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-secondary btn-sm" (click)="onClose()">Close</button>
+            <button type="button" class="btn btn-warning btn-sm fw-bold px-4" (click)="printCurrent()">
+              <i class="bi bi-printer-fill me-1"></i>Print Now
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+}

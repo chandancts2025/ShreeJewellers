@@ -4,12 +4,14 @@ import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { SalesService } from '../../../core/services/sales';
 import { ToastService } from '../../../core/services/toast';
-import { SalesOrderSummary } from '../../../core/models';
+import { SalesOrderResponse, SalesOrderSummary } from '../../../core/models';
+import { ReceiptPreviewModal } from '../../../shared/components/receipt-preview-modal/receipt-preview-modal';
+import { PrintFormat } from '../../../core/services/print';
 
 @Component({
   selector: 'app-sales-orders-list-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, ReceiptPreviewModal],
   templateUrl: './sales-orders-list-page.html',
   styleUrls: ['./sales-orders-list-page.scss']
 })
@@ -20,6 +22,11 @@ export class SalesOrdersListPage implements OnInit {
 
   orders: SalesOrderSummary[] = [];
   isLoading = false;
+
+  selectedOrderForPrint: SalesOrderResponse | null = null;
+  showReceiptModal = false;
+  selectedFormat: PrintFormat = 'a4';
+  isLoadingReceipt = false;
   
   filterForm!: FormGroup;
   currentPage = 1;
@@ -76,11 +83,32 @@ export class SalesOrdersListPage implements OnInit {
         this.totalCount = response.total ?? this.orders.length;
         this.isLoading = false;
       },
-      error: (err) => {
+      error: () => {
         this.toastService.error('Error', 'Failed to load orders');
         this.isLoading = false;
       }
     });
+  }
+
+  quickPrint(orderId: number, format: PrintFormat = 'a4'): void {
+    this.isLoadingReceipt = true;
+    this.selectedFormat = format;
+    this.salesService.getOrder(orderId).subscribe({
+      next: (fullOrder) => {
+        this.selectedOrderForPrint = fullOrder;
+        this.showReceiptModal = true;
+        this.isLoadingReceipt = false;
+      },
+      error: () => {
+        this.toastService.error('Error', 'Could not load order details for printing');
+        this.isLoadingReceipt = false;
+      }
+    });
+  }
+
+  closeReceiptModal(): void {
+    this.showReceiptModal = false;
+    this.selectedOrderForPrint = null;
   }
 
   getStatusBadgeClass(status: string): string {

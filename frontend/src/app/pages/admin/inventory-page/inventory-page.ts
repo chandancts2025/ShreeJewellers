@@ -2,10 +2,12 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 import { CatalogService } from '../../../core/services/catalog';
 import { ToastService } from '../../../core/services/toast';
+import { PrintFormat, PrintService } from '../../../core/services/print';
 import { Category, InventoryTransaction, InventoryValuation, ProductSummary, StockLevel } from '../../../core/models';
 
 type InventoryPanel = 'catalog' | 'stock' | 'ledger';
@@ -21,6 +23,8 @@ export class InventoryPage {
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
   private readonly toast = inject(ToastService);
+  protected readonly printService = inject(PrintService);
+  private readonly sanitizer = inject(DomSanitizer);
 
   products: ProductSummary[] = [];
   transactions: InventoryTransaction[] = [];
@@ -28,6 +32,23 @@ export class InventoryPage {
   categories: Category[] = [];
   stockLevels: StockLevel[] = [];
   valuation: InventoryValuation | null = null;
+
+  // Jewellery Tag & Valuation Print Modals
+  showTagModal = false;
+  selectedProductForTag: ProductSummary | null = null;
+  tagFormat: 'tag' | 'sheet' = 'tag'; // 'tag' = 50x25mm single thermal tag, 'sheet' = A4 sheet of 24 tags
+  showValuationModal = false;
+
+  readonly shopInfo = {
+    name: 'SHREE JEWELLERS',
+    owner: 'Chandan Kr Mandal',
+    address: '3B8-2D, Sanhita Township, Newtown, 700135, WB',
+    phone: '+91 98516 32391',
+    email: 'chandankr.mandal87@gmail.com',
+    gstin: '19AAACS1234F1Z5',
+    hallmarkLic: 'HM-916-WB-2026',
+    hsnCode: '7113'
+  };
 
   activePanel: InventoryPanel = 'catalog';
   currentPage = 1;
@@ -493,5 +514,62 @@ export class InventoryPage {
       return 2;
     }
     return 0;
+  }
+
+  // ── Jewellery Tag & Valuation Print Methods ──────────────────────────────
+  get tagBarcodeSvg(): SafeHtml {
+    const code = this.selectedProductForTag?.skuCode || 'SJ-JEWEL';
+    return this.sanitizer.bypassSecurityTrustHtml(this.printService.generateBarcodeSvg(code, 150, 28));
+  }
+
+  get tagQrSvg(): SafeHtml {
+    const p = this.selectedProductForTag;
+    const data = `SHREE|${p?.skuCode || 'SJ'}|${p?.purity || '22K'}|${p?.netWeightGrams || 0}g|₹${p?.currentTotalValue || 0}`;
+    return this.sanitizer.bypassSecurityTrustHtml(this.printService.generateQrSvg(data, 56));
+  }
+
+  getItemBarcodeSvg(sku: string): SafeHtml {
+    return this.sanitizer.bypassSecurityTrustHtml(this.printService.generateBarcodeSvg(sku || 'SJ-JEWEL', 130, 24));
+  }
+
+  getItemQrSvg(p: any): SafeHtml {
+    const data = `SHREE|${p.skuCode}|${p.purity}|${p.netWeightGrams}g`;
+    return this.sanitizer.bypassSecurityTrustHtml(this.printService.generateQrSvg(data, 48));
+  }
+
+  openTagModal(product: ProductSummary, format: 'tag' | 'sheet' = 'tag'): void {
+    this.selectedProductForTag = product;
+    this.tagFormat = format;
+    this.showTagModal = true;
+  }
+
+  setTagFormat(format: 'tag' | 'sheet'): void {
+    this.tagFormat = format;
+  }
+
+  closeTagModal(): void {
+    this.showTagModal = false;
+    this.selectedProductForTag = null;
+  }
+
+  openValuationModal(): void {
+    this.showValuationModal = true;
+  }
+
+  closeValuationModal(): void {
+    this.showValuationModal = false;
+  }
+
+  executeTagPrint(): void {
+    this.printService.triggerPrint(this.tagFormat === 'tag' ? 'tag' : 'a4');
+  }
+
+  executeValuationPrint(): void {
+    this.printService.triggerPrint('a4');
+  }
+
+  get tagSheetList(): any[] {
+    if (!this.selectedProductForTag) return [];
+    return Array(24).fill(this.selectedProductForTag);
   }
 }

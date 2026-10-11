@@ -1,0 +1,85 @@
+.about-page-container {
+  padding-bottom: 3rem;
+}
+
+.about-hero {
+  border-bottom: 1px solid rgba(201, 168, 76, 0.2);
+}
+
+.story-content p {
+  line-height: 1.75;
+}
+
+.pillar-card {
+  background: rgba(255, 253, 247, 0.85);
+  border: 1px solid rgba(201, 168, 76, 0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(201, 168, 76, 0.12);
+  }
+}
+
+.founder-card {
+  border: 1px solid rgba(201, 168, 76, 0.3);
+}
+
+.founder-image-wrapper {
+  max-width: 260px;
+  border-radius: 1.25rem;
+  overflow: hidden;
+  box-shadow: 0 12px 30px rgba(26, 26, 46, 0.14);
+}
+
+.founder-photo {
+  width: 100%;
+  height: 280px;
+  object-fit: cover;
+}
+
+.founder-quote {
+  background: rgba(201, 168, 76, 0.08);
+  border-left: 3px solid #c9a84c;
+}
+
+.milestone-box {
+  background: rgba(255, 253, 247, 0.9);
+  border: 1px solid rgba(201, 168, 76, 0.25);
+  position: relative;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    border-color: #c9a84c;
+  }
+}
+
+.milestone-year {
+  font-size: 2rem;
+  color: #c9a84c;
+  line-height: 1;
+}
+
+.cert-item {
+  background: rgba(255, 253, 247, 0.85);
+  border: 1px solid rgba(201, 168, 76, 0.22);
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #ffffff;
+    border-color: #c9a84c;
+  }
+}
+
+.cta-section {
+  background: radial-gradient(circle at center, rgba(201, 168, 76, 0.14), transparent 70%),
+              rgba(255, 253, 247, 0.95);
+  border: 1px solid rgba(201, 168, 76, 0.35);
+}
+
+@media (max-width: 767.98px) {
+  .founder-photo {
+    height: 220px;
+  }
+}

@@ -1,36 +1,185 @@
 <section class="app-page">
-  <div class="container">
-    <div class="section-kicker mb-2">Admin Overview</div>
-    <div class="section-title mb-4">Business Dashboard</div>
-    <div class="row g-3 mb-4">
-      <div class="col-md-6 col-xl-3"><div class="lux-card admin-kpi h-100"><div class="small text-secondary">Today's Sales</div><div class="font-display fs-2">₹{{ data?.todaySalesAmount | number:'1.0-0' }}</div></div></div>
-      <div class="col-md-6 col-xl-3"><div class="lux-card admin-kpi h-100"><div class="small text-secondary">Active Loans</div><div class="font-display fs-2">{{ data?.activeLoanCount }}</div></div></div>
-      <div class="col-md-6 col-xl-3"><div class="lux-card admin-kpi h-100"><div class="small text-secondary">Stock Value</div><div class="font-display fs-2">₹{{ data?.stockValueAtLivePrice | number:'1.0-0' }}</div></div></div>
-      <div class="col-md-6 col-xl-3"><div class="lux-card admin-kpi h-100"><div class="small text-secondary">Pending KYC</div><div class="font-display fs-2">{{ data?.pendingKYCCount }}</div></div></div>
+  <div class="container-fluid px-lg-4">
+    <!-- Top Action Banner with Home Page Navigation -->
+    <div class="lux-card p-4 mb-4 border border-warning-subtle" style="background: linear-gradient(135deg, rgba(26,26,46,0.95) 0%, rgba(22,33,62,0.95) 100%);">
+      <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
+        <div>
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <span class="badge lux-badge-secondary px-2 py-1"><i class="bi bi-shield-lock-fill me-1"></i> Admin Portal</span>
+            <span class="text-secondary small">Shree Jewellers Newtown, Kolkata</span>
+          </div>
+          <h1 class="font-display fs-2 text-gold-glow mb-1">Business Dashboard</h1>
+          <p class="text-light-emphasis small mb-0">Overview of jewelry sales, physical inventory, gold loans, and customer operations.</p>
+        </div>
+
+        <div class="d-flex flex-wrap align-items-center gap-2">
+          <!-- Primary Navigation to Home Page -->
+          <a routerLink="/" class="btn lux-btn lux-btn-gold d-inline-flex align-items-center gap-2 px-3 py-2 shadow-sm" title="Return to Public Customer Storefront">
+            <i class="bi bi-house-door-fill fs-5"></i>
+            <span class="fw-semibold">Visit Storefront</span>
+          </a>
+
+          <a routerLink="/admin/sales/create" class="btn lux-btn lux-btn-outline-gold d-inline-flex align-items-center gap-2 px-3 py-2 shadow-sm">
+            <i class="bi bi-receipt-cutoff fs-5"></i>
+            <span class="fw-semibold">New Bill / Invoice</span>
+          </a>
+
+          <a routerLink="/admin/loans" class="btn lux-btn lux-btn-outline-gold d-inline-flex align-items-center gap-2 px-3 py-2 shadow-sm">
+            <i class="bi bi-cash-stack fs-5 text-gold-glow"></i>
+            <span class="fw-semibold">Gold Loans</span>
+          </a>
+        </div>
+      </div>
     </div>
 
+    <!-- Quick Navigation Shortcuts Bar -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-4 col-xl-2">
+        <a routerLink="/" class="lux-card text-decoration-none p-3 h-100 d-flex flex-column align-items-center text-center hover-lift border-hover-gold">
+          <div class="rounded-circle p-2 mb-2" style="background: rgba(255,215,0,0.12);">
+            <i class="bi bi-house-door text-gold fs-4"></i>
+          </div>
+          <span class="fw-bold text-light small">Public Storefront</span>
+          <span class="text-secondary" style="font-size: 0.72rem;">Home & Catalog</span>
+        </a>
+      </div>
+
+      <div class="col-6 col-md-4 col-xl-2">
+        <a routerLink="/admin/sales/create" class="lux-card text-decoration-none p-3 h-100 d-flex flex-column align-items-center text-center hover-lift border-hover-gold">
+          <div class="rounded-circle p-2 mb-2" style="background: rgba(255,215,0,0.12);">
+            <i class="bi bi-printer text-gold fs-4"></i>
+          </div>
+          <span class="fw-bold text-light small">Point of Sale</span>
+          <span class="text-secondary" style="font-size: 0.72rem;">GST Bill & 80mm Slip</span>
+        </a>
+      </div>
+
+      <div class="col-6 col-md-4 col-xl-2">
+        <a routerLink="/admin/inventory" class="lux-card text-decoration-none p-3 h-100 d-flex flex-column align-items-center text-center hover-lift border-hover-gold">
+          <div class="rounded-circle p-2 mb-2" style="background: rgba(255,215,0,0.12);">
+            <i class="bi bi-upc-scan text-gold fs-4"></i>
+          </div>
+          <span class="fw-bold text-light small">Inventory</span>
+          <span class="text-secondary" style="font-size: 0.72rem;">Jewelry Tags & Audit</span>
+        </a>
+      </div>
+
+      <div class="col-6 col-md-4 col-xl-2">
+        <a routerLink="/admin/loans" class="lux-card text-decoration-none p-3 h-100 d-flex flex-column align-items-center text-center hover-lift border-hover-gold">
+          <div class="rounded-circle p-2 mb-2" style="background: rgba(255,215,0,0.12);">
+            <i class="bi bi-coin text-gold fs-4"></i>
+          </div>
+          <span class="fw-bold text-light small">Gold Loans</span>
+          <span class="text-secondary" style="font-size: 0.72rem;">Pawn Slips & Form B</span>
+        </a>
+      </div>
+
+      <div class="col-6 col-md-4 col-xl-2">
+        <a routerLink="/admin/customers" class="lux-card text-decoration-none p-3 h-100 d-flex flex-column align-items-center text-center hover-lift border-hover-gold">
+          <div class="rounded-circle p-2 mb-2" style="background: rgba(255,215,0,0.12);">
+            <i class="bi bi-person-check text-gold fs-4"></i>
+          </div>
+          <span class="fw-bold text-light small">Customers</span>
+          <span class="text-secondary" style="font-size: 0.72rem;">KYC & Accounts</span>
+        </a>
+      </div>
+
+      <div class="col-6 col-md-4 col-xl-2">
+        <a routerLink="/admin/reports" class="lux-card text-decoration-none p-3 h-100 d-flex flex-column align-items-center text-center hover-lift border-hover-gold">
+          <div class="rounded-circle p-2 mb-2" style="background: rgba(255,215,0,0.12);">
+            <i class="bi bi-graph-up-arrow text-gold fs-4"></i>
+          </div>
+          <span class="fw-bold text-light small">Reports</span>
+          <span class="text-secondary" style="font-size: 0.72rem;">Turnover & Audit</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- KPI Metric Cards -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-6 col-xl-3">
+        <a routerLink="/admin/sales/list" class="text-decoration-none d-block h-100">
+          <div class="lux-card admin-kpi h-100 p-4 border-hover-gold">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <span class="small text-secondary text-uppercase fw-semibold">Today's Sales</span>
+              <i class="bi bi-currency-rupee text-gold fs-5"></i>
+            </div>
+            <div class="font-display fs-2 text-gold">₹{{ data?.todaySalesAmount | number:'1.0-0' }}</div>
+            <div class="small text-secondary mt-1"><i class="bi bi-arrow-right-circle me-1"></i> View sales list</div>
+          </div>
+        </a>
+      </div>
+
+      <div class="col-md-6 col-xl-3">
+        <a routerLink="/admin/loans" class="text-decoration-none d-block h-100">
+          <div class="lux-card admin-kpi h-100 p-4 border-hover-gold">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <span class="small text-secondary text-uppercase fw-semibold">Active Gold Loans</span>
+              <i class="bi bi-safe text-gold fs-5"></i>
+            </div>
+            <div class="font-display fs-2 text-light">{{ data?.activeLoanCount }}</div>
+            <div class="small text-secondary mt-1"><i class="bi bi-arrow-right-circle me-1"></i> Manage active loans</div>
+          </div>
+        </a>
+      </div>
+
+      <div class="col-md-6 col-xl-3">
+        <a routerLink="/admin/inventory" class="text-decoration-none d-block h-100">
+          <div class="lux-card admin-kpi h-100 p-4 border-hover-gold">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <span class="small text-secondary text-uppercase fw-semibold">Stock Valuation</span>
+              <i class="bi bi-box-seam text-gold fs-5"></i>
+            </div>
+            <div class="font-display fs-2 text-gold">₹{{ data?.stockValueAtLivePrice | number:'1.0-0' }}</div>
+            <div class="small text-secondary mt-1"><i class="bi bi-arrow-right-circle me-1"></i> Stock audit & tags</div>
+          </div>
+        </a>
+      </div>
+
+      <div class="col-md-6 col-xl-3">
+        <a routerLink="/admin/customers" class="text-decoration-none d-block h-100">
+          <div class="lux-card admin-kpi h-100 p-4 border-hover-gold">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <span class="small text-secondary text-uppercase fw-semibold">Pending KYC</span>
+              <i class="bi bi-person-exclamation text-gold fs-5"></i>
+            </div>
+            <div class="font-display fs-2 text-light">{{ data?.pendingKYCCount }}</div>
+            <div class="small text-secondary mt-1"><i class="bi bi-arrow-right-circle me-1"></i> Review KYC documents</div>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Charts / Trend Section -->
     <div class="row g-4">
       <div class="col-lg-6">
         <div class="lux-card p-4 h-100">
-          <div class="font-display fs-2 mb-3">Sales Trend</div>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="font-display fs-3 text-gold">Sales Trend</div>
+            <span class="badge lux-badge-secondary">12-Month Turnover</span>
+          </div>
           @for (point of data?.salesTrend12Months ?? []; track point.month) {
             <div class="mb-3">
               <div class="d-flex justify-content-between small mb-1">
-                <span>{{ point.month }}</span>
-                <span>₹{{ point.amount | number:'1.0-0' }}</span>
+                <span class="text-secondary fw-semibold">{{ point.month }}</span>
+                <span class="text-light fw-bold">₹{{ point.amount | number:'1.0-0' }}</span>
               </div>
               <div class="chart-bar" [style.width.%]="(point.amount / (data?.todaySalesAmount || 1)) * 100"></div>
             </div>
           }
         </div>
       </div>
+
       <div class="col-lg-6">
         <div class="lux-card p-4 h-100">
-          <div class="font-display fs-2 mb-3">Category Mix</div>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="font-display fs-3 text-gold">Category Mix</div>
+            <span class="badge lux-badge-secondary">Revenue Share</span>
+          </div>
           @for (row of data?.salesByCategory ?? []; track row.category) {
             <div class="d-flex justify-content-between border-bottom py-2">
-              <span>{{ row.category }}</span>
-              <span>{{ row.percent }}%</span>
+              <span class="text-light">{{ row.category }}</span>
+              <span class="text-gold fw-bold">{{ row.percent }}%</span>
             </div>
           }
         </div>

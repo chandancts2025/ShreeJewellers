@@ -1,25 +1,196 @@
-<section class="app-page">
+<section class="app-page home-page-container">
   <div class="container">
-    <section class="hero-panel p-4 p-lg-5 mb-5">
+    <!-- Hero Banner -->
+    <section class="hero-panel p-4 p-md-5 mb-5">
       <div class="row align-items-center g-4">
         <div class="col-lg-7">
-          <div class="section-kicker mb-3">Luxury Jewellery House</div>
-          <h1 class="display-3 font-display mb-3">{{ data?.heroHeadline }}</h1>
-          <p class="lead text-white-50 mb-4">{{ data?.heroSubheadline }}</p>
-          <div class="d-flex flex-wrap gap-3">
-            <a class="btn lux-btn lux-btn-primary" routerLink="/register">Begin Your Journey</a>
-            <a class="btn lux-btn lux-btn-outline text-white border-light" routerLink="/gold-loan">Explore Gold Loans</a>
+          <div class="hero-badge mb-3 d-inline-flex align-items-center gap-2">
+            <span class="badge-dot"></span>
+            <span>Heritage Since {{ homeData().trustedSinceYear }} · Newtown, Kolkata</span>
+          </div>
+          <h1 class="display-4 display-md-3 font-display mb-3 hero-title">{{ homeData().heroHeadline }}</h1>
+          <p class="lead text-white-75 mb-4 hero-lead">{{ homeData().heroSubheadline }}</p>
+          <div class="d-flex flex-wrap gap-3 mb-4 mb-lg-0">
+            <a class="btn lux-btn lux-btn-primary px-4 py-3" routerLink="/gold-loan">
+              <i class="bi bi-cash-coin me-2"></i>Instant Gold Loans
+            </a>
+            <a class="btn lux-btn lux-btn-outline text-white border-light px-4 py-3" routerLink="/contact">
+              <i class="bi bi-geo-alt me-2"></i>Visit Showroom
+            </a>
+            <a class="btn lux-btn lux-btn-secondary px-4 py-3" routerLink="/about">
+              <i class="bi bi-shield-check me-2"></i>Our Heritage
+            </a>
           </div>
         </div>
+
         <div class="col-lg-5">
-          <div class="lux-card p-4 h-100 text-dark">
-            <div class="section-kicker mb-2">Why Families Choose Us</div>
-            @for (highlight of data?.highlights ?? []; track highlight.title) {
-              <div class="d-flex gap-3 mb-3">
-                <div class="text-warning fs-4"><i class="bi {{ highlight.icon }}"></i></div>
+          <div class="hero-stats-panel p-4 h-100">
+            <div class="section-kicker mb-3 text-warning">Showroom Hallmarks</div>
+            <div class="row g-3 mb-4">
+              <div class="col-6">
+                <div class="stat-box p-3 text-center">
+                  <div class="stat-number">28+</div>
+                  <div class="stat-label">Years of Heritage</div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="stat-box p-3 text-center">
+                  <div class="stat-number">100%</div>
+                  <div class="stat-label">BIS Hallmarked</div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="stat-box p-3 text-center">
+                  <div class="stat-number">20 Min</div>
+                  <div class="stat-label">Loan Disbursal</div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="stat-box p-3 text-center">
+                  <div class="stat-number">15,000+</div>
+                  <div class="stat-label">Trusted Clients</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="hero-quote p-3 rounded-3">
+              <div class="d-flex gap-3 align-items-start">
+                <i class="bi bi-quote fs-2 text-warning lh-1"></i>
+                <div class="small text-white-75">
+                  "Every gram weighed with honesty, every stone certified with pride, and every customer treated as sacred family."
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Trust Highlights -->
+    <section class="mb-5">
+      <div class="row g-4">
+        @for (highlight of homeData().highlights; track highlight.title) {
+          <div class="col-md-6 col-xl-3">
+            <div class="lux-card p-4 h-100 highlight-card">
+              <div class="highlight-icon mb-3">
+                <i class="bi {{ highlight.icon }}"></i>
+              </div>
+              <h3 class="h5 fw-bold mb-2">{{ highlight.title }}</h3>
+              <p class="text-secondary small mb-0">{{ highlight.description }}</p>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- Featured Masterpiece Showcase -->
+    <section class="mb-5">
+      <div class="d-flex flex-wrap justify-content-between align-items-end mb-4 gap-3">
+        <div>
+          <div class="section-kicker mb-2">Masterpiece Creations</div>
+          <h2 class="section-title mb-0">Signature Jewellery Showcase</h2>
+        </div>
+        <a class="btn lux-btn lux-btn-outline" routerLink="/contact">
+          <i class="bi bi-calendar-event me-2"></i>Book Showroom Consultation
+        </a>
+      </div>
+
+      <div class="row g-4">
+        @for (item of showcaseItems; track item.name) {
+          <div class="col-md-6 col-lg-4">
+            <div class="lux-card h-100 showcase-card overflow-hidden">
+              <div class="showcase-image-wrapper">
+                <img [src]="item.imageUrl" [alt]="item.name" class="showcase-img" loading="lazy">
+                <div class="showcase-badge">{{ item.badge }}</div>
+                <div class="showcase-purity">{{ item.purity }}</div>
+              </div>
+              <div class="p-4 d-flex flex-column justify-content-between flex-grow-1">
                 <div>
-                  <div class="fw-bold">{{ highlight.title }}</div>
-                  <div class="text-secondary small">{{ highlight.description }}</div>
+                  <div class="small text-uppercase text-warning fw-bold mb-1">{{ item.category }}</div>
+                  <h3 class="h5 font-display fw-bold mb-2">{{ item.name }}</h3>
+                  <p class="text-secondary small mb-3">{{ item.description }}</p>
+                </div>
+                <div class="d-flex justify-content-between align-items-center pt-3 border-top border-warning-subtle">
+                  <span class="small fw-bold text-dark">Weight: {{ item.weight }}</span>
+                  <a routerLink="/contact" class="btn btn-sm lux-btn lux-btn-primary px-3">
+                    Inquire <i class="bi bi-arrow-right ms-1"></i>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- Featured Metal Categories -->
+    <section class="mb-5">
+      <div class="section-kicker mb-2">Artisan Categories</div>
+      <h2 class="section-title mb-4">Curated for Every Milestone</h2>
+      <div class="row g-4">
+        @for (category of homeData().featuredCategories; track category.categoryId) {
+          <div class="col-sm-6 col-xl-3">
+            <div class="lux-card h-100 p-4 category-card">
+              <div class="category-metal-badge mb-3">{{ category.metalType }}</div>
+              <h3 class="font-display h4 mb-2">{{ category.name }}</h3>
+              <p class="text-secondary small mb-3">{{ category.description }}</p>
+              <div class="category-meta d-flex justify-content-between align-items-center mt-auto pt-3 border-top border-warning-subtle">
+                <span class="small text-secondary">{{ category.productCount }} Designs Catalogued</span>
+                <i class="bi bi-arrow-up-right text-warning fs-5"></i>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- About & Heritage Story Card -->
+    <section class="row g-4 mb-5">
+      <div class="col-lg-6">
+        <div class="lux-card p-4 p-md-5 h-100 heritage-card">
+          <div class="section-kicker mb-2">Heritage Story</div>
+          <h2 class="font-display display-6 mb-3">Honouring Traditions Since 1998</h2>
+          <p class="text-secondary lead fs-6 mb-4">{{ homeData().aboutSummary }}</p>
+          <div class="heritage-pillars d-flex flex-column gap-3 mb-4">
+            <div class="d-flex align-items-center gap-3">
+              <div class="pillar-icon"><i class="bi bi-shield-check"></i></div>
+              <div>
+                <div class="fw-bold">100% Laser-Engraved HUID</div>
+                <div class="small text-secondary">Every ornament has a traceable BIS hallmark code.</div>
+              </div>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+              <div class="pillar-icon"><i class="bi bi-award"></i></div>
+              <div>
+                <div class="fw-bold">Lifetime Exchange & Polish</div>
+                <div class="small text-secondary">Complimentary ultrasonic cleaning and fair buyback value.</div>
+              </div>
+            </div>
+          </div>
+          <a class="btn lux-btn lux-btn-primary" routerLink="/about">
+            Discover Our Complete Story <i class="bi bi-arrow-right ms-2"></i>
+          </a>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="lux-card p-4 p-md-5 h-100 testimonials-card">
+          <div class="section-kicker mb-2">Family Testimonials</div>
+          <h2 class="font-display display-6 mb-4">Generations of Loyalty</h2>
+          <div class="d-flex flex-column gap-4">
+            @for (testimonial of homeData().testimonials; track testimonial.customerName) {
+              <div class="testimonial-bubble p-3 rounded-3">
+                <div class="star-rating text-warning mb-2">
+                  <i class="bi bi-star-fill"></i>
+                  <i class="bi bi-star-fill"></i>
+                  <i class="bi bi-star-fill"></i>
+                  <i class="bi bi-star-fill"></i>
+                  <i class="bi bi-star-fill"></i>
+                </div>
+                <p class="mb-2 fst-italic text-dark">“{{ testimonial.quote }}”</p>
+                <div class="d-flex justify-content-between align-items-center small text-secondary">
+                  <span class="fw-bold text-dark">{{ testimonial.customerName }}</span>
+                  <span><i class="bi bi-geo-alt me-1"></i>{{ testimonial.location }}</span>
                 </div>
               </div>
             }
@@ -28,54 +199,22 @@
       </div>
     </section>
 
-    <section class="mb-5">
-      <div class="section-kicker mb-2">Featured Categories</div>
-      <div class="section-title mb-4">Crafted for moments that matter</div>
-      <div class="row g-4">
-        @for (category of data?.featuredCategories ?? []; track category.categoryId) {
-          <div class="col-sm-6 col-xl-3">
-            <div class="lux-card h-100 p-4">
-              <div class="small text-uppercase text-secondary mb-2">{{ category.metalType }}</div>
-              <h3 class="font-display">{{ category.name }}</h3>
-              <p class="text-secondary">{{ category.description }}</p>
-              <div class="fw-bold">{{ category.productCount }} items</div>
-            </div>
+    <!-- Quick Navigation / Concierge Bar -->
+    <section class="lux-card p-4 p-md-5 cta-banner">
+      <div class="row align-items-center g-4">
+        <div class="col-lg-7">
+          <div class="section-kicker text-warning mb-2">Showroom Concierge</div>
+          <h2 class="font-display h2 mb-2">Visit Our Flagship Showroom in Newtown, Kolkata</h2>
+          <p class="text-secondary mb-0">
+            Open Monday to Saturday (10:30 AM - 8:30 PM). Dedicated VIP bridal consultation lounge available upon reservation.
+          </p>
+        </div>
+        <div class="col-lg-5 text-lg-end">
+          <div class="d-flex flex-wrap justify-content-lg-end gap-2">
+            @for (link of homeData().quickLinks; track link.route) {
+              <a class="btn lux-btn lux-btn-outline" [routerLink]="link.route">{{ link.title }}</a>
+            }
           </div>
-        }
-      </div>
-    </section>
-
-    <section class="row g-4 mb-5">
-      <div class="col-lg-6">
-        <div class="lux-card p-4 h-100">
-          <div class="section-kicker mb-2">About The Shop</div>
-          <div class="section-title mb-3">Trusted heritage, modern service</div>
-          <p class="text-secondary mb-0">{{ data?.aboutSummary }}</p>
-        </div>
-      </div>
-      <div class="col-lg-6">
-        <div class="lux-card p-4 h-100">
-          <div class="section-kicker mb-2">Testimonials</div>
-          @for (testimonial of data?.testimonials ?? []; track testimonial.customerName) {
-            <blockquote class="mb-3">
-              <p class="mb-1">“{{ testimonial.quote }}”</p>
-              <footer class="small text-secondary">{{ testimonial.customerName }} · {{ testimonial.location }}</footer>
-            </blockquote>
-          }
-        </div>
-      </div>
-    </section>
-
-    <section class="lux-card p-4">
-      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
-        <div>
-          <div class="section-kicker mb-2">Quick Links</div>
-          <div class="section-title">Everything important, one tap away</div>
-        </div>
-        <div class="d-flex flex-wrap gap-2">
-          @for (link of data?.quickLinks ?? []; track link.route) {
-            <a class="btn lux-btn lux-btn-outline" [routerLink]="link.route">{{ link.title }}</a>
-          }
         </div>
       </div>
     </section>

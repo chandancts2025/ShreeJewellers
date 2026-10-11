@@ -305,6 +305,7 @@ export interface GoldLoanResponse {
   customerUserId: string;
   customerName: string;
   customerCode: string;
+  customerPhone?: string | null;
   loanDate: string;
   maturityDate: string;
   closedDate?: string | null;

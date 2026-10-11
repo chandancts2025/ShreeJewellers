@@ -11,8 +11,11 @@
           </div>
         </div>
         <div class="btn-group" role="group">
-          <button class="btn lux-btn lux-btn-primary" type="button" (click)="printInvoice()" title="Print Tax Invoice">
-            <i class="bi bi-printer me-2"></i> Print Invoice
+          <button class="btn lux-btn lux-btn-primary" type="button" (click)="openReceiptModal('a4')" title="Print Full A4 Tax Invoice">
+            <i class="bi bi-file-earmark-text me-2"></i> Print A4 Invoice
+          </button>
+          <button class="btn btn-dark border-warning text-warning" type="button" (click)="openReceiptModal('80mm')" title="Print 80mm Thermal POS Receipt">
+            <i class="bi bi-receipt me-2"></i> 80mm POS Slip
           </button>
           <button class="btn lux-btn lux-btn-secondary" type="button" (click)="downloadInvoice()" title="Download Invoice">
             <i class="bi bi-file-pdf me-2"></i> PDF
@@ -273,4 +276,11 @@
       </div>
     }
   </div>
+
+  @if (order) {
+    <app-receipt-preview-modal
+      [order]="order"
+      [isOpen]="showReceiptModal"
+      (close)="closeReceiptModal()" />
+  }
 </section>

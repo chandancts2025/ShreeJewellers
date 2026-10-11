@@ -1,42 +1,79 @@
 <app-price-ticker></app-price-ticker>
+
 <nav class="navbar navbar-expand-lg navbar-blur border-bottom border-warning-subtle sticky-top">
-  <div class="container py-2">
-    <a class="navbar-brand font-display fs-2" routerLink="/">Shree Jewellers</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
-      <span class="navbar-toggler-icon"></span>
+  <div class="container py-1 py-lg-2">
+    <a class="navbar-brand font-display fs-2 d-flex align-items-center gap-2" routerLink="/" (click)="closeNav()">
+      <span class="gold-brand-mark"><i class="bi bi-gem"></i></span>
+      <span class="brand-text">Shree Jewellers</span>
+    </a>
+
+    <button
+      class="navbar-toggler custom-toggler border-0 p-2"
+      type="button"
+      [attr.aria-expanded]="isNavOpen()"
+      (click)="toggleNav()"
+      aria-label="Toggle navigation">
+      <div class="hamburger-icon" [class.is-active]="isNavOpen()">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
     </button>
-    <div class="collapse navbar-collapse" id="mainNav">
-      <div class="navbar-nav ms-auto align-items-lg-center gap-lg-3">
-        <a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a>
-        <a class="nav-link" routerLink="/about" routerLinkActive="active">About</a>
-        <a class="nav-link" routerLink="/contact" routerLinkActive="active">Contact</a>
-        <a class="nav-link" routerLink="/gold-loan" routerLinkActive="active">Gold Loan</a>
+
+    @if (isNavOpen()) {
+      <div class="nav-backdrop d-lg-none" (click)="closeNav()"></div>
+    }
+
+    <div class="collapse navbar-collapse" [class.show]="isNavOpen()" id="mainNav">
+      <div class="navbar-nav ms-auto align-items-lg-center gap-1 gap-lg-2 pt-3 pt-lg-0">
+        <a class="nav-link px-3 py-2" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeNav()">
+          <i class="bi bi-house me-2 d-lg-none text-warning"></i>Home
+        </a>
+        <a class="nav-link px-3 py-2" routerLink="/about" routerLinkActive="active" (click)="closeNav()">
+          <i class="bi bi-info-circle me-2 d-lg-none text-warning"></i>About Us
+        </a>
+        <a class="nav-link px-3 py-2" routerLink="/gold-loan" routerLinkActive="active" (click)="closeNav()">
+          <i class="bi bi-cash-coin me-2 d-lg-none text-warning"></i>Gold Loan
+        </a>
+        <a class="nav-link px-3 py-2" routerLink="/contact" routerLinkActive="active" (click)="closeNav()">
+          <i class="bi bi-geo-alt me-2 d-lg-none text-warning"></i>Contact
+        </a>
 
         @if (!auth.isAuthenticated()) {
-          <a class="btn lux-btn lux-btn-outline" routerLink="/login">Login</a>
-          <a class="btn lux-btn lux-btn-primary" routerLink="/register">Register</a>
+          <div class="d-flex flex-column flex-lg-row gap-2 mt-3 mt-lg-0 pt-2 pt-lg-0 border-top border-lg-0 border-warning-subtle">
+            <a class="btn lux-btn lux-btn-outline px-4 text-center" routerLink="/login" (click)="closeNav()">
+              <i class="bi bi-box-arrow-in-right me-1"></i>Login
+            </a>
+            <a class="btn lux-btn lux-btn-primary px-4 text-center" routerLink="/register" (click)="closeNav()">
+              <i class="bi bi-person-plus me-1"></i>Register
+            </a>
+          </div>
         } @else {
-          <!-- Admin Navigation Menu -->
+          <!-- Admin Operations Menu -->
           @if (auth.hasAnyRole(['Staff', 'Admin', 'SuperAdmin'])) {
-            <div class="dropdown">
-              <button class="nav-link dropdown-toggle" data-bs-toggle="dropdown" type="button">
-                <i class="bi bi-box-seam me-1"></i>Admin
+            <div class="dropdown custom-dropdown">
+              <button
+                class="nav-link dropdown-toggle px-3 py-2 border-0 bg-transparent text-start w-100"
+                type="button"
+                [class.show]="activeDropdown() === 'admin'"
+                (click)="toggleDropdown('admin', $event)">
+                <i class="bi bi-shield-lock text-warning me-1"></i>Admin
               </button>
-              <ul class="dropdown-menu">
-                <li><a class="dropdown-item" routerLink="/admin/dashboard"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
+              <ul class="dropdown-menu shadow-lg border-warning-subtle" [class.show]="activeDropdown() === 'admin'">
+                <li><a class="dropdown-item py-2" routerLink="/admin/dashboard" (click)="closeNav()"><i class="bi bi-speedometer2 me-2 text-warning"></i>Dashboard</a></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><strong class="dropdown-header">Operations</strong></li>
-                <li><a class="dropdown-item" routerLink="/admin/customers"><i class="bi bi-people me-2"></i>Customers</a></li>
-                <li><a class="dropdown-item" routerLink="/admin/inventory"><i class="bi bi-box2 me-2"></i>Inventory & Products</a></li>
-                <li><a class="dropdown-item" routerLink="/admin/sales"><i class="bi bi-receipt me-2"></i>Sales & Billing</a></li>
-                <li><a class="dropdown-item" routerLink="/admin/loans"><i class="bi bi-cash-coin me-2"></i>Gold Loans</a></li>
+                <li><strong class="dropdown-header text-uppercase small">Operations</strong></li>
+                <li><a class="dropdown-item py-2" routerLink="/admin/customers" (click)="closeNav()"><i class="bi bi-people me-2"></i>Customers</a></li>
+                <li><a class="dropdown-item py-2" routerLink="/admin/inventory" (click)="closeNav()"><i class="bi bi-box2 me-2"></i>Inventory & Products</a></li>
+                <li><a class="dropdown-item py-2" routerLink="/admin/sales" (click)="closeNav()"><i class="bi bi-receipt me-2"></i>Sales & Billing</a></li>
+                <li><a class="dropdown-item py-2" routerLink="/admin/loans" (click)="closeNav()"><i class="bi bi-cash-stack me-2"></i>Gold Loans</a></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><strong class="dropdown-header">Reporting</strong></li>
-                <li><a class="dropdown-item" routerLink="/admin/reports"><i class="bi bi-graph-up me-2"></i>Reports & Analytics</a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><strong class="dropdown-header">Configuration</strong></li>
+                <li><strong class="dropdown-header text-uppercase small">Reports</strong></li>
+                <li><a class="dropdown-item py-2" routerLink="/admin/reports" (click)="closeNav()"><i class="bi bi-graph-up me-2"></i>Reports & Analytics</a></li>
                 @if (auth.hasAnyRole(['SuperAdmin'])) {
-                  <li><a class="dropdown-item" routerLink="/admin/settings"><i class="bi bi-gear me-2"></i>Settings</a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><strong class="dropdown-header text-uppercase small">Config</strong></li>
+                  <li><a class="dropdown-item py-2" routerLink="/admin/settings" (click)="closeNav()"><i class="bi bi-gear me-2"></i>Settings</a></li>
                 }
               </ul>
             </div>
@@ -44,41 +81,56 @@
 
           <!-- Customer Account Menu -->
           @if (auth.hasAnyRole(['Customer'])) {
-            <div class="dropdown">
-              <button class="nav-link dropdown-toggle" data-bs-toggle="dropdown" type="button">
-                <i class="bi bi-wallet2 me-1"></i>Account
+            <div class="dropdown custom-dropdown">
+              <button
+                class="nav-link dropdown-toggle px-3 py-2 border-0 bg-transparent text-start w-100"
+                type="button"
+                [class.show]="activeDropdown() === 'account'"
+                (click)="toggleDropdown('account', $event)">
+                <i class="bi bi-wallet2 text-warning me-1"></i>My Account
               </button>
-              <ul class="dropdown-menu">
-                <li><a class="dropdown-item" routerLink="/customer/dashboard"><i class="bi bi-house me-2"></i>Dashboard</a></li>
+              <ul class="dropdown-menu shadow-lg border-warning-subtle" [class.show]="activeDropdown() === 'account'">
+                <li><a class="dropdown-item py-2" routerLink="/customer/dashboard" (click)="closeNav()"><i class="bi bi-house me-2 text-warning"></i>Dashboard</a></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><strong class="dropdown-header">My Information</strong></li>
-                <li><a class="dropdown-item" routerLink="/customer/profile"><i class="bi bi-person me-2"></i>Profile</a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><strong class="dropdown-header">My Activities</strong></li>
-                <li><a class="dropdown-item" routerLink="/customer/loans"><i class="bi bi-cash-coin me-2"></i>My Loans</a></li>
-                <li><a class="dropdown-item" routerLink="/customer/orders"><i class="bi bi-receipt me-2"></i>My Orders</a></li>
+                <li><a class="dropdown-item py-2" routerLink="/customer/loans" (click)="closeNav()"><i class="bi bi-cash-coin me-2"></i>My Gold Loans</a></li>
+                <li><a class="dropdown-item py-2" routerLink="/customer/orders" (click)="closeNav()"><i class="bi bi-receipt me-2"></i>My Orders & Invoices</a></li>
+                <li><a class="dropdown-item py-2" routerLink="/customer/profile" (click)="closeNav()"><i class="bi bi-person me-2"></i>My Profile & KYC</a></li>
               </ul>
             </div>
           }
 
-          <button class="btn lux-btn lux-btn-outline" type="button" (click)="goToDashboard()">Dashboard</button>
+          <!-- Quick Dashboard Button -->
+          <button class="btn lux-btn lux-btn-outline px-3 py-2 text-start text-lg-center" type="button" (click)="goToDashboard()">
+            <i class="bi bi-grid-fill me-1 text-warning"></i>Dashboard
+          </button>
 
           <!-- User Profile Dropdown -->
-          <div class="dropdown">
-            <button class="btn lux-btn lux-btn-primary dropdown-toggle" data-bs-toggle="dropdown" type="button">
-              <i class="bi bi-person-circle me-2"></i>{{ displayName() }}
+          <div class="dropdown custom-dropdown">
+            <button
+              class="btn lux-btn lux-btn-primary dropdown-toggle w-100 px-3 py-2 d-flex align-items-center justify-content-between justify-content-lg-center gap-2"
+              type="button"
+              [class.show]="activeDropdown() === 'user'"
+              (click)="toggleDropdown('user', $event)">
+              <span class="d-flex align-items-center gap-2">
+                <i class="bi bi-person-circle"></i>
+                <span class="user-name-trim">{{ displayName() }}</span>
+              </span>
             </button>
-            <ul class="dropdown-menu dropdown-menu-end">
+            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-warning-subtle" [class.show]="activeDropdown() === 'user'">
               @if (auth.hasAnyRole(['Customer'])) {
-                <li><strong class="dropdown-header">Customer Options</strong></li>
-                <li><a class="dropdown-item" routerLink="/customer/profile"><i class="bi bi-person me-2"></i>Profile</a></li>
+                <li><strong class="dropdown-header text-uppercase small">Customer Options</strong></li>
+                <li><a class="dropdown-item py-2" routerLink="/customer/profile" (click)="closeNav()"><i class="bi bi-person me-2"></i>Profile Details</a></li>
               }
               @if (auth.hasAnyRole(['Staff', 'Admin', 'SuperAdmin'])) {
-                <li><strong class="dropdown-header">Admin Options</strong></li>
-                <li><a class="dropdown-item" routerLink="/admin/dashboard"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
+                <li><strong class="dropdown-header text-uppercase small">Staff Options</strong></li>
+                <li><a class="dropdown-item py-2" routerLink="/admin/dashboard" (click)="closeNav()"><i class="bi bi-speedometer2 me-2"></i>Admin Center</a></li>
               }
               <li><hr class="dropdown-divider"></li>
-              <li><button class="dropdown-item" type="button" (click)="auth.logout()"><i class="bi bi-box-arrow-right me-2"></i>Logout</button></li>
+              <li>
+                <button class="dropdown-item py-2 text-danger" type="button" (click)="logout()">
+                  <i class="bi bi-box-arrow-right me-2"></i>Sign Out
+                </button>
+              </li>
             </ul>
           </div>
         }

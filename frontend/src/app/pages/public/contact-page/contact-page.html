@@ -1,65 +1,195 @@
-<section class="app-page">
+<section class="app-page contact-page-container">
   <div class="container">
-    <div class="row g-4">
+    <div class="contact-header text-center mb-5 py-4">
+      <div class="section-kicker mb-2">Connect With Us</div>
+      <h1 class="display-4 font-display fw-bold mb-3">Visit Our Showroom & Corporate Office</h1>
+      <p class="lead text-secondary mx-auto" style="max-width: 680px;">
+        Whether you are planning bridal trousseau purchases, looking for bespoke diamond designs, or need immediate gold loan support, our concierge team is at your service.
+      </p>
+    </div>
+
+    <div class="row g-4 mb-5">
+      <!-- Left Column: Showroom Information & Quick Contact -->
       <div class="col-lg-5">
-        <div class="lux-card p-4 h-100">
-          <div class="section-kicker mb-2">Visit Us</div>
-          <div class="section-title mb-4">{{ data?.shopName }}</div>
-          <div class="mb-3">
-            <div class="fw-bold">Address</div>
-            <div class="text-secondary">{{ data?.address }}</div>
-          </div>
-          <div class="mb-3">
-            <div class="fw-bold">Phone</div>
-            <a class="text-secondary" [href]="'tel:' + data?.phone">{{ data?.phone }}</a>
-          </div>
-          <div class="mb-3">
-            <div class="fw-bold">Email</div>
-            <a class="text-secondary" [href]="'mailto:' + data?.email">{{ data?.email }}</a>
-          </div>
-          <div class="mb-3">
-            <div class="fw-bold">WhatsApp</div>
-            <a class="text-secondary" [href]="'https://wa.me/' + data?.whatsAppNumber" target="_blank" rel="noreferrer">
-              Chat on WhatsApp
-            </a>
-          </div>
+        <div class="lux-card p-4 p-md-5 h-100 d-flex flex-column justify-content-between">
           <div>
-            <div class="fw-bold">Hours</div>
-            <div class="text-secondary">{{ data?.businessHours }}</div>
+            <div class="section-kicker mb-2">Showroom Address</div>
+            <h2 class="font-display h3 mb-4 text-dark">{{ contactData().shopName }} Flagship</h2>
+
+            <div class="contact-info-block mb-4">
+              <div class="d-flex gap-3 align-items-start">
+                <div class="contact-icon-circle"><i class="bi bi-geo-alt-fill"></i></div>
+                <div>
+                  <div class="fw-bold text-dark">Address</div>
+                  <div class="text-secondary small">{{ contactData().address }}</div>
+                  <div class="landmark-tag mt-1">Landmark: Sanhita Township, Newtown, 700135, WB</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="contact-info-block mb-4">
+              <div class="d-flex gap-3 align-items-start">
+                <div class="contact-icon-circle"><i class="bi bi-telephone-fill"></i></div>
+                <div>
+                  <div class="fw-bold text-dark">Phone Inquiries</div>
+                  <a class="text-secondary small d-block text-decoration-none fw-semibold" [href]="'tel:' + contactData().phone">
+                    {{ contactData().phone }}
+                  </a>
+                  <span class="badge bg-success-subtle text-success border border-success-subtle mt-1">10:30 AM – 8:30 PM IST</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="contact-info-block mb-4">
+              <div class="d-flex gap-3 align-items-start">
+                <div class="contact-icon-circle whatsapp-circle"><i class="bi bi-whatsapp"></i></div>
+                <div>
+                  <div class="fw-bold text-dark">WhatsApp Concierge</div>
+                  <a class="text-secondary small d-block mb-2" [href]="whatsAppLink()" target="_blank" rel="noopener noreferrer">
+                    +{{ contactData().whatsAppNumber }}
+                  </a>
+                  <a class="btn btn-sm btn-outline-success rounded-pill px-3" [href]="whatsAppLink()" target="_blank" rel="noopener noreferrer">
+                    <i class="bi bi-whatsapp me-1"></i>Start WhatsApp Chat
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div class="contact-info-block mb-4">
+              <div class="d-flex gap-3 align-items-start">
+                <div class="contact-icon-circle"><i class="bi bi-envelope-fill"></i></div>
+                <div>
+                  <div class="fw-bold text-dark">Official Email</div>
+                  <a class="text-secondary small d-block text-decoration-none" [href]="'mailto:' + contactData().email">
+                    {{ contactData().email }}
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div class="contact-info-block mb-4">
+              <div class="d-flex gap-3 align-items-start">
+                <div class="contact-icon-circle"><i class="bi bi-clock-fill"></i></div>
+                <div>
+                  <div class="fw-bold text-dark">Visiting Hours</div>
+                  <div class="text-secondary small">{{ contactData().businessHours }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="visiting-perks p-3 rounded-3 mt-3">
+            <div class="small fw-bold text-dark mb-1"><i class="bi bi-shield-check text-warning me-1"></i>Visitor Amenities</div>
+            <div class="small text-secondary">Valet parking assistance, air-conditioned bridal lounge, and certified digital purity test counter.</div>
           </div>
         </div>
       </div>
+
+      <!-- Right Column: Interactive Inquiry Form & Embedded Map -->
       <div class="col-lg-7">
-        <div class="lux-card p-4">
-          <div class="section-kicker mb-2">Contact Form</div>
-          <div class="section-title mb-4">We would love to help</div>
+        <div class="lux-card p-4 p-md-5 mb-4">
+          <div class="section-kicker mb-2">Message The Team</div>
+          <h2 class="font-display h3 mb-4">Send a Confidential Inquiry</h2>
+
           <form [formGroup]="form" (ngSubmit)="submit()" class="row g-3">
             <div class="col-md-6">
-              <label class="form-label">Name</label>
-              <input class="form-control" formControlName="name">
+              <label class="form-label small fw-bold text-dark">Your Name *</label>
+              <input
+                class="form-control lux-input"
+                placeholder="e.g. Rajesh Sharma"
+                formControlName="name"
+                [class.is-invalid]="form.controls.name.touched && form.controls.name.invalid">
+              @if (form.controls.name.touched && form.controls.name.invalid) {
+                <div class="invalid-feedback small">Please provide your full name.</div>
+              }
             </div>
+
             <div class="col-md-6">
-              <label class="form-label">Phone</label>
-              <input class="form-control" formControlName="phone">
+              <label class="form-label small fw-bold text-dark">Mobile Number *</label>
+              <input
+                class="form-control lux-input"
+                placeholder="e.g. 9820123456"
+                formControlName="phone"
+                [class.is-invalid]="form.controls.phone.touched && form.controls.phone.invalid">
+              @if (form.controls.phone.touched && form.controls.phone.invalid) {
+                <div class="invalid-feedback small">Please provide a valid 10-digit mobile number.</div>
+              }
             </div>
+
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-dark">Email Address (Optional)</label>
+              <input
+                class="form-control lux-input"
+                type="email"
+                placeholder="name@example.com"
+                formControlName="email"
+                [class.is-invalid]="form.controls.email.touched && form.controls.email.invalid">
+              @if (form.controls.email.touched && form.controls.email.invalid) {
+                <div class="invalid-feedback small">Please enter a valid email address.</div>
+              }
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-dark">Inquiry Purpose *</label>
+              <select class="form-select lux-input" formControlName="subject">
+                <option value="Bridal Consultation">Bridal Trouseau & Necklace Sets</option>
+                <option value="Custom Design">Custom Gold/Diamond Jewellery Design</option>
+                <option value="Gold Loan Appraisal">Instant Gold Loan Appraisal & Rate</option>
+                <option value="Hallmark & Valuation">Hallmark Verification & Valuation</option>
+                <option value="General Inquiry">General Store Inquiry</option>
+              </select>
+            </div>
+
             <div class="col-12">
-              <label class="form-label">Email</label>
-              <input class="form-control" formControlName="email">
+              <label class="form-label small fw-bold text-dark">Your Message / Requirement *</label>
+              <textarea
+                class="form-control lux-input"
+                rows="4"
+                placeholder="Tell us about the jewellery items you are looking for, expected budget, or loan requirement..."
+                formControlName="message"
+                [class.is-invalid]="form.controls.message.touched && form.controls.message.invalid"></textarea>
+              @if (form.controls.message.touched && form.controls.message.invalid) {
+                <div class="invalid-feedback small">Please enter a message of at least 10 characters.</div>
+              }
             </div>
-            <div class="col-12">
-              <label class="form-label">Message</label>
-              <textarea class="form-control" rows="5" formControlName="message"></textarea>
-            </div>
-            <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-3">
-              <button class="btn lux-btn lux-btn-primary" [disabled]="isSubmitting">
-                {{ isSubmitting ? 'Sending...' : 'Send Message' }}
+
+            <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-3 pt-2">
+              <button class="btn lux-btn lux-btn-primary px-4 py-3" [disabled]="isSubmitting">
+                @if (isSubmitting) {
+                  <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  Transmitting...
+                } @else {
+                  <i class="bi bi-send-fill me-2"></i>Send Inquiry
+                }
               </button>
-              <div class="small text-secondary">Your message is saved and shared with the shop team.</div>
+              <div class="small text-secondary">
+                <i class="bi bi-lock me-1"></i>Your information is held in strict family confidentiality.
+              </div>
             </div>
           </form>
         </div>
-        <div class="lux-card p-3 mt-4">
-          <iframe [attr.src]="data?.mapEmbedUrl" width="100%" height="280" style="border:0; border-radius:1rem;"></iframe>
+
+        <!-- Embedded Interactive Google Map -->
+        <div class="lux-card p-3 map-card overflow-hidden">
+          <div class="d-flex justify-content-between align-items-center px-2 py-1 mb-2">
+            <span class="small fw-bold text-dark"><i class="bi bi-map me-1 text-warning"></i>Live Showroom Location</span>
+            <a
+              href="https://maps.google.com/?q=Sanhita+Township+Newtown+700135+WB"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="small text-warning-emphasis fw-bold text-decoration-none">
+              Open in Google Maps <i class="bi bi-box-arrow-up-right ms-1"></i>
+            </a>
+          </div>
+          <iframe
+            [src]="safeMapUrl()"
+            width="100%"
+            height="320"
+            style="border:0; border-radius:0.85rem;"
+            allowfullscreen=""
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+            title="Shree Jewellers Location Map"></iframe>
         </div>
       </div>
     </div>

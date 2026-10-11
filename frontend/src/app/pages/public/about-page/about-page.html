@@ -1,37 +1,130 @@
-<section class="app-page">
+<section class="app-page about-page-container">
   <div class="container">
-    <div class="row g-4">
+    <!-- Header Hero -->
+    <div class="about-hero text-center mb-5 py-4">
+      <div class="section-kicker mb-2">Our Heritage & Story</div>
+      <h1 class="display-4 font-display fw-bold mb-3">Honouring Craftsmanship Since {{ aboutData().trustedSinceYear }}</h1>
+      <p class="lead text-secondary mx-auto" style="max-width: 720px;">
+        For over 28 years, Shree Jewellers has been synonymous with uncompromised gold purity, timeless bridal art, and honest family relationships led by Chandan Kr Mandal.
+      </p>
+    </div>
+
+    <!-- Main Story & Founder Grid -->
+    <div class="row g-4 mb-5">
       <div class="col-lg-8">
-        <div class="lux-card p-4 p-lg-5 h-100">
-          <div class="section-kicker mb-2">Our Story</div>
-          <div class="section-title mb-4">{{ data?.shopName }}</div>
-          <p class="lead text-secondary">{{ data?.story }}</p>
-          <div class="row g-3 mt-4">
-            @for (item of data?.certifications ?? []; track item) {
-              <div class="col-md-6">
-                <div class="lux-card p-3 h-100">
-                  <div class="fw-bold text-warning-emphasis">{{ item }}</div>
-                </div>
-              </div>
+        <div class="lux-card p-4 p-md-5 h-100">
+          <div class="section-kicker mb-2">Artisanal Roots</div>
+          <h2 class="font-display h2 mb-4">{{ aboutData().shopName }} Heritage</h2>
+          <div class="story-content text-secondary lead fs-6">
+            @for (paragraph of aboutData().story.split('\n\n'); track paragraph) {
+              <p class="mb-3">{{ paragraph }}</p>
             }
+          </div>
+
+          <div class="mt-4 pt-4 border-top border-warning-subtle">
+            <h3 class="h5 fw-bold mb-3 text-dark">Our 4 Sacred Principles</h3>
+            <div class="row g-3">
+              @for (pillar of pillars; track pillar.title) {
+                <div class="col-md-6">
+                  <div class="pillar-card p-3 rounded-3 h-100">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                      <i class="bi {{ pillar.icon }} text-warning fs-5"></i>
+                      <div class="fw-bold text-dark">{{ pillar.title }}</div>
+                    </div>
+                    <div class="small text-secondary">{{ pillar.description }}</div>
+                  </div>
+                </div>
+              }
+            </div>
           </div>
         </div>
       </div>
+
       <div class="col-lg-4">
-        <div class="lux-card p-4 h-100 text-center">
-          <img
-            [src]="data?.ownerPhotoUrl || 'https://placehold.co/420x520/faf8f2/1a1a2e?text=Owner'"
-            alt="Owner"
-            class="img-fluid rounded-4 mb-4">
-          <div class="font-display fs-2">{{ data?.ownerName }}</div>
-          <div class="text-secondary mb-4">{{ data?.ownerTitle }}</div>
-          <div class="status-badge status-verified justify-content-center">
-            <i class="bi bi-award"></i>
-            BIS Hallmark Focus
+        <div class="lux-card p-4 h-100 text-center founder-card d-flex flex-column justify-content-between">
+          <div>
+            <div class="founder-image-wrapper mx-auto mb-4">
+              <img
+                [src]="aboutData().ownerPhotoUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&auto=format&fit=crop&q=80'"
+                alt="Chandan Kr Mandal, Founder"
+                class="img-fluid rounded-4 shadow-sm founder-photo">
+            </div>
+            <div class="font-display fs-2 fw-bold mb-1">{{ aboutData().ownerName }}</div>
+            <div class="text-secondary fw-semibold mb-3">{{ aboutData().ownerTitle }}</div>
+
+            <div class="status-badge status-verified justify-content-center mb-3">
+              <i class="bi bi-patch-check-fill me-1"></i>
+              BIS 916 Hallmark Licensed
+            </div>
+
+            <p class="small text-secondary mb-4">{{ aboutData().hallmarkNote }}</p>
           </div>
-          <p class="small text-secondary mt-3 mb-0">{{ data?.hallmarkNote }}</p>
+
+          <div class="founder-quote p-3 rounded-3 text-start mb-3">
+            <div class="small fst-italic text-dark">
+              “Gold is not just an adornment in India; it is a family’s blessing, heritage, and ultimate security. We treat that trust with utmost reverence.”
+            </div>
+            <div class="text-end small fw-bold text-warning-emphasis mt-2">— Chandan Kr Mandal</div>
+          </div>
+
+          <a routerLink="/contact" class="btn lux-btn lux-btn-outline w-100">
+            <i class="bi bi-chat-dots me-2"></i>Schedule Showroom Visit
+          </a>
         </div>
       </div>
     </div>
+
+    <!-- Heritage Timeline -->
+    <section class="lux-card p-4 p-md-5 mb-5 timeline-section">
+      <div class="text-center mb-5">
+        <div class="section-kicker mb-2">Our Journey</div>
+        <h2 class="section-title mb-2">Nearly Three Decades of Trust</h2>
+        <p class="text-secondary small">Milestones that shaped Shree Jewellers into a household destination.</p>
+      </div>
+
+      <div class="row g-4">
+        @for (milestone of milestones; track milestone.year) {
+          <div class="col-md-6 col-lg-3">
+            <div class="milestone-box p-3 rounded-3 h-100">
+              <div class="milestone-year font-display fw-bold mb-2">{{ milestone.year }}</div>
+              <h3 class="h6 fw-bold text-dark mb-2">{{ milestone.title }}</h3>
+              <p class="small text-secondary mb-0">{{ milestone.description }}</p>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- Official Certifications and Compliance -->
+    <section class="lux-card p-4 p-md-5 mb-5 certifications-section">
+      <div class="section-kicker mb-2">Trust & Credentials</div>
+      <h2 class="section-title mb-4">Official Certifications</h2>
+      <div class="row g-3">
+        @for (item of aboutData().certifications; track item) {
+          <div class="col-sm-6 col-md-4">
+            <div class="cert-item p-3 rounded-3 d-flex align-items-center gap-3">
+              <i class="bi bi-check-circle-fill text-warning fs-4"></i>
+              <div class="fw-semibold text-dark small">{{ item }}</div>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- Call to Action Banner -->
+    <section class="lux-card p-4 p-md-5 text-center cta-section">
+      <h2 class="font-display display-6 fw-bold mb-3">Experience Shree Jewellers in Person</h2>
+      <p class="lead text-secondary mx-auto mb-4" style="max-width: 600px;">
+        Visit our Newtown flagship showroom for bridal consultations, certified gold appraisal, or instant confidential gold loans.
+      </p>
+      <div class="d-flex flex-wrap justify-content-center gap-3">
+        <a routerLink="/contact" class="btn lux-btn lux-btn-primary px-4 py-3">
+          <i class="bi bi-geo-alt me-2"></i>Showroom Directions
+        </a>
+        <a routerLink="/gold-loan" class="btn lux-btn lux-btn-outline px-4 py-3">
+          <i class="bi bi-cash-coin me-2"></i>Gold Loan Terms
+        </a>
+      </div>
+    </section>
   </div>
 </section>

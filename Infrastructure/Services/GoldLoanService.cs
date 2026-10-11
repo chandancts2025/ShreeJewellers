@@ -89,8 +89,13 @@ public class GoldLoanService : IGoldLoanService
         var interestSetting = await GetActiveInterestSettingAsync();
         var goldPrice       = await _priceService.GetCurrentRateAsync();
 
-        var totalWeight     = request.GoldItems.Sum(i => i.WeightGrams);
-        var firstPurity     = request.GoldItems.FirstOrDefault()?.Purity ?? "22K";
+        var items           = request.GetItems();
+        if (!items.Any())
+            return new LoanEligibilityResponseDto(false, "At least one pledged gold ornament is required to calculate loan eligibility.",
+                0, 0, 0, 0, 0, "", 0, "", DateOnly.MinValue);
+
+        var totalWeight     = items.Sum(i => i.WeightGrams);
+        var firstPurity     = items.FirstOrDefault()?.Purity ?? "22K";
         var rateToUse       = firstPurity.StartsWith("24") ? goldPrice.Rate24KPer10g : goldPrice.Rate22KPer10g;
         var totalGoldValue  = (totalWeight / 10m) * rateToUse;
         var maxLoan         = Math.Round(totalGoldValue * (interestSetting.LoanToValuePercent / 100m), 2);
@@ -133,7 +138,11 @@ public class GoldLoanService : IGoldLoanService
 
         // ── Loan-to-Value Calculation ─────────────────────────────────────
 
-        var totalWeight    = dto.GoldItems.Sum(i => i.WeightGrams);
+        var loanItems      = dto.GetItems();
+        if (!loanItems.Any())
+            throw new InvalidOperationException("At least one pledged gold ornament is required.");
+
+        var totalWeight    = loanItems.Sum(i => i.WeightGrams);
         var rateToUse      = dto.GoldPurity.StartsWith("24")
                              ? goldPrice.Rate24KPer10g
                              : goldPrice.Rate22KPer10g;
@@ -187,7 +196,7 @@ public class GoldLoanService : IGoldLoanService
 
         // ── Gold Items ────────────────────────────────────────────────────
 
-        foreach (var item in dto.GoldItems)
+        foreach (var item in loanItems)
         {
             var goldItem = new GoldLoanItem
             {

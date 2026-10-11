@@ -162,7 +162,7 @@
                   <i class="bi" [class.bi-check-circle-fill]="eligibilityResult.isEligible" [class.bi-x-circle-fill]="!eligibilityResult.isEligible"></i>
                   {{ eligibilityResult.isEligible ? 'Eligible for Gold Loan' : 'Not Eligible' }}
                 </span>
-                <span class="badge bg-dark">LTV {{ eligibilityResult.ltvPercent || 75 }}%</span>
+                <span class="badge bg-dark">LTV {{ eligibilityResult.loanToValuePercent || 75 }}%</span>
               </div>
               @if (eligibilityResult.isEligible) {
                 <div class="d-flex justify-content-between py-1 border-bottom small">
@@ -336,9 +336,26 @@
                 </div>
               </div>
               <div class="d-flex align-items-center gap-2">
-                <button class="btn btn-sm lux-btn-secondary" type="button" (click)="printPawnTicket()">
-                  <i class="bi bi-printer me-1"></i> Print Pawn Ticket
-                </button>
+                <div class="btn-group btn-group-sm">
+                  <button class="btn lux-btn-secondary" type="button" (click)="printPawnTicket('a4')">
+                    <i class="bi bi-printer me-1"></i> Print Pawn Ticket
+                  </button>
+                  <button type="button" class="btn lux-btn-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="visually-hidden">Toggle Format</span>
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-end shadow-sm border">
+                    <li>
+                      <button class="dropdown-item small" type="button" (click)="printPawnTicket('a4')">
+                        <i class="bi bi-file-earmark-text text-primary me-2"></i> A4 Sanction Agreement
+                      </button>
+                    </li>
+                    <li>
+                      <button class="dropdown-item small" type="button" (click)="printPawnTicket('80mm')">
+                        <i class="bi bi-receipt text-success me-2"></i> 80mm Thermal Pawn Slip
+                      </button>
+                    </li>
+                  </ul>
+                </div>
                 <button class="btn btn-sm btn-outline-secondary" type="button" (click)="clearSelectedLoan()">
                   <i class="bi bi-x-lg me-1"></i> Close View
                 </button>
@@ -557,9 +574,14 @@
                           <td><span class="badge bg-light text-dark border">{{ rep.paymentMode }}</span></td>
                           <td class="fw-semibold text-charcoal">₹{{ rep.principalBalanceAfter | number:'1.0-0' }}</td>
                           <td class="text-end">
-                            <button class="btn btn-xs btn-outline-secondary py-0 px-2" type="button" (click)="printReceipt(rep)" title="Print Repayment Voucher">
-                              <i class="bi bi-printer"></i>
-                            </button>
+                            <div class="btn-group btn-group-sm">
+                              <button class="btn btn-xs btn-outline-secondary py-0 px-2" type="button" (click)="printReceipt(rep, '80mm')" title="Print 80mm Thermal Slip">
+                                <i class="bi bi-receipt"></i>
+                              </button>
+                              <button class="btn btn-xs btn-outline-secondary py-0 px-2" type="button" (click)="printReceipt(rep, 'a4')" title="Print A4 Payment Statement">
+                                <i class="bi bi-file-earmark-text"></i>
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       }
@@ -579,195 +601,538 @@
   </div>
 </section>
 
-<!-- PAWN TICKET / LOAN AGREEMENT MODAL -->
+<!-- PAWN TICKET / LOAN AGREEMENT MODAL (A4 & 80mm DUAL FORMAT) -->
 @if (showPawnTicketModal && selectedLoan) {
-  <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.6);" role="dialog">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+  <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.65);" role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" [class.modal-xl]="pawnTicketFormat === 'a4'" [style.max-width]="pawnTicketFormat === '80mm' ? '460px' : ''">
       <div class="modal-content border-0 shadow-lg">
-        <div class="modal-header border-bottom py-3" style="background: #fbf9f4;">
-          <h5 class="modal-title font-display text-gold">
-            <i class="bi bi-file-earmark-text me-2"></i>Gold Loan Pawn Ticket & Agreement
-          </h5>
-          <button type="button" class="btn-close" (click)="closePawnTicket()"></button>
-        </div>
-        <div class="modal-body p-4" id="printablePawnTicket">
-          <!-- Ticket Header -->
-          <div class="text-center pb-3 border-bottom mb-4">
-            <h3 class="font-display fw-bold mb-1" style="color: #8c6a18; letter-spacing: 0.05em;">SHREE JEWELLERS</h3>
-            <div class="small text-secondary">Authorized Gold Loan & Pawn Broking Department</div>
-            <div class="small text-secondary">108 Jewellery Plaza, Zaveri Market, Mumbai 400002 · GSTIN: 27AABCS1234F1Z8</div>
-            <div class="badge bg-dark mt-2 px-3 py-1">PAWN TICKET / GOLD PLEDGE MEMORANDUM</div>
+        <!-- Modal Toolbar Header -->
+        <div class="modal-header border-bottom py-2 px-3 align-items-center justify-content-between" style="background: #fbf9f4;">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-file-earmark-text text-gold fs-5"></i>
+            <h5 class="modal-title font-display text-gold mb-0 fs-6">Pawn Ticket & Sanction Agreement</h5>
           </div>
-
-          <!-- Basic Loan Meta -->
-          <div class="row g-3 mb-4 small">
-            <div class="col-6">
-              <div class="text-secondary">Pawn Loan Reference:</div>
-              <strong class="fs-5 text-gold">{{ selectedLoan.loanNumber }}</strong>
+          <div class="d-flex align-items-center gap-2">
+            <div class="btn-group btn-group-sm" role="group">
+              <button type="button" class="btn btn-sm" [class.btn-dark]="pawnTicketFormat === 'a4'" [class.btn-outline-secondary]="pawnTicketFormat !== 'a4'" (click)="setPawnTicketFormat('a4')">
+                <i class="bi bi-file-earmark-text me-1"></i> 📄 A4 Agreement
+              </button>
+              <button type="button" class="btn btn-sm" [class.btn-dark]="pawnTicketFormat === '80mm'" [class.btn-outline-secondary]="pawnTicketFormat !== '80mm'" (click)="setPawnTicketFormat('80mm')">
+                <i class="bi bi-receipt me-1"></i> 🧾 80mm Thermal Slip
+              </button>
             </div>
-            <div class="col-6 text-end">
-              <div class="text-secondary">Sanction Date:</div>
-              <strong class="text-charcoal">{{ selectedLoanDetail?.loanDate || selectedLoan.loanDate }}</strong>
-            </div>
-            <div class="col-6">
-              <div class="text-secondary">Customer Name:</div>
-              <strong class="text-charcoal">{{ selectedLoan.customerName || selectedLoanDetail?.customerName || 'Registered Borrower' }}</strong>
-            </div>
-            <div class="col-6 text-end">
-              <div class="text-secondary">Maturity / Due Date:</div>
-              <strong class="text-danger">{{ selectedLoanOutstanding?.maturityDate || selectedLoan.maturityDate }}</strong>
-            </div>
-          </div>
-
-          <!-- Collateral Details -->
-          <div class="p-3 rounded mb-4" style="background: #fbf9f4; border: 1px solid #e5dfd1;">
-            <div class="fw-bold small text-charcoal mb-2"><i class="bi bi-safe me-1"></i> Pledged Ornaments Kept in Vault Custody</div>
-            <table class="table table-sm mb-0">
-              <thead>
-                <tr>
-                  <th>Ornament Description</th>
-                  <th>Weight</th>
-                  <th>Purity</th>
-                  <th>Assessed Value</th>
-                  <th>HUID</th>
-                </tr>
-              </thead>
-              <tbody>
-                @if (selectedLoanDetail?.goldItems && selectedLoanDetail!.goldItems.length > 0) {
-                  @for (it of selectedLoanDetail!.goldItems; track it.id) {
-                    <tr>
-                      <td>{{ it.itemDescription }}</td>
-                      <td>{{ it.weightGrams }} g</td>
-                      <td>{{ it.purity }}</td>
-                      <td>₹{{ it.estimatedValue | number:'1.0-0' }}</td>
-                      <td>{{ it.hallmarkNumber || 'N/A' }}</td>
-                    </tr>
-                  }
-                } @else {
-                  <tr>
-                    <td>Gold Collateral Pledged</td>
-                    <td>{{ selectedLoan.goldDepositedWeightGrams || '—' }} g</td>
-                    <td>{{ selectedLoan.goldPurity || '22K' }}</td>
-                    <td>₹{{ selectedLoan.principalAmount * 1.33 | number:'1.0-0' }}</td>
-                    <td>Verified</td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Financial Terms -->
-          <div class="row g-3 mb-4 small">
-            <div class="col-sm-4">
-              <div class="p-2 border rounded text-center">
-                <div class="text-secondary">Sanctioned Amount</div>
-                <div class="fs-5 fw-bold text-charcoal mt-1">₹{{ selectedLoan.principalAmount | number:'1.0-0' }}</div>
-              </div>
-            </div>
-            <div class="col-sm-4">
-              <div class="p-2 border rounded text-center">
-                <div class="text-secondary">Interest Rate</div>
-                <div class="fs-5 fw-bold text-charcoal mt-1">{{ selectedLoanDetail?.interestRatePercent || 18 }}% p.a.</div>
-              </div>
-            </div>
-            <div class="col-sm-4">
-              <div class="p-2 border rounded text-center">
-                <div class="text-secondary">Current Balance</div>
-                <div class="fs-5 fw-bold text-gold mt-1">₹{{ (selectedLoanOutstanding?.totalOutstanding ?? selectedLoan.outstandingBalance) | number:'1.0-0' }}</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Undertaking -->
-          <div class="small text-secondary mb-4 p-3 border rounded" style="font-size: 0.8rem; background: #fafafa;">
-            <strong>Terms & Custody Undertaking:</strong> The borrower pledges the above gold ornaments as collateral against the loan sanctioned.
-            Interest is payable monthly. On full repayment of principal and interest, pledged ornaments will be returned. If default exceeds 90 days
-            from maturity, the lender reserves the right to recover dues through public auction after statutory notice.
-          </div>
-
-          <!-- Signatures -->
-          <div class="row pt-4 text-center small text-secondary">
-            <div class="col-6">
-              <div style="height: 40px;"></div>
-              <div class="border-top mx-4 pt-1 text-charcoal fw-semibold">Borrower's Signature</div>
-            </div>
-            <div class="col-6">
-              <div style="height: 40px;"></div>
-              <div class="border-top mx-4 pt-1 text-charcoal fw-semibold">For SHREE JEWELLERS (Authorised Signatory)</div>
-            </div>
+            <button type="button" class="btn lux-btn lux-btn-primary btn-sm px-3" (click)="executePawnTicketPrint()">
+              <i class="bi bi-printer me-1"></i> Print ({{ pawnTicketFormat === '80mm' ? '80mm' : 'A4' }})
+            </button>
+            <button type="button" class="btn-close ms-2" (click)="closePawnTicket()"></button>
           </div>
         </div>
-        <div class="modal-footer border-top py-2">
-          <button type="button" class="btn btn-secondary btn-sm" (click)="closePawnTicket()">Close</button>
-          <button type="button" class="btn lux-btn lux-btn-primary btn-sm" (click)="executePrint()">
-            <i class="bi bi-printer me-1"></i> Print Pawn Ticket
-          </button>
+
+        <div class="modal-body p-3 p-md-4" id="printablePawnTicket" style="background: #f8f6f0; overflow-y: auto;">
+          <!-- FORMAT 1: A4 FULL SANCTION AGREEMENT -->
+          @if (pawnTicketFormat === 'a4') {
+            <div class="pawn-sheet-a4 bg-white p-4 p-md-5 rounded shadow-sm border mx-auto">
+              <!-- Top Royal Crest & Lic Header -->
+              <div class="text-center pb-3 border-bottom mb-4">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div class="text-start small text-secondary">
+                    <div><strong>GOVT. APPROVED PAWN BROKER</strong></div>
+                    <div>Lic No: <span class="text-charcoal fw-bold">{{ shopInfo.pawnLicense }}</span></div>
+                    <div>GSTIN: <span class="text-charcoal fw-bold">{{ shopInfo.gstin }}</span></div>
+                  </div>
+                  <div class="text-center">
+                    <h2 class="font-display fw-bold mb-0 text-gold" style="letter-spacing: 0.1em; font-size: 1.85rem;">SHREE JEWELLERS</h2>
+                    <div class="small text-secondary fw-semibold">VALUERS & LICENSED PAWN BROKING DEPARTMENT</div>
+                    <div class="small text-secondary">Proprietor: <strong class="text-charcoal">{{ shopInfo.owner }}</strong></div>
+                    <div class="small text-secondary">{{ shopInfo.address }}</div>
+                    <div class="small text-secondary">Phone: {{ shopInfo.phone }} · Email: {{ shopInfo.email }}</div>
+                  </div>
+                  <div class="text-end small text-secondary">
+                    <div class="border rounded px-2 py-1 bg-light text-center">
+                      <div class="text-muted" style="font-size: 0.7rem;">VAULT SAFE LOCKER</div>
+                      <strong class="text-gold fs-6">#VLT-02</strong>
+                    </div>
+                  </div>
+                </div>
+                <div class="pawn-title-banner mt-3 py-1 px-4 bg-dark text-white d-inline-block rounded-pill text-uppercase fw-bold letter-spacing-1 small">
+                  Form 'B': Pawn Ticket & Gold Pledge Memorandum
+                </div>
+              </div>
+
+              <!-- Barcode & Reference Row -->
+              <div class="row align-items-center border rounded p-3 mb-4 bg-light small g-3">
+                <div class="col-sm-4 text-center text-sm-start">
+                  <div class="text-secondary">Pawn Loan Ref No:</div>
+                  <div class="fs-5 fw-bold text-gold">{{ selectedLoan.loanNumber }}</div>
+                  <div class="text-muted mt-1" style="font-size: 0.75rem;">Status: <span class="badge lux-badge-success">{{ selectedLoan.loanStatus }}</span></div>
+                </div>
+                <div class="col-sm-4 text-center">
+                  <div class="barcode-container" [innerHTML]="pawnBarcodeSvg"></div>
+                  <div class="barcode-text text-muted font-monospace" style="font-size: 0.75rem;">{{ selectedLoan.loanNumber }}</div>
+                </div>
+                <div class="col-sm-4 text-center text-sm-end">
+                  <div>Sanction Date: <strong class="text-charcoal">{{ selectedLoanDetail?.loanDate || selectedLoan.loanDate }}</strong></div>
+                  <div>Maturity / Due Date: <strong class="text-danger">{{ selectedLoanOutstanding?.maturityDate || selectedLoan.maturityDate }}</strong></div>
+                  <div>Tenure: <strong class="text-charcoal">3 to 12 Months</strong></div>
+                </div>
+              </div>
+
+              <!-- Borrower & KYC Particulars -->
+              <div class="row g-3 mb-4 small">
+                <div class="col-md-6">
+                  <div class="border rounded p-3 h-100 bg-white">
+                    <div class="fw-bold text-gold border-bottom pb-1 mb-2"><i class="bi bi-person-badge me-1"></i> Borrower Information</div>
+                    <div class="row g-1">
+                      <div class="col-5 text-secondary">Borrower Name:</div>
+                      <div class="col-7 fw-bold text-charcoal">{{ selectedLoan.customerName || selectedLoanDetail?.customerName || 'Registered Borrower' }}</div>
+                      <div class="col-5 text-secondary">Contact Phone:</div>
+                      <div class="col-7 text-charcoal">{{ selectedLoan?.customerPhone || '+91 98516 32391' }}</div>
+                      <div class="col-5 text-secondary">Address:</div>
+                      <div class="col-7 text-charcoal">3B8-2D, Sanhita Township, Newtown, 700135, WB</div>
+                      <div class="col-5 text-secondary">KYC Status:</div>
+                      <div class="col-7"><span class="badge bg-success-subtle text-success border border-success-subtle">Verified (Aadhaar / PAN)</span></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="border rounded p-3 h-100 bg-white">
+                    <div class="fw-bold text-gold border-bottom pb-1 mb-2"><i class="bi bi-bank me-1"></i> Financial Particulars</div>
+                    <div class="row g-1">
+                      <div class="col-6 text-secondary">Principal Disbursed:</div>
+                      <div class="col-6 fw-bold fs-6 text-gold">₹{{ selectedLoan.principalAmount | number:'1.0-0' }}</div>
+                      <div class="col-6 text-secondary">Amount in Words:</div>
+                      <div class="col-6 text-charcoal small fw-semibold">{{ loanAmountWords }}</div>
+                      <div class="col-6 text-secondary">Annual Interest Rate:</div>
+                      <div class="col-6 text-charcoal fw-bold">{{ selectedLoanDetail?.interestRatePercent || 18 }}% p.a.</div>
+                      <div class="col-6 text-secondary">Monthly Rate:</div>
+                      <div class="col-6 text-charcoal">{{ (((selectedLoanDetail?.interestRatePercent || 18) / 12)).toFixed(2) }}% / month</div>
+                      <div class="col-6 text-secondary">Max Permitted LTV:</div>
+                      <div class="col-6 text-charcoal">75.0% of Market Value</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Pledged Ornaments Detail Table -->
+              <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <div class="fw-bold small text-charcoal"><i class="bi bi-safe me-1 text-gold"></i> Pledged Ornaments Deposited in Sealed Vault Custody</div>
+                  <span class="badge bg-light text-secondary border">Custodian: Shree Jewellers Security Vault</span>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-bordered table-sm align-middle small mb-0">
+                    <thead class="table-light">
+                      <tr>
+                        <th>#</th>
+                        <th>Ornament Description</th>
+                        <th class="text-center">Gross Wt (g)</th>
+                        <th class="text-center">Net Gold Wt (g)</th>
+                        <th class="text-center">Purity</th>
+                        <th>HUID / Hallmark No</th>
+                        <th class="text-end">Assessed Value (₹)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @if (selectedLoanDetail?.goldItems && selectedLoanDetail!.goldItems.length > 0) {
+                        @for (it of selectedLoanDetail!.goldItems; track it.id; let idx = $index) {
+                          <tr>
+                            <td>{{ idx + 1 }}</td>
+                            <td class="fw-semibold text-charcoal">{{ it.itemDescription }}</td>
+                            <td class="text-center">{{ it.weightGrams | number:'1.3-3' }}</td>
+                            <td class="text-center fw-bold text-gold">{{ it.weightGrams | number:'1.3-3' }}</td>
+                            <td class="text-center"><span class="badge bg-warning-subtle text-warning-emphasis border">{{ it.purity }}</span></td>
+                            <td>{{ it.hallmarkNumber || 'BIS Verified' }}</td>
+                            <td class="text-end fw-bold">₹{{ it.estimatedValue | number:'1.0-0' }}</td>
+                          </tr>
+                        }
+                      } @else {
+                        <tr>
+                          <td>1</td>
+                          <td class="fw-semibold text-charcoal">Pledged Gold Ornaments (Vault Deposit)</td>
+                          <td class="text-center">{{ selectedLoan.goldDepositedWeightGrams || '—' }}</td>
+                          <td class="text-center fw-bold text-gold">{{ selectedLoan.goldDepositedWeightGrams || '—' }}</td>
+                          <td class="text-center"><span class="badge bg-warning-subtle text-warning-emphasis border">{{ selectedLoan.goldPurity || '22K' }}</span></td>
+                          <td>Verified 916 Hallmark</td>
+                          <td class="text-end fw-bold">₹{{ (selectedLoan.principalAmount * 1.33) | number:'1.0-0' }}</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Statutory Terms & Undertaking -->
+              <div class="p-3 border rounded mb-4 bg-light small text-secondary" style="font-size: 0.78rem; line-height: 1.5;">
+                <div class="fw-bold text-charcoal mb-1"><i class="bi bi-shield-check me-1 text-gold"></i> Statutory Terms & Custody Declaration:</div>
+                <ol class="mb-0 ps-3">
+                  <li>The Borrower hereby pledges the gold ornaments described above as security against the loan advance sanctioned by Shree Jewellers.</li>
+                  <li>The pledged ornaments are sealed and deposited in fireproof high-security locker #VLT-02 under joint custody.</li>
+                  <li>Monthly interest is payable on or before the due date. A 7-day grace period is allowed before overdue interest applies.</li>
+                  <li>On full repayment of principal, interest, and statutory fees, the identical pledged ornaments shall be returned to the borrower upon surrender of this original ticket.</li>
+                  <li>In the event of default exceeding 90 days past maturity, Shree Jewellers reserves the statutory right to recover dues via public auction after 14 days registered notice.</li>
+                </ol>
+              </div>
+
+              <!-- Signatures & Verification QR -->
+              <div class="row align-items-end pt-3 small text-center g-3">
+                <div class="col-4">
+                  <div style="height: 45px;"></div>
+                  <div class="border-top mx-2 pt-1 text-charcoal fw-semibold">Borrower's Signature & LTI</div>
+                </div>
+                <div class="col-4">
+                  <div class="qr-container d-inline-block" [innerHTML]="pawnQrSvg"></div>
+                  <div class="text-muted" style="font-size: 0.7rem;">Scan to verify pledge record</div>
+                </div>
+                <div class="col-4">
+                  <div style="height: 45px;"></div>
+                  <div class="border-top mx-2 pt-1 text-charcoal fw-semibold">
+                    For SHREE JEWELLERS<br>
+                    <span class="text-muted" style="font-size: 0.72rem;">(Chandan Kr Mandal, Proprietor)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- FORMAT 2: 80MM THERMAL POS PAWN SLIP -->
+          @if (pawnTicketFormat === '80mm') {
+            <div class="pawn-slip-80mm bg-white p-3 rounded shadow-sm border mx-auto font-monospace" style="max-width: 320px; color: #000; font-size: 11px; line-height: 1.35;">
+              <div class="text-center pb-2">
+                <div class="fw-bold fs-6" style="letter-spacing: 0.05em;">*** SHREE JEWELLERS ***</div>
+                <div class="small fw-semibold">GOLD LOAN PAWN TICKET</div>
+                <div style="font-size: 10px;">Prop: Chandan Kr Mandal</div>
+                <div style="font-size: 10px;">Newtown, 700135, WB · Tel: +91 98516 32391</div>
+                <div style="font-size: 9px;">Lic: WB-PB-700135-2026 | GSTIN: 19AAACS1234F1Z5</div>
+              </div>
+              <div class="text-center my-1" style="border-top: 1px dashed #000;"></div>
+
+              <div class="d-flex justify-content-between">
+                <span>Pawn No:</span>
+                <strong>{{ selectedLoan.loanNumber }}</strong>
+              </div>
+              <div class="d-flex justify-content-between">
+                <span>Date:</span>
+                <span>{{ selectedLoan.loanDate | slice:0:10 }}</span>
+              </div>
+              <div class="d-flex justify-content-between">
+                <span>Due Date:</span>
+                <strong>{{ selectedLoanOutstanding?.maturityDate || selectedLoan.maturityDate }}</strong>
+              </div>
+              <div class="d-flex justify-content-between">
+                <span>Borrower:</span>
+                <strong>{{ selectedLoan.customerName }}</strong>
+              </div>
+              <div class="d-flex justify-content-between">
+                <span>Phone:</span>
+                <span>{{ selectedLoan.customerPhone || '+91 98516 32391' }}</span>
+              </div>
+
+              <div class="text-center my-1" style="border-top: 1px dashed #000;"></div>
+              <div class="fw-bold text-center">PLEDGED COLLATERAL</div>
+              <div class="d-flex justify-content-between">
+                <span>Item:</span>
+                <span>{{ selectedLoanDetail?.goldItems?.[0]?.itemDescription || 'Gold Ornaments' }}</span>
+              </div>
+              <div class="d-flex justify-content-between">
+                <span>Gross Wt:</span>
+                <strong>{{ selectedLoan.goldDepositedWeightGrams || selectedLoanDetail?.goldItems?.[0]?.weightGrams || '—' }} g</strong>
+              </div>
+              <div class="d-flex justify-content-between">
+                <span>Purity:</span>
+                <strong>{{ selectedLoan.goldPurity || '22K 916' }}</strong>
+              </div>
+              <div class="d-flex justify-content-between">
+                <span>HUID:</span>
+                <span>{{ selectedLoanDetail?.goldItems?.[0]?.hallmarkNumber || 'Verified' }}</span>
+              </div>
+              <div class="d-flex justify-content-between">
+                <span>Assessed Val:</span>
+                <strong>₹{{ (selectedLoan.principalAmount * 1.33) | number:'1.0-0' }}</strong>
+              </div>
+
+              <div class="text-center my-1" style="border-top: 1px dashed #000;"></div>
+              <div class="d-flex justify-content-between fw-bold fs-6">
+                <span>DISBURSED:</span>
+                <span>₹{{ selectedLoan.principalAmount | number:'1.0-0' }}</span>
+              </div>
+              <div class="text-muted" style="font-size: 9px;">{{ loanAmountWords }}</div>
+              <div class="d-flex justify-content-between mt-1">
+                <span>Interest:</span>
+                <span>{{ selectedLoanDetail?.interestRatePercent || 18 }}% p.a.</span>
+              </div>
+              <div class="d-flex justify-content-between">
+                <span>Locker Custody:</span>
+                <strong>Locker #VLT-02</strong>
+              </div>
+
+              <div class="text-center my-1" style="border-top: 1px dashed #000;"></div>
+              <div class="text-center my-2">
+                <div class="barcode-container" [innerHTML]="pawnBarcodeSvg"></div>
+                <div style="font-size: 9px;">{{ selectedLoan.loanNumber }}</div>
+                <div class="qr-container mt-1" [innerHTML]="pawnQrSvg"></div>
+              </div>
+
+              <div class="text-center my-1" style="font-size: 9px; line-height: 1.2;">
+                PLEASE PRESERVE THIS TICKET SAFELY.<br>
+                Surrender original ticket to redeem ornaments.<br>
+                Monthly interest due by due date.
+              </div>
+
+              <div class="d-flex justify-content-between mt-3 pt-2 text-center" style="font-size: 9px;">
+                <div style="border-top: 1px solid #000; width: 42%;">Borrower</div>
+                <div style="border-top: 1px solid #000; width: 42%;">Manager</div>
+              </div>
+
+              <div class="text-center my-2" style="border-top: 1px dashed #000;">
+                <span class="bg-white px-2" style="font-size: 8px;">- - - - [ TEAR FOR VAULT ] - - - -</span>
+              </div>
+
+              <!-- Vault Counterfoil -->
+              <div class="p-1 border rounded" style="background: #fafafa; font-size: 9px;">
+                <div class="fw-bold text-center">VAULT CUSTODY TAG</div>
+                <div class="d-flex justify-content-between"><span>Pawn Ref:</span><strong>{{ selectedLoan.loanNumber }}</strong></div>
+                <div class="d-flex justify-content-between"><span>Borrower:</span><span>{{ selectedLoan.customerName }}</span></div>
+                <div class="d-flex justify-content-between"><span>Weight:</span><strong>{{ selectedLoan.goldDepositedWeightGrams }} g</strong></div>
+                <div class="d-flex justify-content-between"><span>Purity:</span><span>{{ selectedLoan.goldPurity || '22K' }}</span></div>
+                <div class="d-flex justify-content-between"><span>Locker:</span><strong>#VLT-02</strong></div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="modal-footer border-top py-2 px-3 justify-content-between bg-white">
+          <div class="small text-secondary">
+            Format: <span class="badge bg-dark">{{ pawnTicketFormat === '80mm' ? '80mm Thermal Slip' : 'A4 Sanction Agreement' }}</span>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-secondary btn-sm" (click)="closePawnTicket()">Close</button>
+            <button type="button" class="btn lux-btn lux-btn-primary btn-sm" (click)="executePawnTicketPrint()">
+              <i class="bi bi-printer me-1"></i> Print Pawn Ticket
+            </button>
+          </div>
         </div>
       </div>
     </div>
   </div>
 }
 
-<!-- REPAYMENT RECEIPT VOUCHER MODAL -->
+<!-- REPAYMENT RECEIPT VOUCHER MODAL (80mm & A4 DUAL FORMAT) -->
 @if (selectedReceiptForPrint && selectedLoan) {
-  <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.6);" role="dialog">
-    <div class="modal-dialog modal-md modal-dialog-centered">
+  <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.65);" role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" [class.modal-lg]="receiptFormat === 'a4'" [style.max-width]="receiptFormat === '80mm' ? '460px' : ''">
       <div class="modal-content border-0 shadow-lg">
-        <div class="modal-header border-bottom py-3" style="background: #fbf9f4;">
-          <h5 class="modal-title font-display text-gold">
-            <i class="bi bi-receipt me-2"></i>Gold Loan Repayment Voucher
-          </h5>
-          <button type="button" class="btn-close" (click)="closeReceipt()"></button>
+        <div class="modal-header border-bottom py-2 px-3 align-items-center justify-content-between" style="background: #fbf9f4;">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-receipt text-gold fs-5"></i>
+            <h5 class="modal-title font-display text-gold mb-0 fs-6">Gold Loan Repayment Voucher</h5>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <div class="btn-group btn-group-sm" role="group">
+              <button type="button" class="btn btn-sm" [class.btn-dark]="receiptFormat === '80mm'" [class.btn-outline-secondary]="receiptFormat !== '80mm'" (click)="setReceiptFormat('80mm')">
+                <i class="bi bi-receipt me-1"></i> 🧾 80mm Slip
+              </button>
+              <button type="button" class="btn btn-sm" [class.btn-dark]="receiptFormat === 'a4'" [class.btn-outline-secondary]="receiptFormat !== 'a4'" (click)="setReceiptFormat('a4')">
+                <i class="bi bi-file-earmark-text me-1"></i> 📄 A4 Statement
+              </button>
+            </div>
+            <button type="button" class="btn lux-btn lux-btn-primary btn-sm px-3" (click)="executeReceiptPrint()">
+              <i class="bi bi-printer me-1"></i> Print ({{ receiptFormat === '80mm' ? '80mm' : 'A4' }})
+            </button>
+            <button type="button" class="btn-close ms-2" (click)="closeReceipt()"></button>
+          </div>
         </div>
-        <div class="modal-body p-4" id="printableReceipt">
-          <div class="text-center pb-2 border-bottom mb-3">
-            <h4 class="font-display fw-bold mb-0 text-gold">SHREE JEWELLERS</h4>
-            <div class="small text-secondary">Pawn Loan Repayment Voucher</div>
-          </div>
 
-          <div class="row g-2 small mb-3">
-            <div class="col-6">Receipt #: <strong class="text-gold">{{ selectedReceiptForPrint.receiptNumber }}</strong></div>
-            <div class="col-6 text-end">Date: <strong class="text-charcoal">{{ selectedReceiptForPrint.repaymentDate | slice:0:10 }}</strong></div>
-            <div class="col-6">Loan #: <strong class="text-charcoal">{{ selectedLoan.loanNumber }}</strong></div>
-            <div class="col-6 text-end">Payment Mode: <strong class="text-charcoal">{{ selectedReceiptForPrint.paymentMode }}</strong></div>
-            <div class="col-12">Customer: <strong class="text-charcoal">{{ selectedLoan.customerName }}</strong></div>
-          </div>
-
-          <div class="border rounded p-3 mb-3" style="background: #fbf9f4;">
-            <div class="d-flex justify-content-between py-1 border-bottom small">
-              <span class="text-secondary">Principal Allocation:</span>
-              <strong class="text-charcoal">₹{{ selectedReceiptForPrint.principalComponent | number:'1.0-0' }}</strong>
-            </div>
-            <div class="d-flex justify-content-between py-1 border-bottom small">
-              <span class="text-secondary">Interest Component:</span>
-              <strong class="text-charcoal">₹{{ selectedReceiptForPrint.interestComponent | number:'1.0-0' }}</strong>
-            </div>
-            @if (selectedReceiptForPrint.penaltyAmount > 0) {
-              <div class="d-flex justify-content-between py-1 border-bottom small">
-                <span class="text-danger">Penal Interest:</span>
-                <strong class="text-danger">₹{{ selectedReceiptForPrint.penaltyAmount | number:'1.0-0' }}</strong>
+        <div class="modal-body p-3 p-md-4" id="printableReceipt" style="background: #f8f6f0; overflow-y: auto;">
+          <!-- FORMAT 1: 80MM THERMAL REPAYMENT RECEIPT -->
+          @if (receiptFormat === '80mm') {
+            <div class="repayment-slip-80mm bg-white p-3 rounded shadow-sm border mx-auto font-monospace" style="max-width: 320px; color: #000; font-size: 11px; line-height: 1.35;">
+              <div class="text-center pb-2">
+                <div class="fw-bold fs-6" style="letter-spacing: 0.05em;">*** SHREE JEWELLERS ***</div>
+                <div class="small fw-semibold">GOLD LOAN REPAYMENT SLIP</div>
+                <div style="font-size: 10px;">Prop: Chandan Kr Mandal</div>
+                <div style="font-size: 10px;">Newtown, 700135, WB · Tel: +91 98516 32391</div>
+                <div style="font-size: 9px;">GSTIN: 19AAACS1234F1Z5</div>
               </div>
-            }
-            <div class="d-flex justify-content-between py-2 border-bottom fw-bold fs-5">
-              <span class="text-gold">Total Amount Paid:</span>
-              <span class="text-gold">₹{{ selectedReceiptForPrint.amountPaid | number:'1.0-0' }}</span>
-            </div>
-            <div class="d-flex justify-content-between pt-2 small">
-              <span class="text-secondary">Remaining Principal Balance:</span>
-              <strong class="text-charcoal">₹{{ selectedReceiptForPrint.principalBalanceAfter | number:'1.0-0' }}</strong>
-            </div>
-          </div>
+              <div class="text-center my-1" style="border-top: 1px dashed #000;"></div>
 
-          <div class="text-center pt-3 small text-secondary">
-            <div>Thank you for your repayment.</div>
-            <div class="mt-4 pt-2 border-top mx-5 text-charcoal">Authorized Signature / Cashier Stamp</div>
-          </div>
+              <div class="d-flex justify-content-between">
+                <span>Receipt #:</span>
+                <strong>{{ selectedReceiptForPrint.receiptNumber }}</strong>
+              </div>
+              <div class="d-flex justify-content-between">
+                <span>Date:</span>
+                <span>{{ selectedReceiptForPrint.repaymentDate | slice:0:10 }}</span>
+              </div>
+              <div class="d-flex justify-content-between">
+                <span>Loan Ref:</span>
+                <strong>{{ selectedLoan.loanNumber }}</strong>
+              </div>
+              <div class="d-flex justify-content-between">
+                <span>Customer:</span>
+                <strong>{{ selectedLoan.customerName }}</strong>
+              </div>
+              <div class="d-flex justify-content-between">
+                <span>Payment Mode:</span>
+                <strong>{{ selectedReceiptForPrint.paymentMode }}</strong>
+              </div>
+
+              <div class="text-center my-1" style="border-top: 1px dashed #000;"></div>
+              <div class="fw-bold text-center">BREAKDOWN OF REPAYMENT</div>
+              <div class="d-flex justify-content-between">
+                <span>Principal Component:</span>
+                <span>₹{{ selectedReceiptForPrint.principalComponent | number:'1.0-0' }}</span>
+              </div>
+              <div class="d-flex justify-content-between">
+                <span>Interest Component:</span>
+                <span>₹{{ selectedReceiptForPrint.interestComponent | number:'1.0-0' }}</span>
+              </div>
+              @if (selectedReceiptForPrint.penaltyAmount > 0) {
+                <div class="d-flex justify-content-between text-danger">
+                  <span>Penal Interest:</span>
+                  <span>₹{{ selectedReceiptForPrint.penaltyAmount | number:'1.0-0' }}</span>
+                </div>
+              }
+
+              <div class="text-center my-1" style="border-top: 1px dashed #000;"></div>
+              <div class="d-flex justify-content-between fw-bold fs-6">
+                <span>TOTAL RECEIVED:</span>
+                <span>₹{{ selectedReceiptForPrint.amountPaid | number:'1.0-0' }}</span>
+              </div>
+              <div class="text-muted" style="font-size: 9px;">{{ receiptAmountWords }}</div>
+
+              <div class="text-center my-1" style="border-top: 1px dashed #000;"></div>
+              <div class="d-flex justify-content-between">
+                <span>Balance Principal:</span>
+                <strong>₹{{ selectedReceiptForPrint.principalBalanceAfter | number:'1.0-0' }}</strong>
+              </div>
+              <div class="d-flex justify-content-between">
+                <span>Vault Custody:</span>
+                <span>Secure in Locker #VLT-02</span>
+              </div>
+
+              <div class="text-center my-2">
+                <div class="barcode-container" [innerHTML]="receiptBarcodeSvg"></div>
+                <div style="font-size: 9px;">{{ selectedReceiptForPrint.receiptNumber }}</div>
+                <div class="qr-container mt-1" [innerHTML]="receiptQrSvg"></div>
+              </div>
+
+              <div class="text-center mt-2" style="font-size: 9px;">
+                Thank you for your repayment.<br>
+                Pledged ornaments remain safe in vault custody.
+              </div>
+
+              <div class="d-flex justify-content-between mt-3 pt-2 text-center" style="font-size: 9px;">
+                <div style="border-top: 1px solid #000; width: 42%;">Customer</div>
+                <div style="border-top: 1px solid #000; width: 42%;">Cashier Stamp</div>
+              </div>
+            </div>
+          }
+
+          <!-- FORMAT 2: A4 REPAYMENT VOUCHER STATEMENT -->
+          @if (receiptFormat === 'a4') {
+            <div class="repayment-sheet-a4 bg-white p-4 p-md-5 rounded shadow-sm border mx-auto">
+              <div class="text-center pb-3 border-bottom mb-4">
+                <h3 class="font-display fw-bold mb-0 text-gold" style="letter-spacing: 0.08em;">SHREE JEWELLERS</h3>
+                <div class="small text-secondary fw-semibold">GOLD LOAN DEPARTMENT · REPAYMENT VOUCHER</div>
+                <div class="small text-secondary">Proprietor: <strong class="text-charcoal">{{ shopInfo.owner }}</strong> · GSTIN: {{ shopInfo.gstin }}</div>
+                <div class="small text-secondary">{{ shopInfo.address }} · Phone: {{ shopInfo.phone }}</div>
+                <div class="badge bg-dark mt-2 px-3 py-1 text-uppercase">Official Repayment Voucher & Statement</div>
+              </div>
+
+              <div class="row g-3 mb-4 small">
+                <div class="col-6">
+                  <div class="border rounded p-3 bg-light">
+                    <div>Receipt Number: <strong class="text-gold fs-6">{{ selectedReceiptForPrint.receiptNumber }}</strong></div>
+                    <div>Receipt Date: <strong class="text-charcoal">{{ selectedReceiptForPrint.repaymentDate | slice:0:10 }}</strong></div>
+                    <div>Payment Mode: <span class="badge bg-white text-dark border">{{ selectedReceiptForPrint.paymentMode }}</span></div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="border rounded p-3 bg-light">
+                    <div>Loan Account Ref: <strong class="text-charcoal">{{ selectedLoan.loanNumber }}</strong></div>
+                    <div>Borrower Name: <strong class="text-charcoal">{{ selectedLoan.customerName }}</strong></div>
+                    <div>Vault Locker: <strong class="text-gold">#VLT-02 (Collateral Secure)</strong></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="table-responsive mb-4">
+                <table class="table table-bordered align-middle small mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Component Description</th>
+                      <th>Reference</th>
+                      <th class="text-end">Amount Paid (₹)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="fw-semibold text-charcoal">Principal Amount Allocation</td>
+                      <td class="text-secondary">Reduces outstanding loan balance</td>
+                      <td class="text-end fw-bold">₹{{ selectedReceiptForPrint.principalComponent | number:'1.0-0' }}</td>
+                    </tr>
+                    <tr>
+                      <td class="fw-semibold text-charcoal">Interest Accrual Component</td>
+                      <td class="text-secondary">Monthly interest servicing</td>
+                      <td class="text-end fw-bold">₹{{ selectedReceiptForPrint.interestComponent | number:'1.0-0' }}</td>
+                    </tr>
+                    @if (selectedReceiptForPrint.penaltyAmount > 0) {
+                      <tr>
+                        <td class="fw-semibold text-danger">Penal Interest / Overdue Charges</td>
+                        <td class="text-danger">Statutory overdue fee</td>
+                        <td class="text-end fw-bold text-danger">₹{{ selectedReceiptForPrint.penaltyAmount | number:'1.0-0' }}</td>
+                      </tr>
+                    }
+                    <tr class="table-active fs-6 fw-bold">
+                      <td colspan="2" class="text-end text-gold">TOTAL REPAYMENT RECEIVED:</td>
+                      <td class="text-end text-gold">₹{{ selectedReceiptForPrint.amountPaid | number:'1.0-0' }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="p-3 border rounded mb-4 bg-light small d-flex justify-content-between align-items-center">
+                <div>
+                  <div class="text-secondary">Total Amount in Words:</div>
+                  <strong class="text-charcoal">{{ receiptAmountWords }}</strong>
+                </div>
+                <div class="text-end">
+                  <div class="text-secondary">Remaining Principal Balance:</div>
+                  <strong class="text-gold fs-5">₹{{ selectedReceiptForPrint.principalBalanceAfter | number:'1.0-0' }}</strong>
+                </div>
+              </div>
+
+              <div class="row align-items-end pt-4 small text-center g-3">
+                <div class="col-4">
+                  <div style="height: 40px;"></div>
+                  <div class="border-top mx-2 pt-1 text-charcoal fw-semibold">Customer's Signature</div>
+                </div>
+                <div class="col-4">
+                  <div class="qr-container d-inline-block" [innerHTML]="receiptQrSvg"></div>
+                  <div class="text-muted" style="font-size: 0.7rem;">Scan to verify receipt</div>
+                </div>
+                <div class="col-4">
+                  <div style="height: 40px;"></div>
+                  <div class="border-top mx-2 pt-1 text-charcoal fw-semibold">
+                    For SHREE JEWELLERS<br>
+                    <span class="text-muted" style="font-size: 0.72rem;">(Authorized Cashier Stamp)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
         </div>
-        <div class="modal-footer border-top py-2">
-          <button type="button" class="btn btn-secondary btn-sm" (click)="closeReceipt()">Close</button>
-          <button type="button" class="btn lux-btn lux-btn-primary btn-sm" (click)="executePrint()">
-            <i class="bi bi-printer me-1"></i> Print Receipt
-          </button>
+
+        <div class="modal-footer border-top py-2 px-3 justify-content-between bg-white">
+          <div class="small text-secondary">
+            Format: <span class="badge bg-dark">{{ receiptFormat === '80mm' ? '80mm Thermal Slip' : 'A4 Statement Voucher' }}</span>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-secondary btn-sm" (click)="closeReceipt()">Close</button>
+            <button type="button" class="btn lux-btn lux-btn-primary btn-sm" (click)="executeReceiptPrint()">
+              <i class="bi bi-printer me-1"></i> Print Receipt
+            </button>
+          </div>
         </div>
       </div>
     </div>

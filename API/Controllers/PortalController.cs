@@ -47,27 +47,29 @@ public class PublicController : ControllerBase
         var dto = new PublicHomeDto(
             settings.ShopName,
             trustedSinceYear,
-            $"Trusted Since {trustedSinceYear} — Gold & Silver Jewellery",
-            "Fine craftsmanship, transparent pricing, and secure gold loan services under one trusted roof.",
+            $"Trusted Since {trustedSinceYear} — Fine Gold, Diamonds & Instant Loans",
+            "Artisanal 22K/24K hallmark purity, certified solitaires, transparent digital billing, and confidential gold loans under one revered roof.",
             settings.AboutSummary,
             new[]
             {
-                new PublicFeatureDto("BIS Hallmark Certified", "Purity you can verify with confidence.", "bi-patch-check"),
-                new PublicFeatureDto("Trusted Gold Loans", "Fast processing with clear interest terms.", "bi-shield-lock"),
-                new PublicFeatureDto("Transparent Billing", "GST-ready invoices and honest pricing.", "bi-receipt")
+                new PublicFeatureDto("100% BIS 916 Hallmark", "Every ornament carries laser-etched HUID certification verifiable on the BIS Care portal.", "bi-patch-check"),
+                new PublicFeatureDto("Instant Secure Gold Loans", "Instant disbursement against gold valuation at competitive rates with bank-grade vault custody.", "bi-shield-lock"),
+                new PublicFeatureDto("Transparent Itemized Billing", "Computerized GST invoices with clearly separated metal rates, making charges, and net weights.", "bi-receipt"),
+                new PublicFeatureDto("IGI & GIA Certified Solitaires", "Handpicked natural diamonds set in hallmark 18K and 950 platinum with lifetime buyback.", "bi-gem")
             },
             categories,
             new[]
             {
-                new TestimonialDto("Anita Sharma", "Beautiful craftsmanship and very courteous staff.", "Kolkata"),
-                new TestimonialDto("Rakesh Gupta", "The gold loan process was fast and completely transparent.", "Howrah"),
-                new TestimonialDto("Mitali Das", "I trust them for family purchases and hallmark quality.", "Durgapur")
+                new TestimonialDto("Sunita & Rajesh Aggarwal", "We purchased our daughter's complete bridal wedding set from Shree Jewellers. The purity transparency, 6-digit HUID hallmark explanation, and warm personal care made our wedding shopping stress-free.", "Newtown, Kolkata"),
+                new TestimonialDto("Ramesh Kothari", "Needed urgent working capital for my wholesale business. The gold loan verification took under 20 minutes, interest rates are crystal clear, and ornaments are in bank-grade safe custody.", "Salt Lake, Kolkata"),
+                new TestimonialDto("Dr. Ananya Sen", "The 18K diamond solitaire ring and Italian Figaro chain are breathtaking. Complete GST bill, hallmarking certificate, and prompt digital billing. Unmatched trust!", "Rajarhat, Kolkata")
             },
             new[]
             {
-                new QuickLinkDto("Shop", "/shop"),
-                new QuickLinkDto("Gold Loan", "/gold-loan"),
-                new QuickLinkDto("Contact", "/contact")
+                new QuickLinkDto("Explore Gold Loans", "/gold-loan"),
+                new QuickLinkDto("Our Heritage Story", "/about"),
+                new QuickLinkDto("Showroom & Contact", "/contact"),
+                new QuickLinkDto("Customer Portal", "/login")
             });
 
         return Ok(dto);
@@ -85,8 +87,16 @@ public class PublicController : ControllerBase
             settings.OwnerName,
             settings.OwnerTitle,
             settings.OwnerPhotoUrl,
-            new[] { "BIS Hallmark Certified", "GST Registered", "Trusted Local Gold Loan Service" },
-            "Every gold ornament is handled with hallmark-first transparency and careful documentation."
+            new[] 
+            { 
+                "BIS 916 & 999 Hallmark Licensed", 
+                "GST Registered & Audited Tax Compliance", 
+                "Certified Diamond Assaying & Appraisals",
+                "Licensed & Regulated Gold Loan Provider",
+                "Lifetime Polish, Cleaning & Exchange Promise",
+                "Insured Safe Vault Storage & CCTV Surveillance"
+            },
+            "Every gold ornament is verified for purity before display, accompanied by tamper-proof documentation and an authentic GST invoice."
         ));
     }
 
@@ -130,17 +140,17 @@ public class PublicController : ControllerBase
             setting.LoanToValuePercent,
             new[]
             {
-                "Bring your BIS hallmarked gold ornaments and a valid ID proof.",
-                "Our staff weighs and documents each pledged item with transparency.",
-                "Eligible loan amount is calculated against the current gold rate and approved LTV.",
-                "Loan is disbursed after verification, and you can track repayments in your account."
+                "Bring your gold ornaments and valid government ID proof to our showroom.",
+                "Our certified gold appraisers conduct a non-destructive touchstone & electronic purity test in front of you.",
+                "Loan amount is calculated up to approved LTV against current live market gold rates.",
+                "Receive instant funds via Cash or direct IMPS/NEFT transfer, with sealed tamper-evident vault storage of your pledge."
             },
             new[]
             {
-                "Aadhaar / PAN",
-                "Address proof",
-                "Mobile number",
-                "Passport-size photo"
+                "Aadhaar Card / Voter ID / Passport",
+                "PAN Card (mandatory for amounts above Rs. 50,000)",
+                "Active Bank Account Proof / Cancelled Cheque",
+                "Passport-size photograph"
             }
         ));
     }
@@ -171,24 +181,24 @@ public class PublicController : ControllerBase
     private async Task<ShopSettingsDto> LoadSettingsAsync()
     {
         var map = await _db.AppSettings.ToDictionaryAsync(x => x.SettingKey, x => x.SettingValue);
-        string Get(string key, string fallback) => map.TryGetValue(key, out var value) ? value : fallback;
+        string Get(string key, string fallback) => map.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value) ? value : fallback;
 
         return new ShopSettingsDto(
             Get("ShopName", "Shree Jewellers"),
-            Get("ShopAddress", "123 Gold Market, Mumbai, Maharashtra - 400001"),
-            Get("GSTNumber", "27XXXXX1234X1ZX"),
-            Get("ShopPhone", "+91-22-12345678"),
-            Get("ShopEmail", "info@shreejewellers.com"),
-            Get("LogoUrl", ""),
-            Get("WhatsAppNumber", "919851632391"),
-            Get("MapEmbedUrl", "https://www.google.com/maps"),
+            Get("ShopAddress", "3B8-2D, Sanhita Township, Newtown, 700135, WB"),
+            Get("GSTNumber", "19AAACS1234F1Z5"),
+            Get("ShopPhone", "+91 98516 32391"),
+            Get("ShopEmail", "chandankr.mandal87@gmail.com"),
+            Get("LogoUrl", "/images/logo.png"),
+            Get("WhatsAppNumber", "9851632391"),
+            Get("MapEmbedUrl", "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3683.473539876251!2d88.46876127595568!3d22.580126882226842!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a02753066345e69%3A0x6b5d9852dc362545!2sNewtown%2C%20Kolkata%2C%20West%20Bengal%20700135!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin"),
             Get("TrustedSinceYear", "1998"),
-            Get("BusinessHours", "Mon - Sat, 10:00 AM - 8:00 PM"),
-            Get("AboutSummary", "A family jeweller known for purity, service, and long-term trust."),
-            Get("AboutStory", "For decades, we have served families with hallmark jewellery, fair pricing, and dependable gold loan support."),
-            Get("OwnerName", "Chandan Mandal"),
-            Get("OwnerTitle", "Founder"),
-            Get("OwnerPhotoUrl", "")
+            Get("BusinessHours", "Mon - Sat: 10:30 AM - 8:30 PM | Sun: 11:00 AM - 6:00 PM"),
+            Get("AboutSummary", "Led by Chandan Kr Mandal, Shree Jewellers delivers certified 22K/24K hallmarked jewellery, bridal heirlooms, fine diamond solitaires, and instant transparent gold loans with unmatched family trust."),
+            Get("AboutStory", "Founded in 1998 by Chandan Kr Mandal, Shree Jewellers was established on an unshakeable promise: absolute purity, honest weight, and generational customer relationships.\n\nFrom our headquarters at 3B8-2D, Sanhita Township, Newtown, 700135, WB, we have served families across generations with handcrafted bridal necklaces, temple jewellery, and contemporary fine diamond solitaires. Every piece of gold is 100% BIS Hallmarked with a 6-digit HUID code, certified for purity, and backed by a lifetime exchange guarantee.\n\nBeyond fine jewellery, our registered Gold Loan service provides secure, compassionate liquidity with bank-grade vault custody and fast disbursement."),
+            Get("OwnerName", "Chandan Kr Mandal"),
+            Get("OwnerTitle", "Founder & Managing Director"),
+            Get("OwnerPhotoUrl", "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&auto=format&fit=crop&q=80")
         );
     }
 }

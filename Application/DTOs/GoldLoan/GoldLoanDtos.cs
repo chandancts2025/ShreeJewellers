@@ -9,18 +9,22 @@ public record CreateGoldLoanDto(
     DateOnly LoanDate,
     decimal PrincipalAmount,         // Cash to disburse — must be ≤ MaxEligibleAmount
     string GoldPurity,               // e.g., "22K"
-    List<CreateGoldLoanItemDto> GoldItems,
-    string? Notes
-);
+    List<CreateGoldLoanItemDto>? GoldItems = null,
+    string? Notes = null,
+    List<CreateGoldLoanItemDto>? Items = null
+)
+{
+    public List<CreateGoldLoanItemDto> GetItems() => GoldItems ?? Items ?? new List<CreateGoldLoanItemDto>();
+}
 
 public record CreateGoldLoanItemDto(
     string ItemDescription,          // "Gold ring, floral design, 2024"
     decimal WeightGrams,
     string Purity,
     decimal EstimatedValue,
-    string? HallmarkNumber,
-    string? ImageBase64,             // Optional photo at pledge time
-    string? ImageExtension           // e.g., "jpg"
+    string? HallmarkNumber = null,
+    string? ImageBase64 = null,             // Optional photo at pledge time
+    string? ImageExtension = null           // e.g., "jpg"
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -185,8 +189,12 @@ public record AuctionGoldDto(
 
 public record LoanEligibilityRequestDto(
     string CustomerUserId,
-    List<CreateGoldLoanItemDto> GoldItems
-);
+    List<CreateGoldLoanItemDto>? GoldItems = null,
+    List<CreateGoldLoanItemDto>? Items = null
+)
+{
+    public List<CreateGoldLoanItemDto> GetItems() => GoldItems ?? Items ?? new List<CreateGoldLoanItemDto>();
+};
 
 public record LoanEligibilityResponseDto(
     bool IsEligible,

@@ -187,25 +187,143 @@
   font-weight: 700;
 }
 
-/* Print-specific styling for Pawn Ticket / Loan Agreement */
+/* ── Pawn & Repayment Modal Styles ────────────────────────────────────────── */
+.pawn-sheet-a4,
+.repayment-sheet-a4 {
+  width: 100%;
+  max-width: 840px;
+  background: #ffffff;
+  color: #1a1a2e;
+  border: 1.5px solid #d4af37;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+
+  .table-bordered {
+    border-color: #dcd4c3;
+    th, td {
+      border-color: #e5dfd1;
+    }
+  }
+}
+
+.pawn-slip-80mm,
+.repayment-slip-80mm {
+  width: 100%;
+  max-width: 320px;
+  background: #ffffff;
+  color: #000000;
+  border: 1px solid #dcd4c3;
+  font-family: 'Courier New', Courier, monospace;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+
+  svg {
+    display: inline-block;
+  }
+}
+
+.barcode-container svg {
+  height: 36px;
+  width: auto;
+  max-width: 100%;
+}
+
+.qr-container svg {
+  height: 75px;
+  width: 75px;
+}
+
+/* ── Print Scoped Rules ─────────────────────────────────────────────────── */
 @media print {
+  /* Hide extraneous page chrome */
+  header,
+  nav,
   .app-header,
   .app-sidebar,
+  .navbar,
   .navbar-blur,
+  .modal-header,
+  .modal-footer,
   .btn,
-  .nav-pills,
-  .search-input-group,
-  .col-xl-4 {
+  .toast-container,
+  .app-page {
     display: none !important;
   }
 
-  .col-xl-8 {
-    width: 100% !important;
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
-  .pawn-ticket-modal {
-    display: block !important;
+  .modal {
     position: static !important;
+    display: block !important;
+    background: transparent !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  .modal-dialog {
+    max-width: 100% !important;
     width: 100% !important;
+    margin: 0 !important;
+  }
+
+  .modal-content {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  .modal-body {
+    padding: 0 !important;
+    background: transparent !important;
+    overflow: visible !important;
+  }
+
+  /* 80mm Thermal Print */
+  body.print-active-80mm {
+    @page {
+      size: 80mm auto;
+      margin: 2mm 3mm;
+    }
+
+    .pawn-slip-80mm,
+    .repayment-slip-80mm {
+      box-shadow: none !important;
+      border: none !important;
+      width: 100% !important;
+      max-width: 76mm !important;
+      margin: 0 auto !important;
+      padding: 0 !important;
+    }
+
+    .pawn-sheet-a4,
+    .repayment-sheet-a4 {
+      display: none !important;
+    }
+  }
+
+  /* A4 Agreement Print */
+  body.print-active-a4 {
+    @page {
+      size: A4 portrait;
+      margin: 8mm 10mm;
+    }
+
+    .pawn-sheet-a4,
+    .repayment-sheet-a4 {
+      box-shadow: none !important;
+      border: 1px solid #c9a84c !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      margin: 0 !important;
+      padding: 10mm !important;
+    }
+
+    .pawn-slip-80mm,
+    .repayment-slip-80mm {
+      display: none !important;
+    }
   }
 }
