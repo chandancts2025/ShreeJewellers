@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api';
+import { EmailSettings } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class SettingsService {
@@ -32,6 +33,14 @@ export class SettingsService {
 
   updateGoldPriceSettings(payload: unknown): Observable<any> {
     return this.api.put('/api/settings/gold-price', payload);
+  }
+
+  getEmailSettings(): Observable<EmailSettings> {
+    return this.api.get<EmailSettings>('/api/settings/email');
+  }
+
+  sendTestEmail(recipientEmail?: string): Observable<{ success: boolean; message: string }> {
+    return this.api.post<{ success: boolean; message: string }>('/api/settings/test-email', { recipientEmail });
   }
 
   getReport(endpoint: string, params: Record<string, string | number | boolean | null | undefined>): Observable<any> {

@@ -7,21 +7,31 @@ using ShreeJewellers.Domain.Entities;
 using ShreeJewellers.Infrastructure.Data;
 using System.Security.Claims;
 
+using ShreeJewellers.Infrastructure.Services;
+
 namespace ShreeJewellers.API.Controllers;
 
 [ApiController]
 [Route("api/settings")]
-[Authorize(Roles = "SuperAdmin")]
+[Authorize(Roles = "SuperAdmin,Admin")]
 [Produces("application/json")]
 public class SettingsController : ControllerBase
 {
     private readonly ApplicationDbContext _db;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly INotificationService _notificationService;
+    private readonly IConfiguration _config;
 
-    public SettingsController(ApplicationDbContext db, UserManager<ApplicationUser> userManager)
+    public SettingsController(
+        ApplicationDbContext db,
+        UserManager<ApplicationUser> userManager,
+        INotificationService notificationService,
+        IConfiguration config)
     {
         _db = db;
         _userManager = userManager;
+        _notificationService = notificationService;
+        _config = config;
     }
 
     [HttpGet("shop")]
@@ -157,6 +167,52 @@ public class SettingsController : ControllerBase
         await UpsertSettingAsync("GoldPriceApiKeyHint", string.IsNullOrWhiteSpace(dto.ApiKey) ? "Not updated" : "Configured");
         await _db.SaveChangesAsync();
         return Ok(new { message = "Gold price settings saved successfully." });
+    }
+
+    [HttpGet("email")]
+    public IActionResult GetEmailSettings()
+    {
+        var smtpConfig = _config.GetSection("SmtpSettings");
+        var emailConfig = _config.GetSection("EmailSettings");
+
+        var host = smtpConfig["Host"] ?? emailConfig["SmtpHost"] ?? "smtp.gmail.com";
+        var port = smtpConfig["Port"] ?? emailConfig["SmtpPort"] ?? "587";
+        var enableSsl = bool.TryParse(smtpConfig["EnableSsl"] ?? emailConfig["EnableSsl"], out var ssl) ? ssl : true;
+        var userName = smtpConfig["UserName"] ?? emailConfig["SenderEmail"] ?? smtpConfig["FromEmail"] ?? "";
+        var fromEmail = smtpConfig["FromEmail"] ?? emailConfig["SenderEmail"] ?? userName;
+        var fromName = smtpConfig["FromName"] ?? emailConfig["SenderName"] ?? "EduManage Pro Academy";
+        var devMode = bool.TryParse(smtpConfig["DevMode"] ?? emailConfig["DevMode"], out var dev) && dev;
+        var password = smtpConfig["Password"] ?? emailConfig["SenderPassword"];
+        var isConfigured = !string.IsNullOrWhiteSpace(password) && !password.StartsWith("SET_IN_ENV", StringComparison.OrdinalIgnoreCase);
+
+        return Ok(new EmailSettingsDto(
+            host,
+            port,
+            enableSsl,
+            fromEmail,
+            fromName,
+            devMode,
+            isConfigured
+        ));
+    }
+
+    [HttpPost("test-email")]
+    public async Task<IActionResult> SendTestEmail([FromBody] TestEmailRequestDto? dto)
+    {
+        var recipient = !string.IsNullOrWhiteSpace(dto?.RecipientEmail)
+            ? dto.RecipientEmail.Trim()
+            : (User.FindFirstValue(ClaimTypes.Email) ?? "chandankr.mandal87@gmail.com");
+
+        var result = await _notificationService.SendEmailWithStatusAsync(
+            recipient,
+            "Verification Test: Shree Jewellers Email Service",
+            $"<h3>Email Service Working</h3><p>Your SMTP mail configuration is properly connected and functioning.</p><p>Recipient: {recipient}</p><p>Server Time: {DateTime.UtcNow:u}</p>",
+            isHtml: true);
+
+        if (result.Success)
+            return Ok(new { success = true, message = result.Message });
+
+        return BadRequest(new { success = false, message = result.Message });
     }
 
     private async Task UpsertSettingAsync(string key, string value)

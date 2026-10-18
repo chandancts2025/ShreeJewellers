@@ -1,15 +1,16 @@
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, inject } from '@angular/core';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule, FormBuilder, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SettingsService } from '../../../core/services/settings';
 import { CatalogService } from '../../../core/services/catalog';
 import { ToastService } from '../../../core/services/toast';
 import { PublicDataService } from '../../../core/services/public-data';
+import { EmailSettings } from '../../../core/models';
 
 @Component({
   selector: 'app-settings-page',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './settings-page.html',
   styleUrl: './settings-page.scss'
 })
@@ -27,6 +28,9 @@ export class SettingsPage {
   currentRates: any = null;
   isLoading = false;
   isSavingPrice = false;
+  emailSettings: EmailSettings | null = null;
+  isTestingEmail = false;
+  testEmailRecipient = 'chandankr.mandal87@gmail.com';
 
   readonly shopForm = this.fb.nonNullable.group({
     shopName: [''],
@@ -102,6 +106,16 @@ export class SettingsPage {
       }
     });
 
+    this.settings.getEmailSettings().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (data) => {
+        this.emailSettings = data;
+        if (data?.fromEmail) {
+          this.testEmailRecipient = data.fromEmail;
+        }
+      },
+      error: () => {}
+    });
+
     this.loadPriceHistory();
   }
 
@@ -165,6 +179,26 @@ export class SettingsPage {
       error: (err) => {
         this.isSavingPrice = false;
         this.toast.error('Price Override', err.error?.message || 'Failed to set price override.');
+      }
+    });
+  }
+
+  sendTestEmail(): void {
+    const recipient = (this.testEmailRecipient || '').trim();
+    if (!recipient) {
+      this.toast.error('Test Email', 'Please enter a recipient email address.');
+      return;
+    }
+
+    this.isTestingEmail = true;
+    this.settings.sendTestEmail(recipient).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (res) => {
+        this.isTestingEmail = false;
+        this.toast.success('Email Delivered', res.message || 'Test email dispatched successfully!');
+      },
+      error: (err) => {
+        this.isTestingEmail = false;
+        this.toast.error('Email Test Failed', err.error?.message || 'Failed to dispatch test email.');
       }
     });
   }

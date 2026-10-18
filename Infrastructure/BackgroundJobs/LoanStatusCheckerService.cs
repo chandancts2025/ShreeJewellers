@@ -118,6 +118,17 @@ public class LoanStatusCheckerService : BackgroundService
                     $"Avoid penalty — repay now. Call: +91-22-12345678");
             }
 
+            if (!string.IsNullOrWhiteSpace(loan.Customer?.Email))
+            {
+                await notificationService.SendEmailAsync(
+                    loan.Customer.Email,
+                    $"Gold Loan Due {(daysUntilDue == 0 ? "Today" : $"in {daysUntilDue} Days")} — {loan.LoanNumber}",
+                    $"Dear {loan.Customer.FirstName},\n\n{message}\n\n" +
+                    $"Maturity Date: {loan.MaturityDate:dd-MMM-yyyy}\n" +
+                    $"Loan Number: {loan.LoanNumber}\n\n" +
+                    $"Thank you,\nShree Jewellers");
+            }
+
             _logger.LogInformation(
                 "Due reminder sent for loan {LoanNumber}, {Days} days until due.",
                 loan.LoanNumber, daysUntilDue);
@@ -167,6 +178,18 @@ public class LoanStatusCheckerService : BackgroundService
                     $"Shree Jewellers OVERDUE NOTICE: Loan {loan.LoanNumber} is {daysOverdue} days " +
                     $"overdue. Balance: Rs.{balance.TotalOutstanding:N0}. " +
                     $"Call +91-22-12345678 immediately.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(loan.Customer?.Email))
+            {
+                await notificationService.SendEmailAsync(
+                    loan.Customer.Email,
+                    $"OVERDUE NOTICE: Gold Loan {loan.LoanNumber} ({daysOverdue} days overdue)",
+                    $"Dear {loan.Customer.FirstName},\n\n{message}\n\n" +
+                    $"Loan Number: {loan.LoanNumber}\n" +
+                    $"Total Outstanding: ₹{balance.TotalOutstanding:N2}\n\n" +
+                    $"Please settle your dues to avoid legal action or auction.\n\n" +
+                    $"Thank you,\nShree Jewellers");
             }
 
             // Admin notification at 75 days (pre-auction warning)

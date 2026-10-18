@@ -175,6 +175,14 @@ public class PublicController : ControllerBase
             $"New contact inquiry from {dto.Name}",
             $"Name: {dto.Name}\nPhone: {dto.Phone}\nEmail: {dto.Email}\n\nMessage:\n{dto.Message}");
 
+        if (!string.IsNullOrWhiteSpace(dto.Email))
+        {
+            await _notificationService.SendEmailAsync(
+                dto.Email,
+                $"Thank you for reaching out to {settings.ShopName}",
+                $"Dear {dto.Name},\n\nThank you for contacting {settings.ShopName}. We have received your inquiry:\n\n\"{dto.Message}\"\n\nOur team will review your message and get in touch with you shortly at {dto.Phone} or via this email.\n\nWarm regards,\n{settings.ShopName}\nPhone: {settings.ShopPhone}\nEmail: {settings.ShopEmail}");
+        }
+
         return Ok(new { message = "Thank you. Your message has been received successfully." });
     }
 

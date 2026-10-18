@@ -218,6 +218,20 @@ public record UpdateShopSettingsDto(
     string OwnerPhotoUrl
 );
 
+public record EmailSettingsDto(
+    string Host,
+    string Port,
+    bool EnableSsl,
+    string FromEmail,
+    string FromName,
+    bool DevMode,
+    bool IsConfigured
+);
+
+public record TestEmailRequestDto(
+    string? RecipientEmail
+);
+
 public record InterestSettingListItemDto(
     int Id,
     decimal InterestRatePercent,

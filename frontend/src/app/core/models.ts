@@ -539,3 +539,18 @@ export interface DailySalesSummaryDto {
   byPaymentMode: Record<string, number>;
   byCategoryName: Record<string, number>;
 }
+
+export interface EmailSettings {
+  host: string;
+  port: string;
+  enableSsl: boolean;
+  fromEmail: string;
+  fromName: string;
+  devMode: boolean;
+  isConfigured: boolean;
+}
+
+export interface TestEmailRequest {
+  recipientEmail?: string;
+}
+

@@ -191,6 +191,53 @@
           </form>
         </div>
 
+        <div class="lux-card p-4 mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="font-display fs-2">Email & SMTP Service</div>
+            @if (emailSettings?.isConfigured) {
+              <span class="badge bg-success">
+                <i class="bi bi-check-circle me-1"></i> Active
+              </span>
+            } @else {
+              <span class="badge bg-warning text-dark">
+                <i class="bi bi-exclamation-triangle me-1"></i> Not Configured
+              </span>
+            }
+          </div>
+
+          <div class="small text-secondary mb-3">
+            Gmail SMTP gateway configured for order receipts, payment confirmations, loan reminders, and admin alerts.
+          </div>
+
+          @if (emailSettings) {
+            <div class="p-3 rounded-3 bg-light-subtle border mb-3">
+              <div class="row g-2 small">
+                <div class="col-6"><span class="text-secondary">Host:</span> <strong>{{ emailSettings.host }}</strong></div>
+                <div class="col-6"><span class="text-secondary">Port:</span> <strong>{{ emailSettings.port }} (SSL/TLS)</strong></div>
+                <div class="col-12"><span class="text-secondary">Sender:</span> <strong>{{ emailSettings.fromEmail }}</strong></div>
+                <div class="col-12"><span class="text-secondary">Sender Name:</span> <strong>{{ emailSettings.fromName }}</strong></div>
+                <div class="col-6"><span class="text-secondary">SSL:</span> <span class="badge bg-success-subtle text-success">Enabled</span></div>
+                <div class="col-6"><span class="text-secondary">Mode:</span> <span class="badge" [ngClass]="emailSettings.devMode ? 'bg-secondary' : 'bg-primary'">{{ emailSettings.devMode ? 'Dev Mode' : 'Live Delivery' }}</span></div>
+              </div>
+            </div>
+          }
+
+          <div>
+            <label class="form-label fw-bold small">Send Live Test Email</label>
+            <div class="input-group">
+              <input type="email" class="form-control" [(ngModel)]="testEmailRecipient" placeholder="Enter recipient email">
+              <button class="btn lux-btn lux-btn-primary" type="button" [disabled]="isTestingEmail" (click)="sendTestEmail()">
+                @if (isTestingEmail) {
+                  <span class="spinner-border spinner-border-sm me-1" role="status"></span> Sending...
+                } @else {
+                  <i class="bi bi-send me-1"></i> Send Test
+                }
+              </button>
+            </div>
+            <div class="form-text small">Dispatches an actual verification test email via SMTP to verify configuration.</div>
+          </div>
+        </div>
+
         <div class="lux-card p-4">
           <div class="font-display fs-2 mb-3">System Staff & Users</div>
           <div class="table-responsive">

@@ -366,17 +366,32 @@ public class GoldLoanService : IGoldLoanService
 
         await _notificationService.SendInAppAsync(customer.Id, isFullyPaid ? "Gold Loan Closed" : "Repayment Recorded", message, "GoldLoan", loan.Id);
 
-        if (isFullyPaid)
+        if (!string.IsNullOrWhiteSpace(customer?.Email))
         {
-            await _notificationService.SendEmailAsync(
-                customer.Email!,
-                $"Gold Loan Closed — {loan.LoanNumber} | Shree Jewellers",
-                $"Dear {customer.FirstName},\n\n" +
-                $"Your gold loan {loan.LoanNumber} has been fully repaid.\n" +
-                $"Please visit the shop to collect your pledged gold items.\n\n" +
-                $"Receipt No: {receiptNumber}\n" +
-                $"Amount Paid: ₹{dto.AmountPaid:N2}\n\n" +
-                $"Thank you for choosing Shree Jewellers.");
+            if (isFullyPaid)
+            {
+                await _notificationService.SendEmailAsync(
+                    customer.Email,
+                    $"Gold Loan Closed — {loan.LoanNumber} | Shree Jewellers",
+                    $"Dear {customer.FirstName},\n\n" +
+                    $"Your gold loan {loan.LoanNumber} has been fully repaid.\n" +
+                    $"Please visit the shop to collect your pledged gold items.\n\n" +
+                    $"Receipt No: {receiptNumber}\n" +
+                    $"Amount Paid: ₹{dto.AmountPaid:N2}\n\n" +
+                    $"Thank you for choosing Shree Jewellers.");
+            }
+            else
+            {
+                await _notificationService.SendEmailAsync(
+                    customer.Email,
+                    $"Repayment Receipt {receiptNumber} — Gold Loan {loan.LoanNumber} | Shree Jewellers",
+                    $"Dear {customer.FirstName},\n\n" +
+                    $"We have received your payment of ₹{dto.AmountPaid:N2} towards gold loan {loan.LoanNumber}.\n\n" +
+                    $"Receipt No: {receiptNumber}\n" +
+                    $"Principal Balance Remaining: ₹{principalBalanceAfter:N2}\n" +
+                    $"Payment Date: {dto.RepaymentDate:dd-MMM-yyyy}\n\n" +
+                    $"Thank you for banking with Shree Jewellers.");
+            }
         }
 
         _logger.LogInformation(
