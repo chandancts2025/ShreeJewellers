@@ -59,8 +59,12 @@ public class NotificationService : INotificationService
             var port = int.TryParse(portStr, out var p) ? p : 587;
             var userName = smtpConfig["UserName"] ?? emailConfig["SenderEmail"] ?? smtpConfig["FromEmail"];
             var password = smtpConfig["Password"] ?? emailConfig["SenderPassword"];
+            if (!string.IsNullOrEmpty(password))
+            {
+                password = password.Replace(" ", "").Trim();
+            }
             var fromEmail = smtpConfig["FromEmail"] ?? emailConfig["SenderEmail"] ?? userName ?? "chandankr.mandal87@gmail.com";
-            var fromName = smtpConfig["FromName"] ?? emailConfig["SenderName"] ?? "EduManage Pro Academy";
+            var fromName = smtpConfig["FromName"] ?? emailConfig["SenderName"] ?? "Shree Jewellers";
             var enableSsl = bool.TryParse(smtpConfig["EnableSsl"] ?? emailConfig["EnableSsl"], out var ssl) ? ssl : true;
             var devMode = bool.TryParse(smtpConfig["DevMode"] ?? emailConfig["DevMode"], out var dev) && dev;
 
@@ -108,6 +112,8 @@ public class NotificationService : INotificationService
             message.Body = builder.ToMessageBody();
 
             using var client = new SmtpClient();
+            client.Timeout = 15000;
+            client.CheckCertificateRevocation = false;
             var socketOptions = !enableSsl
                 ? SecureSocketOptions.None
                 : (port == 465 ? SecureSocketOptions.SslOnConnect : SecureSocketOptions.StartTls);

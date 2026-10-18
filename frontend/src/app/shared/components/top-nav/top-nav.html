@@ -32,9 +32,101 @@
         <a class="nav-link px-3 py-2" routerLink="/about" routerLinkActive="active" (click)="closeNav()">
           <i class="bi bi-info-circle me-2 d-lg-none text-warning"></i>About Us
         </a>
-        <a class="nav-link px-3 py-2" routerLink="/gold-loan" routerLinkActive="active" (click)="closeNav()">
-          <i class="bi bi-cash-coin me-2 d-lg-none text-warning"></i>Gold Loan
-        </a>
+        <!-- Gold Loan Dropdown Submenu -->
+        <div class="dropdown custom-dropdown">
+          <button
+            class="nav-link dropdown-toggle px-3 py-2 border-0 bg-transparent text-start w-100 d-flex align-items-center justify-content-between justify-content-lg-start gap-1"
+            type="button"
+            [class.show]="activeDropdown() === 'goldLoan'"
+            (click)="toggleDropdown('goldLoan', $event)"
+            aria-expanded="false">
+            <span class="d-flex align-items-center">
+              <i class="bi bi-cash-coin me-2 text-warning"></i>Gold Loan
+            </span>
+            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle ms-1 px-2 py-0.5 rounded-pill small-badge d-none d-xl-inline">1%/mo</span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-start shadow-lg border-warning-subtle gold-loan-menu" [class.show]="activeDropdown() === 'goldLoan'">
+            <li>
+              <div class="dropdown-header d-flex align-items-center justify-content-between py-1 px-3">
+                <span class="text-uppercase fw-bold text-gold small"><i class="bi bi-safe me-1"></i>Pawn & Gold Loans</span>
+                <span class="badge bg-warning text-dark fw-bold">Up to 75% LTV</span>
+              </div>
+            </li>
+            <li><hr class="dropdown-divider my-1"></li>
+            <li>
+              <a class="dropdown-item py-2 px-3 d-flex align-items-start gap-2" routerLink="/gold-loan" [queryParams]="{ tab: 'overview' }" (click)="closeNav()">
+                <div class="menu-icon-box bg-warning-subtle text-warning">
+                  <i class="bi bi-award-fill"></i>
+                </div>
+                <div>
+                  <div class="fw-semibold text-charcoal">Overview & Schemes</div>
+                  <div class="small text-secondary">Interest rates, statutory LTV & vault safety</div>
+                </div>
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item py-2 px-3 d-flex align-items-start gap-2" routerLink="/gold-loan" [queryParams]="{ tab: 'calculator' }" (click)="closeNav()">
+                <div class="menu-icon-box bg-warning-subtle text-warning">
+                  <i class="bi bi-calculator-fill"></i>
+                </div>
+                <div>
+                  <div class="fw-semibold text-charcoal">EMI & Valuation Calculator</div>
+                  <div class="small text-secondary">Live carat pricing, LTV & repayment schedule</div>
+                </div>
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item py-2 px-3 d-flex align-items-start gap-2" routerLink="/gold-loan" [queryParams]="{ tab: 'eligibility' }" (click)="closeNav()">
+                <div class="menu-icon-box bg-warning-subtle text-warning">
+                  <i class="bi bi-card-checklist"></i>
+                </div>
+                <div>
+                  <div class="fw-semibold text-charcoal">Eligibility & Documents</div>
+                  <div class="small text-secondary">Accepted ornaments (18K-24K) & KYC checklist</div>
+                </div>
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item py-2 px-3 d-flex align-items-start gap-2" routerLink="/gold-loan" [queryParams]="{ tab: 'process' }" (click)="closeNav()">
+                <div class="menu-icon-box bg-warning-subtle text-warning">
+                  <i class="bi bi-diagram-3-fill"></i>
+                </div>
+                <div>
+                  <div class="fw-semibold text-charcoal">4-Step Loan Journey</div>
+                  <div class="small text-secondary">15-minute appraisal, digital ticket & cash disbursal</div>
+                </div>
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item py-2 px-3 d-flex align-items-start gap-2" routerLink="/gold-loan" [queryParams]="{ tab: 'apply' }" (click)="closeNav()">
+                <div class="menu-icon-box bg-warning-subtle text-warning">
+                  <i class="bi bi-pencil-square"></i>
+                </div>
+                <div>
+                  <div class="fw-semibold text-charcoal d-flex align-items-center gap-1">
+                    <span>Apply / Instant Quote</span>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle font-2xs">Fast Track</span>
+                  </div>
+                  <div class="small text-secondary">Instant valuation estimate & callback request</div>
+                </div>
+              </a>
+            </li>
+            @if (auth.isAuthenticated() && auth.hasAnyRole(['Customer'])) {
+              <li><hr class="dropdown-divider my-1"></li>
+              <li>
+                <a class="dropdown-item py-2 px-3 d-flex align-items-center gap-2 text-warning fw-semibold" routerLink="/customer/loans" (click)="closeNav()">
+                  <div class="menu-icon-box bg-warning text-dark">
+                    <i class="bi bi-wallet2"></i>
+                  </div>
+                  <div>
+                    <div class="fw-bold">My Active Loans Desk</div>
+                    <div class="small text-secondary">View loan balance & digital pawn tickets</div>
+                  </div>
+                </a>
+              </li>
+            }
+          </ul>
+        </div>
         <a class="nav-link px-3 py-2" routerLink="/contact" routerLinkActive="active" (click)="closeNav()">
           <i class="bi bi-geo-alt me-2 d-lg-none text-warning"></i>Contact
         </a>

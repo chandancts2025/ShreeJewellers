@@ -6,6 +6,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { LoanService } from '../../../core/services/loan';
 import { AdminService } from '../../../core/services/admin';
 import { ToastService } from '../../../core/services/toast';
+import { ActivatedRoute } from '@angular/router';
 import { CustomerListItem, GoldLoanResponse, OutstandingBalance } from '../../../core/models';
 import { PrintFormat, PrintService } from '../../../core/services/print';
 
@@ -24,6 +25,7 @@ export class GoldLoanManagementPage {
   private readonly toast = inject(ToastService);
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly route = inject(ActivatedRoute);
   protected readonly printService = inject(PrintService);
   private readonly sanitizer = inject(DomSanitizer);
 
@@ -111,6 +113,21 @@ export class GoldLoanManagementPage {
   constructor() {
     this.load();
     this.loadCustomers();
+
+    this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
+      const tab = params['tab'];
+      if (tab === 'active' || tab === 'due' || tab === 'defaulted') {
+        this.activeTab = tab;
+      } else if (tab === 'issue') {
+        setTimeout(() => {
+          document.getElementById('issueLoanCard')?.scrollIntoView({ behavior: 'smooth' });
+        }, 150);
+      } else if (tab === 'eligibility') {
+        setTimeout(() => {
+          document.getElementById('eligibilityCard')?.scrollIntoView({ behavior: 'smooth' });
+        }, 150);
+      }
+    });
   }
 
   get pawnBarcodeSvg(): SafeHtml {

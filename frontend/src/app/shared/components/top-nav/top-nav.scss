@@ -154,3 +154,57 @@
     }
   }
 }
+
+/* Gold Loan Submenu Enhancements */
+.gold-loan-menu {
+  @media (min-width: 992px) {
+    min-width: 360px;
+    padding: 0.65rem 0.5rem;
+    animation: fadeInDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+.menu-icon-box {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.dropdown-item:hover .menu-icon-box {
+  transform: scale(1.08);
+  background-color: rgba(201, 168, 76, 0.25) !important;
+}
+
+.small-badge {
+  font-size: 0.68rem;
+  letter-spacing: 0.02em;
+}
+
+.font-2xs {
+  font-size: 0.65rem;
+}
+
+@media (min-width: 992px) {
+  .custom-dropdown:hover > .dropdown-menu {
+    display: block;
+    margin-top: 0;
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+

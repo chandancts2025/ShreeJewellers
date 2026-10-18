@@ -88,10 +88,30 @@ import { AuthService } from '../../../core/services/auth';
           </div>
 
           <!-- Gold Loans -->
-          <a class="sidebar-item" routerLink="/admin/loans" routerLinkActive="active" (click)="closeOnMobile()">
+          <a class="sidebar-item" routerLink="/admin/loans" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeOnMobile()">
             <i class="bi bi-cash-coin"></i>
             <span>Gold Loans & Pawns</span>
           </a>
+
+          <!-- Gold Loans Submenu -->
+          <div class="sidebar-submenu">
+            <a class="sidebar-item sub-item" routerLink="/admin/loans" [queryParams]="{ tab: 'active' }" (click)="closeOnMobile()">
+              <i class="bi bi-wallet2"></i>
+              <span>Active Portfolio</span>
+            </a>
+            <a class="sidebar-item sub-item" routerLink="/admin/loans" [queryParams]="{ tab: 'issue' }" (click)="closeOnMobile()">
+              <i class="bi bi-plus-circle-fill"></i>
+              <span>Disburse / Issue Loan</span>
+            </a>
+            <a class="sidebar-item sub-item" routerLink="/admin/loans" [queryParams]="{ tab: 'eligibility' }" (click)="closeOnMobile()">
+              <i class="bi bi-calculator-fill"></i>
+              <span>Eligibility Appraisal</span>
+            </a>
+            <a class="sidebar-item sub-item" routerLink="/admin/loans" [queryParams]="{ tab: 'due' }" (click)="closeOnMobile()">
+              <i class="bi bi-alarm-fill"></i>
+              <span>Due & Defaults</span>
+            </a>
+          </div>
         </div>
 
         <!-- Reporting Section -->

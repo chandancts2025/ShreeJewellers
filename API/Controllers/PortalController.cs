@@ -170,17 +170,29 @@ public class PublicController : ControllerBase
         await _db.SaveChangesAsync();
 
         var settings = await LoadSettingsAsync();
-        await _notificationService.SendEmailAsync(
-            settings.ShopEmail,
+        var adminEmail = !string.IsNullOrWhiteSpace(settings.ShopEmail) ? settings.ShopEmail.Trim() : "chandankr.mandal87@gmail.com";
+
+        var adminEmailTask = _notificationService.SendEmailAsync(
+            adminEmail,
             $"New contact inquiry from {dto.Name}",
             $"Name: {dto.Name}\nPhone: {dto.Phone}\nEmail: {dto.Email}\n\nMessage:\n{dto.Message}");
 
+        Task? customerEmailTask = null;
         if (!string.IsNullOrWhiteSpace(dto.Email))
         {
-            await _notificationService.SendEmailAsync(
-                dto.Email,
+            customerEmailTask = _notificationService.SendEmailAsync(
+                dto.Email.Trim(),
                 $"Thank you for reaching out to {settings.ShopName}",
                 $"Dear {dto.Name},\n\nThank you for contacting {settings.ShopName}. We have received your inquiry:\n\n\"{dto.Message}\"\n\nOur team will review your message and get in touch with you shortly at {dto.Phone} or via this email.\n\nWarm regards,\n{settings.ShopName}\nPhone: {settings.ShopPhone}\nEmail: {settings.ShopEmail}");
+        }
+
+        if (customerEmailTask != null)
+        {
+            await Task.WhenAll(adminEmailTask, customerEmailTask);
+        }
+        else
+        {
+            await adminEmailTask;
         }
 
         return Ok(new { message = "Thank you. Your message has been received successfully." });

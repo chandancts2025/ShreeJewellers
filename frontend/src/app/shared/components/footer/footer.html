@@ -26,7 +26,8 @@
         <div class="text-uppercase small fw-bold text-dark mb-3">Explore</div>
         <a class="d-block mb-2 text-secondary text-decoration-none" routerLink="/">Home Showcase</a>
         <a class="d-block mb-2 text-secondary text-decoration-none" routerLink="/about">Heritage Story</a>
-        <a class="d-block mb-2 text-secondary text-decoration-none" routerLink="/gold-loan">Gold Loans</a>
+        <a class="d-block mb-2 text-secondary text-decoration-none" routerLink="/gold-loan" [queryParams]="{ tab: 'overview' }">Gold Loan Schemes</a>
+        <a class="d-block mb-2 text-secondary text-decoration-none" routerLink="/gold-loan" [queryParams]="{ tab: 'calculator' }">Loan EMI Calculator</a>
         <a class="d-block text-secondary text-decoration-none" routerLink="/contact">Showroom Contact</a>
       </div>
 
