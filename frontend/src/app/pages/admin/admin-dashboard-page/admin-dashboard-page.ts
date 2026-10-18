@@ -20,4 +20,10 @@ export class AdminDashboardPage {
       this.data = data;
     });
   }
+
+  getBarWidth(amount: number): number {
+    if (!this.data?.salesTrend12Months?.length) return 0;
+    const max = Math.max(...this.data.salesTrend12Months.map((p: any) => p.amount || 0), 1);
+    return Math.min(100, Math.max(5, Math.round((amount / max) * 100)));
+  }
 }

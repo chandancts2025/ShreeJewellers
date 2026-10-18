@@ -3,7 +3,7 @@
   --sj-gold: #c9a84c;
   --sj-gold-soft: #ecdba3;
   --sj-cream: #faf8f2;
-  --sj-muted: #8b8b9a;
+  --sj-muted: #59596b;
   --sj-danger: #b94a48;
   --sj-success: #2f6f54;
   --sj-surface: rgba(255, 255, 255, 0.82);
@@ -89,18 +89,98 @@ h6,
   }
 }
 
-.lux-badge-secondary {
-  background-color: rgba(255, 255, 255, 0.15) !important;
-  color: #f1f5f9 !important;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  font-weight: 600;
+.badge {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  line-height: 1.25;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background-color: #f0edf5;
+  color: #383046;
+  border: 1px solid #dcd4e6;
+}
+
+.lux-badge-secondary,
+.badge.badge-secondary,
+.badge-secondary {
+  background-color: #f0edf5 !important;
+  color: #383046 !important;
+  border: 1px solid #dcd4e6 !important;
+  font-weight: 700;
+}
+
+.lux-badge-info,
+.badge.badge-info,
+.badge-info {
+  background-color: #eaf3fa !important;
+  color: #17547d !important;
+  border: 1px solid #c2def1 !important;
+  font-weight: 700;
+}
+
+.lux-badge-success,
+.badge.badge-success,
+.badge-success {
+  background-color: #eaf6ee !important;
+  color: #1a6335 !important;
+  border: 1px solid #b6e2c3 !important;
+  font-weight: 700;
+}
+
+.lux-badge-warning,
+.badge.badge-warning,
+.badge-warning {
+  background-color: #fdf5e4 !important;
+  color: #875a08 !important;
+  border: 1px solid #f6deb0 !important;
+  font-weight: 700;
+}
+
+.lux-badge-danger,
+.badge.badge-danger,
+.badge-danger {
+  background-color: #fdeeee !important;
+  color: #a11f1f !important;
+  border: 1px solid #f7c3c3 !important;
+  font-weight: 700;
 }
 
 .lux-badge-gold {
-  background: rgba(201, 168, 76, 0.18) !important;
-  color: #ffd700 !important;
-  border: 1px solid rgba(255, 215, 0, 0.35) !important;
+  background-color: #fcf6e7 !important;
+  color: #7d5408 !important;
+  border: 1px solid #edd596 !important;
   font-weight: 700;
+}
+
+.lux-badge-dark {
+  background-color: rgba(255, 255, 255, 0.16) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  font-weight: 600;
+}
+
+/* Dark surface contextual adaptation */
+.hero-panel,
+.dark-panel,
+.bg-dark,
+.gold-hero-section,
+[style*="rgba(26,26,46"],
+[style*="rgba(26, 26, 46"] {
+  .lux-badge-secondary {
+    background-color: rgba(255, 255, 255, 0.18) !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.32) !important;
+  }
+
+  .lux-badge-gold {
+    background: rgba(201, 168, 76, 0.22) !important;
+    color: #ffd700 !important;
+    border: 1px solid rgba(255, 215, 0, 0.45) !important;
+  }
 }
 
 .text-gold-glow {
@@ -242,6 +322,10 @@ h6,
 
 .text-secondary {
   color: #585868 !important;
+}
+
+.text-muted {
+  color: #59596b !important;
 }
 
 .bg-gold-subtle {

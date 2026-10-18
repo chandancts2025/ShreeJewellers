@@ -5,7 +5,7 @@
       <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
         <div>
           <div class="d-flex align-items-center gap-2 mb-1">
-            <span class="badge lux-badge-secondary px-2 py-1"><i class="bi bi-shield-lock-fill me-1"></i> Admin Portal</span>
+            <span class="badge lux-badge-dark px-2.5 py-1.5"><i class="bi bi-shield-lock-fill me-1"></i> Admin Portal</span>
             <span class="text-gold-soft small">Shree Jewellers Newtown, Kolkata</span>
           </div>
           <h1 class="font-display fs-2 text-gold-glow mb-1">Business Dashboard</h1>
@@ -154,8 +154,11 @@
     <div class="row g-4">
       <div class="col-lg-6">
         <div class="lux-card p-4 h-100">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <div class="font-display fs-3 text-gold">Sales Trend</div>
+          <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+            <div>
+              <h2 class="font-display fs-3 text-gold mb-0">Sales Trend</h2>
+              <span class="small text-secondary">Historical Monthly Performance</span>
+            </div>
             <span class="badge lux-badge-secondary">12-Month Turnover</span>
           </div>
           @for (point of data?.salesTrend12Months ?? []; track point.month) {
@@ -164,7 +167,14 @@
                 <span class="text-secondary fw-semibold">{{ point.month }}</span>
                 <span class="text-charcoal fw-bold">₹{{ point.amount | number:'1.0-0' }}</span>
               </div>
-              <div class="chart-bar" [style.width.%]="(point.amount / (data?.todaySalesAmount || 1)) * 100"></div>
+              <div class="chart-bar-track">
+                <div class="chart-bar" [style.width.%]="getBarWidth(point.amount)"></div>
+              </div>
+            </div>
+          } @empty {
+            <div class="text-center py-5 text-secondary">
+              <i class="bi bi-bar-chart-line fs-2 text-gold d-block mb-2 opacity-50"></i>
+              <p class="mb-0 small">No sales recorded for the past 12 months yet.</p>
             </div>
           }
         </div>
@@ -172,14 +182,27 @@
 
       <div class="col-lg-6">
         <div class="lux-card p-4 h-100">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <div class="font-display fs-3 text-gold">Category Mix</div>
+          <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+            <div>
+              <h2 class="font-display fs-3 text-gold mb-0">Category Mix</h2>
+              <span class="small text-secondary">Breakdown by Jewellery Type</span>
+            </div>
             <span class="badge lux-badge-secondary">Revenue Share</span>
           </div>
           @for (row of data?.salesByCategory ?? []; track row.category) {
-            <div class="d-flex justify-content-between border-bottom py-2">
-              <span class="text-charcoal fw-medium">{{ row.category }}</span>
-              <span class="text-gold fw-bold">{{ row.percent }}%</span>
+            <div class="py-2 border-bottom">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="text-charcoal fw-semibold">{{ row.category }}</span>
+                <span class="badge lux-badge-info">{{ row.percent }}%</span>
+              </div>
+              <div class="chart-bar-track" style="height: 6px;">
+                <div class="chart-bar" [style.width.%]="row.percent" style="background: linear-gradient(90deg, #1d5f8a 0%, #38bdf8 100%);"></div>
+              </div>
+            </div>
+          } @empty {
+            <div class="text-center py-5 text-secondary">
+              <i class="bi bi-pie-chart fs-2 text-gold d-block mb-2 opacity-50"></i>
+              <p class="mb-0 small">No category revenue data recorded yet.</p>
             </div>
           }
         </div>
